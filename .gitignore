@@ -1,6 +1,5 @@
 secrets_local.py
 __pycache__/
-seen.json
 .wrangler/
 docs/*.pdf
 docs/*_guide.html
