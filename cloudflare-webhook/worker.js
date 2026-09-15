@@ -52,7 +52,7 @@ export async function orgSearch(env, text) {
   const qs = Object.values(ORGS).map(({ orgs }) =>
     `${text} ${Object.keys(orgs).map((o) => "org:" + o).join(" ")} good-first-issues:>0 archived:false pushed:>=${ago(90)}`.trim());
   const results = await Promise.all(qs.map((q) => search(env, q, "updated")));
-  return results.flat().sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
+  return results.flat().filter(english).sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
 }
 
 export function renderOrgs(head, items, md = false) {
@@ -128,7 +128,15 @@ export async function lookup(env, lane, major, extra) {
   const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
   const [a, b] = await Promise.all([gh, gl]);
   const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
-  return spamFree.concat(b).slice(0, MAX + 3);
+  return spamFree.concat(b).filter(english).slice(0, MAX + 3);
+}
+// English-only: drop repos whose name+description is mostly non-ASCII (CJK, Cyrillic, ...) or has no description.
+export function english(it) {
+  const s = `${it.full_name} ${it.description || ""}`;
+  if (!(it.description || "").trim()) return false;
+  let ascii = 0;
+  for (const ch of s) if (ch.charCodeAt(0) < 128) ascii++;
+  return ascii / s.length >= 0.9;
 }
 // Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors (typed keywords override).
 const AI_SPAM = /\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b/i;

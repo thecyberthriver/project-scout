@@ -123,8 +123,8 @@ def load_seen() -> dict:
 
 
 def english(desc: str) -> bool:
-    """Skip mostly non-ASCII (e.g. CJK) descriptions — students here read English."""
-    return not desc or sum(ord(c) < 128 for c in desc) / len(desc) >= 0.7
+    """English-only: require a description and >= 90% ASCII (drops CJK, Cyrillic, mixed-language repos)."""
+    return bool(desc.strip()) and sum(ord(c) < 128 for c in desc) / len(desc) >= 0.9
 
 
 def difficulty(it: dict) -> str:
@@ -140,7 +140,7 @@ def difficulty(it: dict) -> str:
 def pick(items: list[dict], seen: dict, n: int, major: str = "") -> list[dict]:
     out = []
     for it in items:
-        if it["full_name"] in seen or not english(it.get("description") or ""):
+        if it["full_name"] in seen or not english(f'{it["full_name"]} {it.get("description") or ""}') or not (it.get("description") or "").strip():
             continue
         if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
             continue
@@ -293,9 +293,10 @@ def self_check() -> None:
     assert messages(["a" * 3000, "b" * 3000, "c"]) == ["a" * 3000, "b" * 3000 + "\nc"]
     assert messages([]) == []
     assert to_markdown('<b>x</b> <a href="https://u">t</a> &lt;i&gt;') == "**x** [t](<https://u>) <i>"
-    assert pick([{"full_name": "x/y"}, {"full_name": "a/b"}, {"full_name": "c/d"}], {"x/y": "2099-01-01"}, 1) \
-        == [{"full_name": "a/b"}]
-    assert english("") and english("Agent-native backtesting") and not english("面向基本面因子研究的智能体-AI agent")
+    assert pick([{"full_name": "x/y", "description": "seen"}, {"full_name": "a/b", "description": "fresh"},
+                 {"full_name": "c/d", "description": "extra"}], {"x/y": "2099-01-01"}, 1) == [{"full_name": "a/b", "description": "fresh"}]
+    assert pick([{"full_name": "a/b", "description": ""}], {}, 1) == []  # English-only also means: must have a description
+    assert not english("") and english("Agent-native backtesting") and not english("面向基本面因子研究的智能体-AI agent")
     r = {"full_name": "<b>", "html_url": "u", "stargazers_count": 1, "description": ""}
     assert "&lt;b&gt;" in render_repo(r, "build") and "good-first-issues" in render_repo(r, "oss")
     assert "good-first-issues:>0" in LANES["oss"][3]("t", "trading")
