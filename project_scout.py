@@ -128,8 +128,9 @@ STARTER_WHY = {
 # Sources with public data: Devpost's listing JSON (filtered to NYC-area in-person events) and Major League
 # Hacking's season page (embeds event JSON). Everything else is login-walled, so it's linked, not scraped.
 NYC_RE = __import__("re").compile(
-    r"\b(new york|nyc|brooklyn|manhattan|queens|bronx|staten island|jersey city|hoboken|newark|long island city|"
-    r"columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b", __import__("re").I)
+    r"\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark|"
+    r"long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b", __import__("re").I)
+# note: "<city>, New York" upstate (Ithaca, Troy, Rochester) is deliberately NOT matched — commutable NYC area only.
 HACK_LINKS = [
     ("MLH season calendar (filter New York)", "https://mlh.io/seasons/2027/events"),
     ("Devpost — in-person hackathons", "https://devpost.com/hackathons?challenge_type[]=in-person&order_by=deadline&search=new+york"),
@@ -177,7 +178,7 @@ def hackathons_nyc() -> list[dict]:
                 continue
             va = ev.get("venueAddress") or {}
             where = ev.get("location") or f"{va.get('city', '')}, {va.get('state', '')}"
-            if ev.get("formatType") in ("physical", "hybrid") and (NYC_RE.search(where) or va.get("state") == "New York"):
+            if ev.get("formatType") in ("physical", "hybrid") and NYC_RE.search(where):
                 out.append({"title": ev["name"], "url": ev.get("websiteUrl") or "https://mlh.io" + ev.get("url", ""),
                             "when": ev.get("dateRange", ""), "where": where, "org": "MLH", "src": "MLH", "prize": ""})
     except Exception as e:

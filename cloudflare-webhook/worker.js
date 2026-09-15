@@ -44,7 +44,8 @@ export const STARTERS = {
   marketing: ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk", "n8n-io/n8n"],
 };
 // NYC in-person hackathons: Devpost listing JSON + MLH season page (embedded JSON). Mirrors hackathons_nyc() in ../project_scout.py.
-const NYC_RE = /\b(new york|nyc|brooklyn|manhattan|queens|bronx|staten island|jersey city|hoboken|newark|long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b/i;
+// Commutable NYC area only: "<city>, New York" upstate (Ithaca, Troy, Rochester) is deliberately not matched.
+const NYC_RE = /\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark|long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b/i;
 export const HACK_LINKS = [
   ["MLH season calendar", "https://mlh.io/seasons/2027/events"],
   ["Devpost in-person", "https://devpost.com/hackathons?challenge_type[]=in-person&order_by=deadline&search=new+york"],
@@ -81,7 +82,7 @@ export async function hackathonsNyc() {
     for (const m of html.matchAll(/\{"id":"[0-9a-f-]{36}","slug":.*?"venueAddress":\{[^}]*\}\}/g)) {
       let ev; try { ev = JSON.parse(m[0]); } catch { continue; }
       const va = ev.venueAddress || {}, where = ev.location || `${va.city || ""}, ${va.state || ""}`;
-      if (["physical", "hybrid"].includes(ev.formatType) && (NYC_RE.test(where) || va.state === "New York"))
+      if (["physical", "hybrid"].includes(ev.formatType) && NYC_RE.test(where))
         out.push({ title: ev.name, url: ev.websiteUrl || "https://mlh.io" + (ev.url || ""), when: ev.dateRange || "", where, org: "MLH", src: "MLH", prize: "" });
     }
   } catch (e) { console.log("mlh", e.message); }
