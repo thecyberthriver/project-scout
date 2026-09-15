@@ -173,7 +173,7 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
             if picks:
                 parts.append(f"<i>{lane_label}</i>\n" + "\n".join(render_repo(p, lane) for p in picks))
         if parts:
-            chunks.append(f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>')
+            chunks.append((key, f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>'))
     parts = []
     for sector, (sector_label, orgs) in ORGS.items():
         try:
@@ -183,15 +183,15 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
             continue
         parts += [render_org(p, sector_label) for p in picks]
     if parts:
-        chunks.append("\n<b>🤝 Contribute to mission-driven orgs — resume-ready experience</b>\n" + "\n".join(parts) +
-                      '\n  🔎 <a href="https://www.linkedin.com/jobs/search/?keywords=%22open%20source%22%20volunteer">'
-                      "open-source volunteer roles on LinkedIn</a>")
-    if not chunks:
-        return []
-    chunks.insert(0, "<b>🧪 Project Scout — new on GitHub</b>\n"
-                     "Build it, contribute to it, or reproduce the research — steal the idea, make your own version.")
-    chunks[-1] += "\n\n<i>/quant /fintech /swe /cyber /data /pm /marketing · /oss &lt;major&gt; · /research &lt;major&gt; — live search anytime.</i>"
+        chunks.append(("orgs", "\n<b>🤝 Contribute to mission-driven orgs — resume-ready experience</b>\n" + "\n".join(parts) +
+                       '\n  🔎 <a href="https://www.linkedin.com/jobs/search/?keywords=%22open%20source%22%20volunteer">'
+                       "open-source volunteer roles on LinkedIn</a>"))
     return chunks
+
+
+HEADER = ("<b>🧪 Project Scout — new on GitHub</b>\n"
+          "Build it, contribute to it, or reproduce the research — steal the idea, make your own version.")
+FOOTER = "\n\n<i>/quant /fintech /swe /cyber /data /pm /marketing · /oss &lt;major&gt; · /research &lt;major&gt; · /orgs — live search anytime.</i>"
 
 
 def targets() -> list[tuple[str, str]]:
@@ -214,18 +214,30 @@ def send(text: str) -> None:
             print(f"telegram {e.code} for chat {chat}: {e.read()[:200].decode(errors='replace')}", file=sys.stderr)  # other targets still get it
 
 
-def discord(text: str) -> None:
-    """Optional: mirror to a Discord channel webhook (DISCORD_WEBHOOK_URL) — Telegram HTML -> Discord markdown."""
+def to_markdown(text: str) -> str:
+    """Telegram HTML -> Discord markdown (<url> suppresses embeds)."""
     import re
     md = re.sub(r'<a href="([^"]+)">([^<]*)</a>', r"[\2](<\1>)", text)
     md = re.sub(r"</?b>", "**", md)
     md = re.sub(r"</?i>", "*", md)
-    md = md.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+    return md.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+
+
+def discord(key: str, text: str) -> None:
+    """Optional Discord mirror. DISCORD_WEBHOOKS = JSON {major key or "orgs": webhook url} posts each section into its
+    own channel (see discord_setup.py); DISCORD_WEBHOOK_URL posts everything into one channel."""
+    hooks = json.loads(os.environ.get("DISCORD_WEBHOOKS") or "{}")
+    url = hooks.get(key) or os.environ.get("DISCORD_WEBHOOK_URL")
+    if not url:
+        return
+    md = to_markdown(text).strip()
     for part in [md[i:i + 1900] for i in range(0, len(md), 1900)]:  # Discord cap is 2000 chars
-        req = urllib.request.Request(os.environ["DISCORD_WEBHOOK_URL"], data=json.dumps({"content": part}).encode(),
+        req = urllib.request.Request(url, data=json.dumps({"content": part}).encode(),
                                      headers={"Content-Type": "application/json", "User-Agent": "project-scout"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            assert r.status in (200, 204), r.status
+        try:
+            urllib.request.urlopen(req, timeout=30)
+        except urllib.error.HTTPError as e:
+            print(f"discord {e.code} for {key}: {e.read()[:200].decode(errors='replace')}", file=sys.stderr)
 
 
 def messages(chunks: list[str], limit: int = 3900) -> list[str]:
@@ -242,6 +254,7 @@ def messages(chunks: list[str], limit: int = 3900) -> list[str]:
 def self_check() -> None:
     assert messages(["a" * 3000, "b" * 3000, "c"]) == ["a" * 3000, "b" * 3000 + "\nc"]
     assert messages([]) == []
+    assert to_markdown('<b>x</b> <a href="https://u">t</a> &lt;i&gt;') == "**x** [t](<https://u>) <i>"
     assert pick([{"full_name": "x/y"}, {"full_name": "a/b"}, {"full_name": "c/d"}], {"x/y": "2099-01-01"}, 1) \
         == [{"full_name": "a/b"}]
     assert english("") and english("Agent-native backtesting") and not english("面向基本面因子研究的智能体-AI agent")
@@ -257,14 +270,15 @@ def main() -> int:
         self_check()
         return 0
     seen = load_seen()
-    msgs = messages(build_digest(seen))
+    chunks = build_digest(seen)
+    msgs = messages([HEADER] + [t for _, t in chunks] + [FOOTER]) if chunks else []
     if "--preview" in sys.argv:
         print("\n\n=====\n\n".join(msgs) or "(nothing new)")
         return 0
     for m in msgs:
         send(m)
-        if os.environ.get("DISCORD_WEBHOOK_URL"):
-            discord(m)
+    for key, text in chunks:  # Discord: one post per section, into that section's channel
+        discord(key, text)
     json.dump(seen, open(SEEN, "w"), indent=0)
     print(f"sent {len(msgs)} message(s) at {datetime.now():%Y-%m-%d %H:%M}")
     return 0
