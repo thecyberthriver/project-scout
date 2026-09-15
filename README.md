@@ -67,3 +67,13 @@ mirrored into a channel through a plain Discord webhook.
 
 Discord vs Telegram: Discord server roles let you gate who sees the feed and who
 can run `/scout`; the Telegram campus bot answers anyone who finds it.
+
+### Provisioning the private TLDP server
+
+`discord_setup.py` builds the whole layout in one run once the bot is invited
+(`https://discord.com/oauth2/authorize?client_id=<APP_ID>&scope=bot+applications.commands&permissions=805317681&guild_id=<GUILD_ID>`):
+categories + channels, read-only #announcements, "TLDP Staff" role, Medium
+verification, @everyone stripped of Create Invite, one webhook per feed channel
+(printed as the `DISCORD_WEBHOOKS` secret), a 45-use / 7-day invite and a pinned
+welcome post. With `DISCORD_WEBHOOKS` set, each 2-hourly section lands in its own
+channel (#quant-projects … #open-source-orgs).

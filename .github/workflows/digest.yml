@@ -35,5 +35,6 @@ jobs:
           CAMPUS_BOT_TOKEN: ${{ secrets.CAMPUS_BOT_TOKEN }}
           CAMPUS_CHAT_ID: ${{ secrets.CAMPUS_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
           GITHUB_TOKEN: ${{ github.token }}
         run: python project_scout.py

@@ -152,8 +152,8 @@ def render_org(it: dict, sector_label: str) -> str:
             f'\n  📝 Resume: Open-Source Contributor, {esc(name)} ({esc(it["full_name"].split("/")[1])})')
 
 
-def build_digest(seen: dict) -> list[str]:
-    """One chunk per major that has unseen repos; empty list = nothing new, send nothing."""
+def build_digest(seen: dict) -> list[tuple[str, str]]:
+    """(key, chunk) per major/orgs section that has unseen repos; empty list = nothing new, send nothing."""
     chunks = []
     for key, (label, terms, anchor, evergreen) in MAJORS.items():
         parts = []
