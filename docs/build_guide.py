@@ -82,6 +82,8 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
 <tr><td>#show-your-work</td><td>Merged pull requests, demos, and the resume line you earned. Every Friday the bot posts a leaderboard of who shared the most links here.</td></tr>
 <tr><td>#help</td><td>Stuck on git, a pull request, or setup? Ask here.</td></tr>
 <tr><td>#general-chat</td><td>Everything else.</td></tr>
+<tr><td rowspan="2">SPRING REQUIREMENTS</td><td>🏁 nyc-hackathons</td><td><b>You must attend one in-person hackathon by spring.</b> New NYC-area listings (city-wide, university, company and public-sector events) post here automatically from Devpost and MLH. Reply in a post to find teammates; register early.</td></tr>
+<tr><td>🎓 capstone</td><td><b>Your capstone project is judged in spring.</b> Post your idea, your repo link, weekly progress, and questions for staff.</td></tr>
 <tr><td>STUDY ROOMS</td><td>Study Room 1 / 2</td><td>Voice rooms for co-working. Mute when you are not talking.</td></tr>
 </table>
 

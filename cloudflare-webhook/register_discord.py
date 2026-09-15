@@ -27,7 +27,8 @@ MAJORS = [("Quant", "quant"), ("Finance / FinTech", "fintech"), ("Software Engin
 LANES = [("Start here (idea lists, roadmaps, beginner basics)", "start"),
          ("Build this (fresh repos)", "build"), ("Contribute (good first issues)", "oss"),
          ("Research (fresh paper code)", "research"),
-         ("Orgs (non-profit / public / private sector, resume-ready)", "orgs")]
+         ("Orgs (non-profit / public / private sector, resume-ready)", "orgs"),
+         ("NYC hackathons (in-person, live from Devpost + MLH)", "hackathons")]
 COMMANDS = [{
     "name": "verify",
     "description": "Unlock the server: match your name against the TLDP roster",

@@ -31,7 +31,8 @@ export const LANES = {
 const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"', pm: '"project management"', marketing: '"digital marketing"' };
 const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
                      org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
-                     basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start" };
+                     basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start",
+                     hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons" };
 // "Start here": curated evergreen repos with project IDEAS and the basics (mirrors STARTERS in ../project_scout.py).
 export const STARTERS = {
   quant: ["wilsonfreitas/awesome-quant", "stefan-jansen/machine-learning-for-trading", "je-suis-tm/quant-trading", "microsoft/qlib", "QuantConnect/Lean", "ranaroussi/yfinance"],
@@ -42,6 +43,61 @@ export const STARTERS = {
   pm: ["dend/awesome-product-management", "opf/openproject", "makeplane/plane", "wekan/wekan", "mattermost-community/focalboard"],
   marketing: ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk", "n8n-io/n8n"],
 };
+// NYC in-person hackathons: Devpost listing JSON + MLH season page (embedded JSON). Mirrors hackathons_nyc() in ../project_scout.py.
+const NYC_RE = /\b(new york|nyc|brooklyn|manhattan|queens|bronx|staten island|jersey city|hoboken|newark|long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b/i;
+export const HACK_LINKS = [
+  ["MLH season calendar", "https://mlh.io/seasons/2027/events"],
+  ["Devpost in-person", "https://devpost.com/hackathons?challenge_type[]=in-person&order_by=deadline&search=new+york"],
+  ["Eventbrite NYC", "https://www.eventbrite.com/d/ny--new-york/hackathon/"],
+  ["Meetup NYC", "https://www.meetup.com/find/?keywords=hackathon&location=us--ny--New%20York&source=EVENTS"],
+  ["Luma NYC", "https://lu.ma/nyc?q=hackathon"],
+];
+async function cachedText(url, accept) {
+  const cache = caches.default, key = new Request(url, { method: "GET" });
+  let r = await cache.match(key);
+  if (!r) {
+    r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 project-scout", accept } });
+    if (!r.ok) throw new Error(`${new URL(url).host} HTTP ${r.status}`);
+    r = new Response(await r.text(), { headers: { "cache-control": "s-maxage=1800" } });
+    await cache.put(key, r.clone());
+  }
+  return r.text();
+}
+export async function hackathonsNyc() {
+  const out = [];
+  try {
+    for (let page = 1; page <= 4; page++) {
+      const d = JSON.parse(await cachedText(`https://devpost.com/api/hackathons?status[]=open&status[]=upcoming&challenge_type[]=in-person&order_by=deadline&per_page=50&page=${page}`, "application/json"));
+      if (!d.hackathons?.length) break;
+      for (const h of d.hackathons) {
+        const loc = h.displayed_location?.location || "";
+        if (NYC_RE.test(loc) || NYC_RE.test(h.title))
+          out.push({ title: h.title, url: h.url, when: h.submission_period_dates || "", where: loc, org: h.organization_name || "", src: "Devpost", prize: h.prize_amount || "" });
+      }
+    }
+  } catch (e) { console.log("devpost", e.message); }
+  try {
+    const html = await cachedText("https://mlh.io/seasons/2027/events", "text/html");
+    for (const m of html.matchAll(/\{"id":"[0-9a-f-]{36}","slug":.*?"venueAddress":\{[^}]*\}\}/g)) {
+      let ev; try { ev = JSON.parse(m[0]); } catch { continue; }
+      const va = ev.venueAddress || {}, where = ev.location || `${va.city || ""}, ${va.state || ""}`;
+      if (["physical", "hybrid"].includes(ev.formatType) && (NYC_RE.test(where) || va.state === "New York"))
+        out.push({ title: ev.name, url: ev.websiteUrl || "https://mlh.io" + (ev.url || ""), when: ev.dateRange || "", where, org: "MLH", src: "MLH", prize: "" });
+    }
+  } catch (e) { console.log("mlh", e.message); }
+  const seen = new Set();
+  return out.filter((h) => !seen.has(h.url) && seen.add(h.url));
+}
+export function renderHacks(head, items, md = false) {
+  const e = md ? (s) => String(s) : esc;
+  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
+  const more = HACK_LINKS.map(([n, u]) => link(n, u)).join(" · ");
+  if (!items.length) return `${head}\nNothing listed right now. Check: ${more}`;
+  const rows = items.slice(0, 10).map((h) =>
+    `• ${link(h.title, h.url)}${h.prize ? ` · 🏆 ${e(h.prize)}` : ""}\n  📅 ${e(h.when)} · 📍 ${e(h.where)}${h.org && h.org !== h.src ? ` · ${e(h.org)}` : ""} · via ${h.src}`);
+  return `${head}\n${rows.join("\n")}\n\n🔎 More: ${more}`;
+}
+
 export async function startItems(env, major) {
   const majors = major ? [major] : Object.keys(STARTERS);
   const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 6 : 14);
@@ -96,7 +152,8 @@ const HELP =
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
   "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
-  "/basics &lt;major&gt; — start here: curated idea lists, roadmaps, beginner courses and sample apps\n\n" +
+  "/basics &lt;major&gt; — start here: curated idea lists, roadmaps, beginner courses and sample apps\n" +
+  "/hackathons — NYC in-person hackathons, live from Devpost + MLH\n\n" +
   "Add keywords to narrow: <code>/cyber honeypot</code>, <code>/oss data pandas</code>, <code>/research quant</code>.\n" +
   "Any other text = keyword search across all majors.\n\n" +
   "<i>New repos are pushed here automatically as they appear (checked every 2 h).</i>";
@@ -191,7 +248,7 @@ export function parse(text) {
   // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
   const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
-  lane = LANES[lane] || lane === "orgs" || lane === "start" ? lane : LANE_ALIAS[lane];
+  lane = LANES[lane] || ["orgs", "start", "hackathons"].includes(lane) ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
   let major = (words[0] || "").toLowerCase();
   major = MAJORS[major] ? major : ALIAS[major] || null;
@@ -218,6 +275,11 @@ async function handleUpdate(env, update) {
 
   const { lane, major, extra } = parse(t);
   if (lane === "build" && !major && !extra) return tgSend(env, chatId, HELP);
+  if (lane === "hackathons") {
+    try { await tgSend(env, chatId, renderHacks("<b>🏁 NYC in-person hackathons (Devpost + MLH, live)</b>", await hackathonsNyc())); }
+    catch (e) { await tgSend(env, chatId, `⚠️ ${esc(e.message)}`); }
+    return;
+  }
   const laneLabel = { orgs: "🤝 Mission-driven orgs", start: "📚 Start here — ideas & basics" }[lane] || LANES[lane].label;
   const head = `<b>${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}</b>${extra ? ` · <i>${esc(extra)}</i>` : ""}`;
   try {

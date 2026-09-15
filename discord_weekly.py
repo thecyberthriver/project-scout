@@ -71,17 +71,14 @@ def leaderboard(channel_id: str) -> str:
 
 
 def hackathons() -> str:
-    url = "https://devpost.com/api/hackathons?status[]=open&order_by=deadline&per_page=8"
-    try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"}), timeout=30) as r:
-            hs = json.load(r).get("hackathons", [])
-    except Exception as e:  # Devpost's JSON is unofficial; degrade to a link
-        return f"🏁 **Hackathons:** browse open ones at https://devpost.com/hackathons?status[]=open ({e})"
-    rows = []
-    for h in hs[:6]:
-        prize = f" · {h['prize_amount']}" if h.get("prize_amount") else ""
-        rows.append(f"• [{h['title']}](<{h['url']}>) — {h.get('submission_period_dates', '')}{prize} · {h.get('displayed_location', {}).get('location', '')}")
-    return "🏁 **Hackathons closing soon** (Devpost) — a deadline beats a to-do list. Kaggle: https://www.kaggle.com/competitions\n" + "\n".join(rows)
+    """Friday reminder: every NYC in-person hackathon currently listed (spring requirement), pointing at the forum."""
+    from project_scout import hackathons_nyc, HACK_LINKS
+    hs = hackathons_nyc()
+    rows = [f"• [{h['title']}](<{h['url']}>) — {h['when']} · {h['where']} · via {h['src']}" for h in hs[:10]]
+    more = " · ".join(f"[{n}](<{u}>)" for n, u in HACK_LINKS[:5])
+    body = "\n".join(rows) if rows else "Nothing listed this week — check the links below and post what you find in 🏁 nyc-hackathons."
+    return ("🏁 **Spring requirement: attend one in-person hackathon.** Currently listed in the NYC area:\n" + body +
+            f"\n\nNew listings post automatically in 🏁 nyc-hackathons. More: {more}")
 
 
 def webhook_post(url: str, content: str) -> None:

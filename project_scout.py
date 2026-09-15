@@ -124,6 +124,84 @@ STARTER_WHY = {
 }
 
 
+# ---- NYC in-person hackathons (spring requirement) --------------------------------------------------
+# Sources with public data: Devpost's listing JSON (filtered to NYC-area in-person events) and Major League
+# Hacking's season page (embeds event JSON). Everything else is login-walled, so it's linked, not scraped.
+NYC_RE = __import__("re").compile(
+    r"\b(new york|nyc|brooklyn|manhattan|queens|bronx|staten island|jersey city|hoboken|newark|long island city|"
+    r"columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b", __import__("re").I)
+HACK_LINKS = [
+    ("MLH season calendar (filter New York)", "https://mlh.io/seasons/2027/events"),
+    ("Devpost — in-person hackathons", "https://devpost.com/hackathons?challenge_type[]=in-person&order_by=deadline&search=new+york"),
+    ("Eventbrite NYC — hackathon", "https://www.eventbrite.com/d/ny--new-york/hackathon/"),
+    ("Meetup NYC — hackathon", "https://www.meetup.com/find/?keywords=hackathon&location=us--ny--New%20York&source=EVENTS"),
+    ("Luma NYC — hackathon", "https://lu.ma/nyc?q=hackathon"),
+    ("NYC Civic Tech Hackathon (CUNY, annual)", "https://www.cuny.edu/civic-tech-hackathon/"),
+    ("NASA Space Apps Challenge — NYC (October)", "https://www.spaceappschallenge.org/"),
+    ("BetaNYC civic hack nights", "https://beta.nyc/events/"),
+    ("NYC Open Data events", "https://opendata.cityofnewyork.us/events/"),
+]
+
+
+def _get(url: str, accept: str = "application/json") -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 project-scout", "Accept": accept})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.read()
+
+
+def hackathons_nyc() -> list[dict]:
+    """Upcoming/open in-person hackathons in the NYC area, newest deadline first. Fields: title,url,when,where,org,src."""
+    out, seen_urls = [], set()
+    try:  # Devpost: page through in-person listings, keep NYC-area locations
+        for page in range(1, 6):
+            data = json.loads(_get("https://devpost.com/api/hackathons?status[]=open&status[]=upcoming&challenge_type[]=in-person"
+                                   f"&order_by=deadline&per_page=50&page={page}"))
+            hs = data.get("hackathons", [])
+            if not hs:
+                break
+            for h in hs:
+                loc = (h.get("displayed_location") or {}).get("location", "")
+                if NYC_RE.search(loc) or NYC_RE.search(h["title"]):
+                    out.append({"title": h["title"], "url": h["url"], "when": h.get("submission_period_dates", ""),
+                                "where": loc, "org": h.get("organization_name") or "", "src": "Devpost",
+                                "prize": h.get("prize_amount") or ""})
+    except Exception as e:
+        print(f"devpost: {e}", file=sys.stderr)
+    try:  # MLH: the season page embeds one JSON object per event
+        import re
+        html = _get("https://mlh.io/seasons/2027/events", "text/html").decode("utf-8", "replace")
+        for m in re.finditer(r'\{"id":"[0-9a-f-]{36}","slug":.*?"venueAddress":\{[^}]*\}\}', html):
+            try:
+                ev = json.loads(m.group(0))
+            except ValueError:
+                continue
+            va = ev.get("venueAddress") or {}
+            where = ev.get("location") or f"{va.get('city', '')}, {va.get('state', '')}"
+            if ev.get("formatType") in ("physical", "hybrid") and (NYC_RE.search(where) or va.get("state") == "New York"):
+                out.append({"title": ev["name"], "url": ev.get("websiteUrl") or "https://mlh.io" + ev.get("url", ""),
+                            "when": ev.get("dateRange", ""), "where": where, "org": "MLH", "src": "MLH", "prize": ""})
+    except Exception as e:
+        print(f"mlh: {e}", file=sys.stderr)
+    uniq = []
+    for h in out:
+        if h["url"] not in seen_urls:
+            seen_urls.add(h["url"])
+            uniq.append(h)
+    return uniq
+
+
+def render_hack(h: dict) -> str:
+    prize = f" · 🏆 {esc(h['prize'])}" if h.get("prize") else ""
+    org = f" · {esc(h['org'])}" if h.get("org") and h["org"] != h["src"] else ""
+    return (f'• <a href="{h["url"]}">{esc(h["title"])}</a>{prize}\n'
+            f"  📅 {esc(h['when'])} · 📍 {esc(h['where'])}{org} · via {h['src']}")
+
+
+def hack_footer() -> str:
+    links = " · ".join(f'<a href="{u}">{esc(n)}</a>' for n, u in HACK_LINKS[:5])
+    return f"\n  🔎 More: {links}"
+
+
 def gh_repo(full_name: str) -> dict | None:
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout"}
     if os.environ.get("GITHUB_TOKEN"):
@@ -250,6 +328,14 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
             print(f"orgs/{sector}: {e}", file=sys.stderr)
             continue
         parts += [render_org(p, sector_label) for p in picks]
+    new_hacks = []
+    for h in hackathons_nyc():
+        if "hack:" + h["url"] not in seen:
+            seen["hack:" + h["url"]] = date.today().isoformat()
+            new_hacks.append(h)
+    if new_hacks:
+        chunks.append(("hackathons", "\n<b>🏁 NYC in-person hackathons — new listings</b>\n<i>Spring requirement: attend one. Register early, teams fill up.</i>\n" +
+                       "\n".join(render_hack(h) for h in new_hacks[:8]) + hack_footer()))
     if parts:
         chunks.append(("orgs", "\n<b>🤝 Contribute to mission-driven orgs — resume-ready experience</b>\n" + "\n".join(parts) +
                        '\n  🔎 <a href="https://www.linkedin.com/jobs/search/?keywords=%22open%20source%22%20volunteer">'

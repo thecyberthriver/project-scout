@@ -68,6 +68,10 @@ LAYOUT = {
         ("help", "Stuck on git, a PR, an environment? Ask here.", TEXT, None),
         ("general-chat", "Everything else.", TEXT, None),
     ]),
+    "🎯 SPRING REQUIREMENTS": (True, [
+        ("🏁│nyc-hackathons", "In-person hackathons in the NYC area, city-wide + private + public sector, updated every 6 h from Devpost and MLH. Attend one by spring. Reply in a post to find teammates.", FORUM, "hackathons"),
+        ("🎓│capstone", "Your capstone project, judged in spring. Post your idea, repo link, weekly progress, and questions for staff.", TEXT, None),
+    ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }
 OLD_FEED_NAMES = {"data-analytics", "swe", "cybersecurity", "quant", "finance-fintech", "project-management",
@@ -85,7 +89,11 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 • **🤝 open-source-orgs** — non-profit, public-sector and company repos that welcome contributors, with a LinkedIn link and a ready-to-paste resume line.
 • **#scout-search** — search on demand: `/scout major:Cybersecurity`, `/scout lane:Contribute major:Data Analytics`, `/scout lane:Orgs keywords:python`.
 • **#show-your-work** — post merged PRs and demos. Friday leaderboard lives here.
-• **#announcements** — staff posts + hackathons closing soon.
+• **#announcements** — staff posts.
+
+**Spring requirements (both graded)**
+• **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
+• **🎓 capstone** — your capstone project, judged in spring. Post your idea, your repo, and weekly progress there.
 
 **Start now:** /verify, introduce yourself, pick one repo this week and open one good-first-issue PR.
 """
