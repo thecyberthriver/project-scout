@@ -69,7 +69,7 @@ export const STARTERS = {
   fintech: ["OpenBB-finance/OpenBB", "plaid/pattern", "stripe-samples/checkout-one-time-payments", "firefly-iii/firefly-iii", "actualbudget/actual", "ranaroussi/yfinance"],
   swe: ["practical-tutorials/project-based-learning", "codecrafters-io/build-your-own-x", "florinpop17/app-ideas", "karan/Projects", "nilbuild/developer-roadmap", "ossu/computer-science"],
   cyber: ["sbilly/awesome-security", "OWASP/CheatSheetSeries", "juice-shop/juice-shop", "OWASP/wstg", "swisskyrepo/PayloadsAllTheThings", "mitre-attack/attack-navigator"],
-  data: ["microsoft/Data-Science-For-Beginners", "jakevdp/PythonDataScienceHandbook", "Yorko/mlcourse.ai", "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience"],
+  data: ["microsoft/Data-Science-For-Beginners", "jakevdp/PythonDataScienceHandbook", "Yorko/mlcourse.ai", "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience", "microsoft/PowerBI-Developer-Samples", "microsoft/powerbi-desktop-samples", "tableau/TabPy", "tableau/server-client-python", "tableau/hyper-api-samples"],
   pm: ["dend/awesome-product-management", "opf/openproject", "makeplane/plane", "wekan/wekan", "mattermost-community/focalboard"],
   marketing: ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk", "n8n-io/n8n"],
 };
@@ -131,7 +131,7 @@ export function renderHacks(head, items, md = false) {
 
 export async function startItems(env, major) {
   const majors = major ? [major] : Object.keys(STARTERS);
-  const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 6 : 14);
+  const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 11 : 14);
   const items = await Promise.all(names.map((n) => ghJson(env, `https://api.github.com/repos/${n}`).catch(() => null)));
   return items.filter(Boolean);
 }
@@ -179,7 +179,9 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 const HELP =
   "<b>Project Scout</b> — GitHub project ideas by major.\n\n" +
-  "/quant · /fintech · /swe · /cyber · /data — fresh repos to build\n" +
+  "/quant · /fintech · /swe · /cyber · /data · /pm · /marketing — fresh repos to build\n" +
+  "  /swe = Python + SQL + frontend mixed · /swe sql · /swe frontend · /swe java (any language)\n" +
+  "  /data powerbi · /data tableau · /cyber d1…d8 (CISSP domains, /domains lists them)\n" +
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
   "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
