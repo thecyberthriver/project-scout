@@ -90,7 +90,7 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
 <table>
 <tr><th>Field</th><th>Choices</th><th>Example</th></tr>
 <tr><td><b>major</b></td><td>Quant, Finance / FinTech, Software Engineering, Cybersecurity, Data Analytics, Project Management, Digital Marketing</td><td><code>/scout major:Cybersecurity</code></td></tr>
-<tr><td><b>lane</b></td><td>Build this (fresh repos, default) &middot; Contribute (good first issues) &middot; Research (fresh paper code) &middot; Orgs (non-profit / public / private sector)</td><td><code>/scout lane:Contribute major:Data Analytics</code></td></tr>
+<tr><td><b>lane</b></td><td><b>Start here</b> (curated idea lists, roadmaps, beginner courses, sample apps &mdash; use this first) &middot; Build this (fresh repos, default) &middot; Contribute (good first issues) &middot; Research (fresh paper code) &middot; Orgs (non-profit / public / private sector)</td><td><code>/scout lane:Start here major:Cybersecurity</code></td></tr>
 <tr><td><b>keywords</b></td><td>Anything: a tool, a topic, a dataset</td><td><code>/scout major:Quant keywords:options pricing</code></td></tr>
 </table>
 <p>Each result shows the repo name, stars, language, a one-line description and the link. Keyword searches pull from GitHub and GitLab (GitLab rows are tagged). Results are cached for 15 minutes, so if a search says "try again shortly", wait a minute.</p>

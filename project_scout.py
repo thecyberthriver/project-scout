@@ -94,6 +94,58 @@ ORGS = {
 }
 ORG_NAME = {o: n for _, orgs in ORGS.values() for o, n in orgs.items()}
 
+# "Start here": curated, evergreen repos that give students project IDEAS and the basics to get going
+# (idea lists, roadmaps, beginner courses, sample apps). Verified live 2026-09-15. Posted once per major
+# with --starters; served on demand as /basics <major> (Telegram) and lane "Start here" (Discord).
+STARTERS = {
+    "quant": ["wilsonfreitas/awesome-quant", "stefan-jansen/machine-learning-for-trading", "je-suis-tm/quant-trading",
+              "microsoft/qlib", "QuantConnect/Lean", "ranaroussi/yfinance"],
+    "fintech": ["OpenBB-finance/OpenBB", "plaid/pattern", "stripe-samples/checkout-one-time-payments",
+                "firefly-iii/firefly-iii", "actualbudget/actual", "ranaroussi/yfinance"],
+    "swe": ["practical-tutorials/project-based-learning", "codecrafters-io/build-your-own-x", "florinpop17/app-ideas",
+            "karan/Projects", "nilbuild/developer-roadmap", "ossu/computer-science"],
+    "cyber": ["sbilly/awesome-security", "OWASP/CheatSheetSeries", "juice-shop/juice-shop", "OWASP/wstg",
+              "swisskyrepo/PayloadsAllTheThings", "mitre-attack/attack-navigator"],
+    "data": ["microsoft/Data-Science-For-Beginners", "jakevdp/PythonDataScienceHandbook", "Yorko/mlcourse.ai",
+             "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience"],
+    "pm": ["dend/awesome-product-management", "opf/openproject", "makeplane/plane", "wekan/wekan",
+           "mattermost-community/focalboard"],
+    "marketing": ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk",
+                  "n8n-io/n8n"],
+}
+STARTER_WHY = {
+    "quant": "idea list → book code with notebooks → example strategies → two real backtest engines → free market data",
+    "fintech": "open-source Bloomberg-style terminal → bank-linking sample app → payments sample → two budgeting apps to study → market data",
+    "swe": "project tutorials → build-your-own-X → app idea lists (easy/medium/hard) → roadmaps → a full CS curriculum",
+    "cyber": "tools & resources list → OWASP cheat sheets → a deliberately vulnerable app to practice on → testing guide → payloads → ATT&CK map",
+    "data": "beginner course → free textbook with notebooks → ML course → public datasets → dashboards in Python → resources list",
+    "pm": "PM resources list → three open-source PM tools to run, study or contribute to → kanban you can extend",
+    "marketing": "product analytics → two web-analytics platforms → marketing automation → newsletters → workflow automation",
+}
+
+
+def gh_repo(full_name: str) -> dict | None:
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout"}
+    if os.environ.get("GITHUB_TOKEN"):
+        headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
+    try:
+        with urllib.request.urlopen(urllib.request.Request(f"https://api.github.com/repos/{full_name}", headers=headers), timeout=30) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        print(f"{full_name}: {e.code}", file=sys.stderr)
+        return None
+
+
+def starters() -> list[tuple[str, str]]:
+    """One evergreen 'Start here' chunk per major: ideas + basics to get going."""
+    chunks = []
+    for key, (label, *_rest) in MAJORS.items():
+        repos = [r for r in (gh_repo(f) for f in STARTERS[key]) if r]
+        rows = "\n".join(render_repo(r, "build") for r in repos)
+        chunks.append((key, f"\n<b>📚 Start here — {label}: ideas &amp; basics</b>\n<i>{esc(STARTER_WHY[key])}</i>\n{rows}\n"
+                            "  💡 Pick one, read its README, then run /scout for something fresh to build on top of it."))
+    return chunks
+
 
 def org_query(orgs: dict, anchor: str = "") -> str:
     return f"{anchor} {' '.join('org:' + o for o in orgs)} good-first-issues:>0 archived:false pushed:>={ago(90)}".strip()
@@ -310,6 +362,14 @@ def self_check() -> None:
 def main() -> int:
     if "--self-check" in sys.argv:
         self_check()
+        return 0
+    if "--starters" in sys.argv:  # one-time evergreen post per major (Telegram + Discord); rerun after editing STARTERS
+        chunks = starters()
+        for m in messages([t for _, t in chunks]):
+            send(m)
+        for key, text in chunks:
+            discord(key, text)
+        print(f"posted {len(chunks)} start-here sections")
         return 0
     seen = load_seen()
     chunks = build_digest(seen)

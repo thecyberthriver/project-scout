@@ -30,7 +30,24 @@ export const LANES = {
 // a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
 const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"', pm: '"project management"', marketing: '"digital marketing"' };
 const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
-                     org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs" };
+                     org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
+                     basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start" };
+// "Start here": curated evergreen repos with project IDEAS and the basics (mirrors STARTERS in ../project_scout.py).
+export const STARTERS = {
+  quant: ["wilsonfreitas/awesome-quant", "stefan-jansen/machine-learning-for-trading", "je-suis-tm/quant-trading", "microsoft/qlib", "QuantConnect/Lean", "ranaroussi/yfinance"],
+  fintech: ["OpenBB-finance/OpenBB", "plaid/pattern", "stripe-samples/checkout-one-time-payments", "firefly-iii/firefly-iii", "actualbudget/actual", "ranaroussi/yfinance"],
+  swe: ["practical-tutorials/project-based-learning", "codecrafters-io/build-your-own-x", "florinpop17/app-ideas", "karan/Projects", "nilbuild/developer-roadmap", "ossu/computer-science"],
+  cyber: ["sbilly/awesome-security", "OWASP/CheatSheetSeries", "juice-shop/juice-shop", "OWASP/wstg", "swisskyrepo/PayloadsAllTheThings", "mitre-attack/attack-navigator"],
+  data: ["microsoft/Data-Science-For-Beginners", "jakevdp/PythonDataScienceHandbook", "Yorko/mlcourse.ai", "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience"],
+  pm: ["dend/awesome-product-management", "opf/openproject", "makeplane/plane", "wekan/wekan", "mattermost-community/focalboard"],
+  marketing: ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk", "n8n-io/n8n"],
+};
+export async function startItems(env, major) {
+  const majors = major ? [major] : Object.keys(STARTERS);
+  const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 6 : 14);
+  const items = await Promise.all(names.map((n) => ghJson(env, `https://api.github.com/repos/${n}`).catch(() => null)));
+  return items.filter(Boolean);
+}
 // Mission-driven orgs whose repos welcome outside contributors (mirrors ORGS in ../project_scout.py).
 // <= 12 orgs per sector: GitHub search queries max out at 256 chars.
 export const ORGS = {
@@ -78,7 +95,8 @@ const HELP =
   "/quant · /fintech · /swe · /cyber · /data — fresh repos to build\n" +
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
-  "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n\n" +
+  "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
+  "/basics &lt;major&gt; — start here: curated idea lists, roadmaps, beginner courses and sample apps\n\n" +
   "Add keywords to narrow: <code>/cyber honeypot</code>, <code>/oss data pandas</code>, <code>/research quant</code>.\n" +
   "Any other text = keyword search across all majors.\n\n" +
   "<i>New repos are pushed here automatically as they appear (checked every 2 h).</i>";
@@ -91,12 +109,10 @@ async function tgSend(env, chatId, text) {
   });
 }
 
-export async function search(env, q, sort) {
-  const url = "https://api.github.com/search/repositories?" +
-    new URLSearchParams({ q, sort, order: "desc", per_page: String(MAX) });
+// GitHub GET with a 15-min edge cache so a room full of students tapping /cyber costs one call, not one per tap.
+async function ghJson(env, url) {
   const headers = { accept: "application/vnd.github+json", "user-agent": "project-scout-bot" };
   if (env.GITHUB_TOKEN) headers.authorization = `Bearer ${env.GITHUB_TOKEN}`;
-  // Cache each query 15 min so a room full of students tapping /cyber costs one GitHub call, not one per tap.
   const cache = caches.default;
   const key = new Request(url, { method: "GET" });
   let r = await cache.match(key);
@@ -106,7 +122,13 @@ export async function search(env, q, sort) {
     r = new Response(await r.text(), { headers: { "content-type": "application/json", "cache-control": "s-maxage=900" } });
     await cache.put(key, r.clone());
   }
-  return (await r.json()).items || [];
+  return r.json();
+}
+
+export async function search(env, q, sort) {
+  const url = "https://api.github.com/search/repositories?" +
+    new URLSearchParams({ q, sort, order: "desc", per_page: String(MAX) });
+  return (await ghJson(env, url)).items || [];
 }
 
 // Second source for keyword searches: GitLab's public projects API (no auth). Rows are tagged "(GitLab)".
@@ -169,7 +191,7 @@ export function parse(text) {
   // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
   const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
-  lane = LANES[lane] || lane === "orgs" ? lane : LANE_ALIAS[lane];
+  lane = LANES[lane] || lane === "orgs" || lane === "start" ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
   let major = (words[0] || "").toLowerCase();
   major = MAJORS[major] ? major : ALIAS[major] || null;
@@ -196,11 +218,16 @@ async function handleUpdate(env, update) {
 
   const { lane, major, extra } = parse(t);
   if (lane === "build" && !major && !extra) return tgSend(env, chatId, HELP);
-  const laneLabel = lane === "orgs" ? "🤝 Mission-driven orgs" : LANES[lane].label;
+  const laneLabel = { orgs: "🤝 Mission-driven orgs", start: "📚 Start here — ideas & basics" }[lane] || LANES[lane].label;
   const head = `<b>${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}</b>${extra ? ` · <i>${esc(extra)}</i>` : ""}`;
   try {
     if (lane === "orgs") {
       await tgSend(env, chatId, renderOrgs(head, await orgSearch(env, terms(lane, major, extra))));
+      return;
+    }
+    if (lane === "start") {
+      await tgSend(env, chatId, render(head, "build", await startItems(env, major)) +
+        "\n\n💡 Pick one, read its README, then run a major command for something fresh to build on top of it.");
       return;
     }
     await tgSend(env, chatId, render(head, lane, await lookup(env, lane, major, extra)));

@@ -11,7 +11,7 @@
  *   DISCORD_APP_ID       General Information → Application ID
  *   optional GITHUB_TOKEN
  */
-import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs } from "./worker.js";
+import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs, startItems } from "./worker.js";
 
 const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
@@ -63,12 +63,14 @@ async function answer(env, interaction, lane, major, extra) {
   let content;
   if (lane === "build" && !major && !extra) content = HELP;
   else {
-    const laneLabel = lane === "orgs" ? "🤝 Mission-driven orgs" : LANES[lane].label;
+    const laneLabel = { orgs: "🤝 Mission-driven orgs", start: "📚 Start here — ideas & basics" }[lane] || LANES[lane].label;
     const head = `**${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}**${extra ? ` · *${extra}*` : ""}`;
     try {
       content = lane === "orgs"
         ? renderOrgs(head, await orgSearch(env, terms(lane, major, extra)), true)
-        : render(head, lane, await lookup(env, lane, major, extra), true);
+        : lane === "start"
+          ? render(head, "build", await startItems(env, major), true) + "\n\n💡 Pick one, read its README, then run `/scout` for something fresh to build on top of it."
+          : render(head, lane, await lookup(env, lane, major, extra), true);
     } catch (e) {
       content = `⚠️ ${e.message} — GitHub search is rate-limited; try again in a minute.`;
     }
@@ -90,7 +92,7 @@ export default {
     if (i.type !== 2) return json({ type: 4, data: { content: "Unsupported interaction." } });
     const o = Object.fromEntries((i.data.options || []).map((x) => [x.name, x.value]));
     if (i.data.name === "verify") return json({ type: 4, data: { content: await verifyStudent(env, i, o), flags: 64 } });
-    const lane = LANES[o.lane] || o.lane === "orgs" ? o.lane : "build";
+    const lane = LANES[o.lane] || o.lane === "orgs" || o.lane === "start" ? o.lane : "build";
     const major = MAJORS[o.major] ? o.major : null;
     ctx.waitUntil(answer(env, i, lane, major, (o.keywords || "").trim()).catch((e) => console.log("answer error", e)));
     return json({ type: 5 });                                          // deferred reply; edited by answer()
