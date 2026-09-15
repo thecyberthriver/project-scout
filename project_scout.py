@@ -76,7 +76,6 @@ ORGS = {
                                     "freeCodeCamp": "freeCodeCamp"}),
     "public": ("🏛 Public sector", {"cisagov": "CISA", "GSA": "US GSA", "18F": "18F", "usds": "US Digital Service",
                                    "nasa": "NASA", "usnistgov": "NIST", "CDCgov": "CDC",
-                                   "department-of-veterans-affairs": "US Dept of Veterans Affairs",
                                    "CityOfNewYork": "City of New York", "alphagov": "UK GDS"}),
     "private": ("🏢 Private sector", {"microsoft": "Microsoft", "google": "Google", "aws": "AWS", "IBM": "IBM",
                                      "cloudflare": "Cloudflare", "elastic": "Elastic", "grafana": "Grafana Labs",

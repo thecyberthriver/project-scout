@@ -36,7 +36,7 @@ export const ORGS = {
     datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America",
     openstreetmap: "OpenStreetMap", torproject: "Tor Project", creativecommons: "Creative Commons", freeCodeCamp: "freeCodeCamp" } },
   public: { label: "🏛 Public sector", orgs: { cisagov: "CISA", GSA: "US GSA", "18F": "18F", usds: "US Digital Service",
-    nasa: "NASA", usnistgov: "NIST", CDCgov: "CDC", "department-of-veterans-affairs": "US Dept of Veterans Affairs",
+    nasa: "NASA", usnistgov: "NIST", CDCgov: "CDC",
     CityOfNewYork: "City of New York", alphagov: "UK GDS" } },
   private: { label: "🏢 Private sector", orgs: { microsoft: "Microsoft", google: "Google", aws: "AWS", IBM: "IBM",
     cloudflare: "Cloudflare", elastic: "Elastic", grafana: "Grafana Labs", hashicorp: "HashiCorp", goldmansachs: "Goldman Sachs",
