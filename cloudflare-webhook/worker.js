@@ -33,13 +33,12 @@ const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", pa
 // <= 12 orgs per sector: GitHub search queries max out at 256 chars.
 export const ORGS = {
   nonprofit: { label: "🌱 Non-profit", orgs: { mozilla: "Mozilla", OWASP: "OWASP", wikimedia: "Wikimedia", EFForg: "EFF",
-    datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America",
-    openstreetmap: "OpenStreetMap", torproject: "Tor Project", creativecommons: "Creative Commons", freeCodeCamp: "freeCodeCamp" } },
+    datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America", torproject: "Tor Project", freeCodeCamp: "freeCodeCamp" } },
   public: { label: "🏛 Public sector", orgs: { cisagov: "CISA", GSA: "US GSA", "18F": "18F", usds: "US Digital Service",
     nasa: "NASA", usnistgov: "NIST", CDCgov: "CDC",
     CityOfNewYork: "City of New York", alphagov: "UK GDS" } },
   private: { label: "🏢 Private sector", orgs: { microsoft: "Microsoft", google: "Google", aws: "AWS", IBM: "IBM",
-    cloudflare: "Cloudflare", elastic: "Elastic", grafana: "Grafana Labs", hashicorp: "HashiCorp", goldmansachs: "Goldman Sachs",
+    cloudflare: "Cloudflare", elastic: "Elastic", goldmansachs: "Goldman Sachs",
     "man-group": "Man Group", jpmorganchase: "JPMorgan Chase", bloomberg: "Bloomberg" } },
 };
 const ORG_SECTOR = {};

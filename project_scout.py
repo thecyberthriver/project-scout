@@ -71,15 +71,14 @@ RESEARCH_ANCHOR = {"trading": '"quantitative finance"', "finance": '"financial"'
 ORGS = {
     "nonprofit": ("🌱 Non-profit", {"mozilla": "Mozilla", "OWASP": "OWASP", "wikimedia": "Wikimedia", "EFForg": "EFF",
                                     "datakind": "DataKind", "ushahidi": "Ushahidi", "hackforla": "Hack for LA",
-                                    "codeforamerica": "Code for America", "openstreetmap": "OpenStreetMap",
-                                    "torproject": "Tor Project", "creativecommons": "Creative Commons",
+                                    "codeforamerica": "Code for America",
+                                    "torproject": "Tor Project",
                                     "freeCodeCamp": "freeCodeCamp"}),
     "public": ("🏛 Public sector", {"cisagov": "CISA", "GSA": "US GSA", "18F": "18F", "usds": "US Digital Service",
                                    "nasa": "NASA", "usnistgov": "NIST", "CDCgov": "CDC",
                                    "CityOfNewYork": "City of New York", "alphagov": "UK GDS"}),
     "private": ("🏢 Private sector", {"microsoft": "Microsoft", "google": "Google", "aws": "AWS", "IBM": "IBM",
-                                     "cloudflare": "Cloudflare", "elastic": "Elastic", "grafana": "Grafana Labs",
-                                     "hashicorp": "HashiCorp", "goldmansachs": "Goldman Sachs", "man-group": "Man Group",
+                                     "cloudflare": "Cloudflare", "elastic": "Elastic", "goldmansachs": "Goldman Sachs", "man-group": "Man Group",
                                      "jpmorganchase": "JPMorgan Chase", "bloomberg": "Bloomberg"}),
 }
 ORG_NAME = {o: n for _, orgs in ORGS.values() for o, n in orgs.items()}
