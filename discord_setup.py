@@ -4,7 +4,7 @@ discord_setup.py — provision the private TLDP server in one run (rerunnable: s
 stdlib only (+ Pillow, optional, for the server icon).
 
   python discord_setup.py               # build / update everything, print secrets to set
-  python discord_setup.py --invites 45  # print 45 single-use 30-day invite links (one per student, CSV)
+  python discord_setup.py --invites 45  # print 45 single-use 7-day invite links (Discord max) (one per student, CSV)
 
 Reads DISCORD_BOT_TOKEN / DISCORD_GUILD_ID from env or ../secrets_local.py. Needs the bot invited with
 Manage Server, Manage Roles, Manage Channels, Manage Webhooks, Create Invite, Send/Manage Messages (805317681).
@@ -23,6 +23,7 @@ import io
 import json
 import os
 import sys
+import urllib.parse
 import urllib.request
 
 try:
@@ -120,11 +121,28 @@ def icon_png() -> str | None:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def staff(names: list[str]) -> int:
+    """--staff "Nii Ato" "Cristina": give the TLDP Staff role to members whose username/display name matches."""
+    role = next(r for r in api("GET", f"/guilds/{GUILD}/roles") if r["name"] == "TLDP Staff")
+    for name in names:
+        q = name.split()[0]
+        hits = api("GET", f"/guilds/{GUILD}/members/search?query={urllib.parse.quote(q)}&limit=10")
+        low = name.lower()
+        hit = next((m for m in hits if low in " ".join(filter(None, [m["user"]["username"], m["user"].get("global_name"), m.get("nick")])).lower()), None) \
+            or (hits[0] if len(hits) == 1 else None)
+        if not hit:
+            print(f"{name}: not in the server yet (send them an invite, then rerun)")
+            continue
+        api("PUT", f"/guilds/{GUILD}/members/{hit['user']['id']}/roles/{role['id']}")
+        print(f"{name}: TLDP Staff granted to @{hit['user']['username']}")
+    return 0
+
+
 def invites(n: int) -> int:
     chans = {c["name"]: c for c in api("GET", f"/guilds/{GUILD}/channels")}
     print("student_number,invite_url")
     for i in range(1, n + 1):
-        inv = api("POST", f"/channels/{chans['welcome']['id']}/invites", {"max_age": 30 * 86400, "max_uses": 1, "unique": True})
+        inv = api("POST", f"/channels/{chans['welcome']['id']}/invites", {"max_age": 7 * 86400, "max_uses": 1, "unique": True})
         print(f"{i},https://discord.gg/{inv['code']}")
     return 0
 
@@ -135,6 +153,8 @@ def main() -> int:
         return 1
     if "--invites" in sys.argv:
         return invites(int(sys.argv[sys.argv.index("--invites") + 1]))
+    if "--staff" in sys.argv:
+        return staff(sys.argv[sys.argv.index("--staff") + 1:])
     print("guild:", api("GET", f"/guilds/{GUILD}")["name"])
 
     # 1. server hardening + icon
