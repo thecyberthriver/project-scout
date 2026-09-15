@@ -184,7 +184,8 @@ def self_check() -> None:
     assert english("") and english("Agent-native backtesting") and not english("面向基本面因子研究的智能体-AI agent")
     r = {"full_name": "<b>", "html_url": "u", "stargazers_count": 1, "description": ""}
     assert "&lt;b&gt;" in render_repo(r, "build") and "good-first-issues" in render_repo(r, "oss")
-    assert "good-first-issues:>0" in LANES["oss"][3]("t", "a") and LANES["research"][3]("t", "a").startswith("a arxiv")
+    assert "good-first-issues:>0" in LANES["oss"][3]("t", "trading")
+    assert LANES["research"][3]("t", "trading").startswith('"quantitative finance" arxiv')
     print("self-check ok")
 
 
