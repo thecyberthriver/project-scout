@@ -77,3 +77,12 @@ verification, @everyone stripped of Create Invite, one webhook per feed channel
 (printed as the `DISCORD_WEBHOOKS` secret), a 45-use / 7-day invite and a pinned
 welcome post. With `DISCORD_WEBHOOKS` set, each 2-hourly section lands in its own
 channel (#quant-projects … #open-source-orgs).
+
+### Student loop (Discord)
+
+`discord_weekly.py` + `.github/workflows/weekly.yml`: Friday it posts the 🙋 claims of the week
+to #find-a-team, a leaderboard of links posted in #show-your-work, and open hackathons (Devpost)
+to #announcements; Monday it reminds you (private Telegram) to pin a "pick of the week".
+`/verify name: major:` (Discord) matches the student against the `ROSTER` Worker secret (JSON
+array of names — never commit it) and grants the "TLDP Student" + major roles that unlock the
+gated categories. `python discord_setup.py --invites 45` prints single-use invite links.

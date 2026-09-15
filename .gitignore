@@ -4,3 +4,4 @@ seen.json
 .wrangler/
 docs/*.pdf
 docs/*_guide.html
+roster_local.json

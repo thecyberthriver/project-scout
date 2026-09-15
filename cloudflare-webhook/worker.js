@@ -12,7 +12,7 @@
  */
 export const MAJORS = {
   quant:   { label: "📈 Quant",                anchor: "trading",  terms: '"quantitative finance" OR backtesting OR "algorithmic trading" OR "options pricing" OR "portfolio optimization"' },
-  fintech: { label: "💳 Finance / FinTech",    anchor: "finance",  terms: 'fintech OR payments OR "personal finance" OR "open banking" OR budgeting OR "stock market"' },
+  fintech: { label: "💳 Finance / FinTech",    anchor: "finance",  terms: 'fintech OR payments OR "personal finance" OR "open banking" OR "stock market" OR "financial data"' },
   swe:     { label: "💻 Software Engineering", anchor: "software", terms: '"build your own" OR "from scratch" OR "project ideas" OR "portfolio project" OR "full stack"' },
   cyber:   { label: "🔐 Cybersecurity",        anchor: "security", terms: 'cybersecurity OR "penetration testing" OR "threat detection" OR "malware analysis" OR "security tool" OR CTF' },
   data:    { label: "📊 Data Analytics",       anchor: "data",     terms: '"data analytics" OR "data analysis" OR "exploratory data analysis" OR "data pipeline" OR "data visualization"' },
@@ -25,7 +25,7 @@ const ago = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
 export const LANES = {
   build:    { label: "🧪 Build this", sort: "stars",   q: (t) => `${t} created:>=${ago(90)} stars:>=10 archived:false` },
   oss:      { label: "🤝 Contribute", sort: "updated", q: (t) => `${t} good-first-issues:>0 stars:>=50 pushed:>=${ago(30)} archived:false` },
-  research: { label: "🔬 Research",  sort: "stars",   q: (t) => `${t} arxiv in:readme,description created:>=${ago(90)} stars:>=5 archived:false` },
+  research: { label: "🔬 Research",  sort: "stars",   q: (t) => `${t} arxiv in:readme,description created:>=${ago(90)} stars:>=20 archived:false` },
 };
 // a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
 const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"', pm: '"project management"', marketing: '"digital marketing"' };
@@ -35,10 +35,10 @@ const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", pa
 // <= 12 orgs per sector: GitHub search queries max out at 256 chars.
 export const ORGS = {
   nonprofit: { label: "🌱 Non-profit", orgs: { mozilla: "Mozilla", OWASP: "OWASP", wikimedia: "Wikimedia", EFForg: "EFF",
-    datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America", torproject: "Tor Project", freeCodeCamp: "freeCodeCamp" } },
+    datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America", torproject: "Tor Project", freeCodeCamp: "freeCodeCamp", BetaNYC: "BetaNYC (NYC civic tech)" } },
   public: { label: "🏛 Public sector", orgs: { cisagov: "CISA", GSA: "US GSA", "18F": "18F", usds: "US Digital Service",
     nasa: "NASA", usnistgov: "NIST", CDCgov: "CDC",
-    CityOfNewYork: "City of New York", alphagov: "UK GDS" } },
+    CityOfNewYork: "City of New York", NYCPlanning: "NYC Dept of City Planning", alphagov: "UK GDS" } },
   private: { label: "🏢 Private sector", orgs: { microsoft: "Microsoft", google: "Google", aws: "AWS", IBM: "IBM",
     cloudflare: "Cloudflare", elastic: "Elastic", goldmansachs: "Goldman Sachs",
     "man-group": "Man Group", jpmorganchase: "JPMorgan Chase", bloomberg: "Bloomberg" } },
@@ -116,7 +116,7 @@ async function gitlab(kw) {
   try {
     const r = await fetch(url, { headers: { "user-agent": "project-scout-bot" } });
     if (!r.ok) return [];
-    return (await r.json()).filter((p) => p.description).map((p) => ({
+    return (await r.json()).filter((p) => p.description && (p.star_count || 0) >= 5).map((p) => ({
       full_name: `${p.path_with_namespace} (GitLab)`, html_url: p.web_url, stargazers_count: p.star_count || 0,
       description: p.description, language: null }));
   } catch { return []; }
@@ -127,7 +127,18 @@ export async function lookup(env, lane, major, extra) {
   const gh = search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
   const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
   const [a, b] = await Promise.all([gh, gl]);
-  return a.concat(b).slice(0, MAX + 3);
+  const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
+  return spamFree.concat(b).slice(0, MAX + 3);
+}
+// Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors (typed keywords override).
+const AI_SPAM = /\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b/i;
+const AI_OK = new Set(["swe", "data"]);
+// Rough on-ramp hint from repo size (KB) and stars — so freshmen don't pick a 20k-star monorepo.
+export function difficulty(it) {
+  const size = it.size || 0, stars = it.stargazers_count || 0;
+  if (size < 5000 && stars < 500) return "🟢 starter";
+  if (size < 50000 && stars < 5000) return "🟡 intermediate";
+  return "🔴 advanced";
 }
 
 // md=true renders Discord markdown (<url> suppresses link embeds) instead of Telegram HTML.
@@ -140,7 +151,7 @@ export function render(head, lane, items, md = false) {
     if (d.length > 140) d = d.slice(0, 140) + "…";
     const lang = it.language ? ` · ${e(it.language)}` : "";
     const tail = lane === "oss" ? `\n  👉 ${link("open good-first-issues", it.html_url + GFI)}` : "";
-    return `• ${link(it.full_name, it.html_url)} ⭐${it.stargazers_count}${lang}\n  ${e(d) || "(no description)"}${tail}`;
+    return `• ${link(it.full_name, it.html_url)} ⭐${it.stargazers_count}${lang} · ${difficulty(it)}\n  ${e(d) || "(no description)"}${tail}`;
   });
   return `${head}\n${rows.join("\n")}`;
 }
@@ -162,7 +173,7 @@ export function parse(text) {
 export function terms(lane, major, extra) {
   if (lane === "build" && major && !extra) return MAJORS[major].terms;
   const kw = extra ? `${extra} in:name,description,readme` : "";
-  const anchor = major ? (lane === "research" ? RESEARCH_ANCHOR[major] : MAJORS[major].anchor) : "";
+  const anchor = major ? (lane === "research" ? `${RESEARCH_ANCHOR[major]} ${MAJORS[major].anchor}` : MAJORS[major].anchor) : "";
   return `${anchor} ${kw}`.trim();
 }
 

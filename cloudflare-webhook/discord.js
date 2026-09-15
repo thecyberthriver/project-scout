@@ -30,6 +30,35 @@ async function verify(request, body, env) {
 
 const json = (o) => new Response(JSON.stringify(o), { headers: { "content-type": "application/json" } });
 
+/**
+ * /verify name:<full name> major:<choice> — second gate after the invite link.
+ * Secrets: ROSTER (JSON array of the 45 student names), DISCORD_BOT_TOKEN, DISCORD_GUILD_ID,
+ *          STUDENT_ROLE_ID, MAJOR_ROLES (JSON {quant: roleId, ...}). Matching is case/punctuation-insensitive
+ *          and accepts "First Last" against roster entries like "First M. Last".
+ */
+const norm = (s) => String(s).toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+function rosterMatch(name, roster) {
+  const n = norm(name).split(" ");
+  if (n.length < 2) return null;
+  return roster.find((r) => { const p = norm(r).split(" "); return p[0] === n[0] && p[p.length - 1] === n[n.length - 1]; }) || null;
+}
+async function verifyStudent(env, i, o) {
+  const roster = JSON.parse(env.ROSTER || "[]");
+  const userId = i.member?.user?.id;
+  if (!userId || !env.STUDENT_ROLE_ID) return "Verification isn't set up yet — ask TLDP staff.";
+  const hit = rosterMatch(o.name || "", roster);
+  if (!hit) return `❌ "${o.name}" isn't on the TLDP roster. Use the name TLDP has on file, or ask staff in #introductions.`;
+  const roles = [env.STUDENT_ROLE_ID];
+  const majorRoles = JSON.parse(env.MAJOR_ROLES || "{}");
+  if (o.major && majorRoles[o.major]) roles.push(majorRoles[o.major]);
+  for (const r of roles) {
+    const res = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${userId}/roles/${r}`, {
+      method: "PUT", headers: { authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "user-agent": "project-scout-bot" } });
+    if (!res.ok) return `⚠️ Matched ${hit} but Discord refused the role (HTTP ${res.status}). Ask staff.`;
+  }
+  return `✅ Welcome, ${hit}! You now have the TLDP Student role${o.major ? ` and the ${MAJORS[o.major]?.label || o.major} role` : ""}. The feed and collaboration channels are unlocked.`;
+}
+
 async function answer(env, interaction, lane, major, extra) {
   let content;
   if (lane === "build" && !major && !extra) content = HELP;
@@ -60,6 +89,7 @@ export default {
     if (i.type === 1) return json({ type: 1 });                       // PING → PONG (endpoint verification)
     if (i.type !== 2) return json({ type: 4, data: { content: "Unsupported interaction." } });
     const o = Object.fromEntries((i.data.options || []).map((x) => [x.name, x.value]));
+    if (i.data.name === "verify") return json({ type: 4, data: { content: await verifyStudent(env, i, o), flags: 64 } });
     const lane = LANES[o.lane] || o.lane === "orgs" ? o.lane : "build";
     const major = MAJORS[o.major] ? o.major : null;
     ctx.waitUntil(answer(env, i, lane, major, (o.keywords || "").trim()).catch((e) => console.log("answer error", e)));

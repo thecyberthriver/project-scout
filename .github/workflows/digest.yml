@@ -2,11 +2,11 @@ name: Project Scout digest
 
 on:
   schedule:
-    - cron: "17 */2 * * *"   # every 2 h (off-the-hour slots run more reliably); sends only when something is new
+    - cron: "17 */6 * * *"   # every 6 h (off-the-hour slots run more reliably); sends only when something is new
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write   # seen.json is committed back (Actions cache can be evicted -> old repos would re-send)
 
 concurrency:
   group: project-scout
@@ -20,13 +20,6 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
-      - name: Restore de-dupe cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
-        with:
-          path: seen.json
-          key: project-seen-${{ github.run_id }}
-          restore-keys: |
-            project-seen-
       - run: python project_scout.py --self-check
       - name: Search GitHub and send digest
         env:
@@ -38,3 +31,18 @@ jobs:
           DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
           GITHUB_TOKEN: ${{ github.token }}
         run: python project_scout.py
+      - name: Commit de-dupe state
+        run: |
+          git config user.name "project-scout-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen.json
+          git diff --cached --quiet || (git commit -m "chore: update seen.json [skip ci]" && git pull --rebase && git push)
+      - name: Alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="❌ Project Scout digest FAILED: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

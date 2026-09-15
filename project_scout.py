@@ -33,7 +33,7 @@ MAJORS = {
               '"quantitative finance" OR backtesting OR "algorithmic trading" OR "options pricing" OR "portfolio optimization"',
               "trading", "https://github.com/wilsonfreitas/awesome-quant"),
     "fintech": ("💳 Finance / FinTech",
-                'fintech OR payments OR "personal finance" OR "open banking" OR budgeting OR "stock market"',
+                'fintech OR payments OR "personal finance" OR "open banking" OR "stock market" OR "financial data"',
                 "finance", "https://github.com/topics/fintech"),
     "swe": ("💻 Software Engineering",
             '"build your own" OR "from scratch" OR "project ideas" OR "portfolio project" OR "full stack"',
@@ -60,13 +60,16 @@ def ago(days: int) -> str:
 # lane -> (label, picks per major, sort, query builder(terms, anchor))
 # GitHub search has no parentheses, so only the build lane uses the OR list; others use the anchor word.
 LANES = {
-    "build": ("🧪 Build this", 3, "stars",
+    "build": ("🧪 Build this", 2, "stars",
               lambda terms, anchor: f"{terms} created:>={ago(14)} stars:>=10 archived:false"),
     "oss": ("🤝 Contribute — open good-first-issues", 2, "updated",
             lambda terms, anchor: f"{anchor} good-first-issues:>0 stars:>=50 pushed:>={ago(30)} archived:false"),
     "research": ("🔬 Research — fresh paper code (cites arXiv)", 2, "stars",
-                 lambda terms, anchor: f"{RESEARCH_ANCHOR[anchor]} arxiv in:readme,description created:>={ago(30)} stars:>=5 archived:false"),
+                 lambda terms, anchor: f"{RESEARCH_ANCHOR[anchor]} {anchor} arxiv in:readme,description created:>={ago(30)} stars:>=20 archived:false"),
 }
+# Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors.
+AI_SPAM = __import__("re").compile(r"\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b", __import__("re").I)
+AI_OK = {"swe", "data"}
 # a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
 RESEARCH_ANCHOR = {"trading": '"quantitative finance"', "finance": '"financial"', "software": '"software engineering"',
                    "security": "cybersecurity", "data": '"data analysis"', '"project management"': '"project management"',
@@ -80,10 +83,11 @@ ORGS = {
                                     "datakind": "DataKind", "ushahidi": "Ushahidi", "hackforla": "Hack for LA",
                                     "codeforamerica": "Code for America",
                                     "torproject": "Tor Project",
-                                    "freeCodeCamp": "freeCodeCamp"}),
+                                    "freeCodeCamp": "freeCodeCamp", "BetaNYC": "BetaNYC (NYC civic tech)"}),
     "public": ("🏛 Public sector", {"cisagov": "CISA", "GSA": "US GSA", "18F": "18F", "usds": "US Digital Service",
                                    "nasa": "NASA", "usnistgov": "NIST", "CDCgov": "CDC",
-                                   "CityOfNewYork": "City of New York", "alphagov": "UK GDS"}),
+                                   "CityOfNewYork": "City of New York", "NYCPlanning": "NYC Dept of City Planning",
+                                   "alphagov": "UK GDS"}),
     "private": ("🏢 Private sector", {"microsoft": "Microsoft", "google": "Google", "aws": "AWS", "IBM": "IBM",
                                      "cloudflare": "Cloudflare", "elastic": "Elastic", "goldmansachs": "Goldman Sachs", "man-group": "Man Group",
                                      "jpmorganchase": "JPMorgan Chase", "bloomberg": "Bloomberg"}),
@@ -115,7 +119,7 @@ def load_seen() -> dict:
     except (OSError, ValueError):
         return {}
     cutoff = ago(SEEN_TTL_DAYS)
-    return {k: v for k, v in seen.items() if v >= cutoff}
+    return {k: v for k, v in seen.items() if k == "_meta" or v >= cutoff}
 
 
 def english(desc: str) -> bool:
@@ -123,10 +127,22 @@ def english(desc: str) -> bool:
     return not desc or sum(ord(c) < 128 for c in desc) / len(desc) >= 0.7
 
 
-def pick(items: list[dict], seen: dict, n: int) -> list[dict]:
+def difficulty(it: dict) -> str:
+    """Rough on-ramp hint from repo size (KB) and stars — so freshmen don't pick a 20k-star monorepo."""
+    size, stars = it.get("size") or 0, it.get("stargazers_count") or 0
+    if size < 5000 and stars < 500:
+        return "🟢 starter"
+    if size < 50000 and stars < 5000:
+        return "🟡 intermediate"
+    return "🔴 advanced"
+
+
+def pick(items: list[dict], seen: dict, n: int, major: str = "") -> list[dict]:
     out = []
     for it in items:
         if it["full_name"] in seen or not english(it.get("description") or ""):
+            continue
+        if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
             continue
         seen[it["full_name"]] = date.today().isoformat()
         out.append(it)
@@ -147,7 +163,7 @@ def render_repo(it: dict, lane: str) -> str:
     desc = desc[:140] + "…" if len(desc) > 140 else desc
     lang = f" · {it['language']}" if it.get("language") else ""
     tail = f'\n  👉 <a href="{it["html_url"]}{GFI}">open good-first-issues</a>' if lane == "oss" else ""
-    return (f'• <a href="{it["html_url"]}">{esc(it["full_name"])}</a> ⭐{it["stargazers_count"]}{lang}\n'
+    return (f'• <a href="{it["html_url"]}">{esc(it["full_name"])}</a> ⭐{it["stargazers_count"]}{lang} · {difficulty(it)}\n'
             f"  {esc(desc) or '(no description)'}{tail}")
 
 
@@ -166,7 +182,7 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
         parts = []
         for lane, (lane_label, n, sort, q) in LANES.items():
             try:
-                picks = pick(gh_search(q(terms, anchor), sort), seen, n)
+                picks = pick(gh_search(q(terms, anchor), sort), seen, n, key)
             except Exception as e:  # one bad query must not kill the run
                 print(f"{key}/{lane}: {e}", file=sys.stderr)
                 continue
@@ -231,13 +247,35 @@ def discord(key: str, text: str) -> None:
     if not url:
         return
     md = to_markdown(text).strip()
+    title = md.splitlines()[0].replace("*", "")[:60] + f" · {datetime.now():%b %d %H:%M}"
+    thread = None  # feed channels are forums: the first part opens a post, later parts reply inside it
     for part in [md[i:i + 1900] for i in range(0, len(md), 1900)]:  # Discord cap is 2000 chars
-        req = urllib.request.Request(url, data=json.dumps({"content": part}).encode(),
+        body = {"content": part}
+        if thread is None:
+            body["thread_name"] = title
+        u = url + ("?wait=true" if thread is None else f"?wait=true&thread_id={thread}")
+        req = urllib.request.Request(u, data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json", "User-Agent": "project-scout"})
         try:
-            urllib.request.urlopen(req, timeout=30)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                thread = json.load(r).get("channel_id")
         except urllib.error.HTTPError as e:
-            print(f"discord {e.code} for {key}: {e.read()[:200].decode(errors='replace')}", file=sys.stderr)
+            err = e.read()[:200].decode(errors="replace")
+            if e.code == 400 and "thread_name" in err:  # plain text channel (single-channel DISCORD_WEBHOOK_URL)
+                body.pop("thread_name", None)
+                urllib.request.urlopen(urllib.request.Request(url, data=json.dumps(body).encode(),
+                                       headers={"Content-Type": "application/json", "User-Agent": "project-scout"}), timeout=30)
+                thread = 0
+            else:
+                print(f"discord {e.code} for {key}: {err}", file=sys.stderr)
+                return
+
+
+def alert(text: str) -> None:
+    """Ops alert to YOUR private bot only (never the campus channel / Discord)."""
+    body = json.dumps({"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text}).encode()
+    urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage",
+                                                  data=body, headers={"Content-Type": "application/json"}), timeout=30)
 
 
 def messages(chunks: list[str], limit: int = 3900) -> list[str]:
@@ -261,7 +299,10 @@ def self_check() -> None:
     r = {"full_name": "<b>", "html_url": "u", "stargazers_count": 1, "description": ""}
     assert "&lt;b&gt;" in render_repo(r, "build") and "good-first-issues" in render_repo(r, "oss")
     assert "good-first-issues:>0" in LANES["oss"][3]("t", "trading")
-    assert LANES["research"][3]("t", "trading").startswith('"quantitative finance" arxiv')
+    assert LANES["research"][3]("t", "trading").startswith('"quantitative finance" trading arxiv')
+    assert pick([{"full_name": "x/gpt-agent", "description": "an LLM agent"}, {"full_name": "y/scanner", "description": "port scanner"}], {}, 5, "cyber") \
+        == [{"full_name": "y/scanner", "description": "port scanner"}]
+    assert difficulty({"size": 100, "stargazers_count": 10}) == "🟢 starter" and difficulty({"size": 99999, "stargazers_count": 10}) == "🔴 advanced"
     print("self-check ok")
 
 
@@ -279,6 +320,13 @@ def main() -> int:
         send(m)
     for key, text in chunks:  # Discord: one post per section, into that section's channel
         discord(key, text)
+    meta = seen.pop("_meta", {}) if isinstance(seen.get("_meta"), dict) else {}
+    now = datetime.now()
+    if chunks:
+        meta["last_sent"] = now.isoformat(timespec="minutes")
+    elif meta.get("last_sent") and now - datetime.fromisoformat(meta["last_sent"]) > timedelta(hours=48):
+        alert(f"⚠️ Project Scout has posted nothing since {meta['last_sent']} — check the Actions log / GitHub search terms.")
+    seen["_meta"] = meta
     json.dump(seen, open(SEEN, "w"), indent=0)
     print(f"sent {len(msgs)} message(s) at {datetime.now():%Y-%m-%d %H:%M}")
     return 0

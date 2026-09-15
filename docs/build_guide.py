@@ -49,10 +49,12 @@ HTML = f"""
   <li>Recommended: Settings &rarr; My Account &rarr; enable two-factor authentication.</li>
 </ol>
 
-<h2>2. Join the TLDP server</h2>
+<h2>2. Join the TLDP server and unlock it</h2>
 <ol>
   <li>While signed in, open this link: <b>{INVITE}</b></li>
-  <li>Click <b>Accept Invite</b>. The server "TLDP_2026_2027" appears in the left rail (the column of round icons).</li>
+  <li>Click <b>Accept Invite</b>. The server "TLDP_2026_2027" appears in the left rail (the column of round icons). You will only see the START HERE channels at first.</li>
+  <li>In any channel, type <code>/verify name:Your Full Name major:Your Major</code> and press Enter. Use the name TLDP has on file. The bot checks the TLDP roster and gives you the <b>TLDP Student</b> role plus your major role. All channels unlock immediately.</li>
+  <li>If the bot says your name is not on the roster, post in <b>#introductions</b> and staff will let you in by hand.</li>
   <li>If Discord asks you to wait 10 minutes before posting, that is the server's verification level. Read #welcome meanwhile.</li>
   <li>Post one line in <b>#introductions</b>: name, major, and what you want to build this semester.</li>
 </ol>
@@ -65,19 +67,19 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
 <table>
 <tr><th>Category</th><th>Channel</th><th>What it is for</th></tr>
 <tr><td rowspan="3">START HERE</td><td>#welcome</td><td>Rules and how the bot works. Read first.</td></tr>
-<tr><td>#announcements</td><td>Staff posts only. Turn notifications on for this one.</td></tr>
+<tr><td>#announcements</td><td>Staff posts, the weekly "pick of the week", and hackathons closing soon (Fridays). Turn notifications on for this one.</td></tr>
 <tr><td>#introductions</td><td>Say hi: name, major, goal.</td></tr>
-<tr><td rowspan="8">PROJECT SCOUT FEED</td><td>#data-analytics</td><td rowspan="7">Every 2 hours the bot drops fresh GitHub repos for that major: things to build, open-source repos with open <i>good first issue</i> tickets, and brand-new paper code. Follow the channel for your major; peek at others.</td></tr>
-<tr><td>#swe</td></tr>
-<tr><td>#cybersecurity</td></tr>
-<tr><td>#quant</td></tr>
-<tr><td>#finance-fintech</td></tr>
-<tr><td>#project-management</td></tr>
-<tr><td>#digital-marketing</td></tr>
-<tr><td>#open-source-orgs</td><td>Non-profit, public-sector and company repos that welcome contributors. Each post includes a LinkedIn link and a ready-to-paste resume line.</td></tr>
+<tr><td rowspan="8">PROJECT SCOUT FEED<br/><span class="small">(forums: each drop is its own post)</span></td><td>📊 data-analytics</td><td rowspan="7">Every 6 hours the bot opens a new post with fresh GitHub repos for that major: things to build, open-source repos with open <i>good first issue</i> tickets, and brand-new paper code. Each repo is tagged 🟢 starter, 🟡 intermediate or 🔴 advanced. Open the post to discuss it. <b>React 🙋 on a post to claim it</b>; every Friday the bot lists who claimed what in #find-a-team so you can team up.</td></tr>
+<tr><td>💻 swe</td></tr>
+<tr><td>🔐 cybersecurity</td></tr>
+<tr><td>📈 quant</td></tr>
+<tr><td>💳 finance-fintech</td></tr>
+<tr><td>📋 project-management</td></tr>
+<tr><td>📣 digital-marketing</td></tr>
+<tr><td>🤝 open-source-orgs</td><td>Non-profit, public-sector and company repos that welcome contributors. Each post includes a LinkedIn link and a ready-to-paste resume line.</td></tr>
 <tr><td rowspan="5">COLLABORATE</td><td>#scout-search</td><td>Search on demand with <code>/scout</code> (see section 4).</td></tr>
 <tr><td>#find-a-team</td><td>Post the repo you picked and who you need. Teams of 2 to 4 work best.</td></tr>
-<tr><td>#show-your-work</td><td>Merged pull requests, demos, and the resume line you earned.</td></tr>
+<tr><td>#show-your-work</td><td>Merged pull requests, demos, and the resume line you earned. Every Friday the bot posts a leaderboard of who shared the most links here.</td></tr>
 <tr><td>#help</td><td>Stuck on git, a pull request, or setup? Ask here.</td></tr>
 <tr><td>#general-chat</td><td>Everything else.</td></tr>
 <tr><td>STUDY ROOMS</td><td>Study Room 1 / 2</td><td>Voice rooms for co-working. Mute when you are not talking.</td></tr>
@@ -101,7 +103,27 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
   <li><b>When it merges:</b> post the PR in #show-your-work and add the resume line from #open-source-orgs to your resume, for example "Open-Source Contributor, NASA (osal)".</li>
 </ol>
 
-<h2>5. House rules</h2>
+<h2>5. Putting it on your resume and LinkedIn</h2>
+<p>An open-source contribution counts as experience when it is specific and verifiable. Use this shape, one line per project, newest first, under a heading like <b>Open-Source Contributions</b> or inside <b>Projects</b>:</p>
+<div class="box">
+<b>Open-Source Contributor, OWASP (wstg)</b> &nbsp;·&nbsp; Sep 2026 – present<br/>
+&bull; Fixed 3 documentation and test issues in the Web Security Testing Guide (Python, Markdown); 2 pull requests merged by maintainers.<br/>
+&bull; github.com/OWASP/wstg/pulls?q=author:yourhandle
+</div>
+<div class="box">
+<b>Open-Source Contributor, NASA (cFS)</b> &nbsp;·&nbsp; Oct 2026<br/>
+&bull; Resolved a "good first issue" in the Core Flight System build scripts (C, CMake); added a regression test; merged after review.<br/>
+&bull; Skills shown: reading a large C codebase, Git workflow, code review etiquette.
+</div>
+<ul>
+  <li>Say what you did in numbers: pull requests merged, issues closed, tests added.</li>
+  <li>Name the language and the tool. Recruiters search resumes for exact words like "Python", "Git", "CMake".</li>
+  <li>Link the pull request list. That link is proof no interviewer can argue with.</li>
+  <li>On LinkedIn: add the project under <b>Projects</b>, link the repo, and post a two-line update when a pull request merges. Follow the organization's LinkedIn page from the link in #open-source-orgs and mention them in the post.</li>
+  <li>Never claim more than the merged work. One real merged pull request beats five "in progress".</li>
+</ul>
+
+<h2>6. House rules</h2>
 <ul>
   <li>Be the colleague you would want. No harassment, no spam, no sharing of the invite link.</li>
   <li>Use real names or recognizable display names. Staff may remove unrecognized accounts.</li>
@@ -109,9 +131,10 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
   <li>Problems with the server or the bot: post in #help or message a member with the <b>TLDP Staff</b> role.</li>
 </ul>
 
-<h2>6. Quick fixes</h2>
+<h2>7. Quick fixes</h2>
 <table>
 <tr><th>Symptom</th><th>Fix</th></tr>
+<tr><td>I only see #welcome, #announcements and #introductions</td><td>You have not verified yet. Run <code>/verify name:Your Full Name</code>. Still locked? Post in #introductions.</td></tr>
 <tr><td>Invite says "invalid or expired"</td><td>The 7-day link expired or 45 uses were reached. Ask your TLDP lead for a fresh link.</td></tr>
 <tr><td>Cannot post</td><td>Verify your email (Settings &rarr; My Account), then wait 10 minutes after joining.</td></tr>
 <tr><td><code>/scout</code> does not appear when typing</td><td>Make sure you are typing in a text channel inside TLDP_2026_2027, then type the slash and wait a second for the menu.</td></tr>

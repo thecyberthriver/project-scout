@@ -28,6 +28,14 @@ LANES = [("Build this (fresh repos)", "build"), ("Contribute (good first issues)
          ("Research (fresh paper code)", "research"),
          ("Orgs (non-profit / public / private sector, resume-ready)", "orgs")]
 COMMANDS = [{
+    "name": "verify",
+    "description": "Unlock the server: match your name against the TLDP roster",
+    "options": [
+        {"type": 3, "name": "name", "description": "Your full name as TLDP has it on file", "required": True},
+        {"type": 3, "name": "major", "description": "Your major (gives you the @major role)", "required": False,
+         "choices": [{"name": n, "value": v} for n, v in MAJORS]},
+    ],
+}, {
     "name": "scout",
     "description": "GitHub project ideas, open-source issues and paper code by major",
     "options": [
