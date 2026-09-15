@@ -11,7 +11,7 @@
  *   DISCORD_APP_ID       General Information → Application ID
  *   optional GITHUB_TOKEN
  */
-import { MAJORS, LANES, search, render, terms } from "./worker.js";
+import { MAJORS, LANES, search, render, terms, orgSearch, renderOrgs } from "./worker.js";
 
 const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
@@ -34,9 +34,12 @@ async function answer(env, interaction, lane, major, extra) {
   let content;
   if (lane === "build" && !major && !extra) content = HELP;
   else {
-    const head = `**${LANES[lane].label} · ${major ? MAJORS[major].label : "🔎 All majors"}**${extra ? ` · *${extra}*` : ""}`;
+    const laneLabel = lane === "orgs" ? "🤝 Mission-driven orgs" : LANES[lane].label;
+    const head = `**${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}**${extra ? ` · *${extra}*` : ""}`;
     try {
-      content = render(head, lane, await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort), true);
+      content = lane === "orgs"
+        ? renderOrgs(head, await orgSearch(env, terms(lane, major, extra)), true)
+        : render(head, lane, await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort), true);
     } catch (e) {
       content = `⚠️ ${e.message} — GitHub search is rate-limited; try again in a minute.`;
     }
@@ -57,7 +60,7 @@ export default {
     if (i.type === 1) return json({ type: 1 });                       // PING → PONG (endpoint verification)
     if (i.type !== 2) return json({ type: 4, data: { content: "Unsupported interaction." } });
     const o = Object.fromEntries((i.data.options || []).map((x) => [x.name, x.value]));
-    const lane = LANES[o.lane] ? o.lane : "build";
+    const lane = LANES[o.lane] || o.lane === "orgs" ? o.lane : "build";
     const major = MAJORS[o.major] ? o.major : null;
     ctx.waitUntil(answer(env, i, lane, major, (o.keywords || "").trim()).catch((e) => console.log("answer error", e)));
     return json({ type: 5 });                                          // deferred reply; edited by answer()

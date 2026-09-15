@@ -65,6 +65,34 @@ LANES = {
 RESEARCH_ANCHOR = {"trading": '"quantitative finance"', "finance": '"financial"', "software": '"software engineering"',
                    "security": "cybersecurity", "data": '"data analysis"'}
 
+# Mission-driven orgs whose GitHub repos welcome outside contributors (good-first-issues) — resume-ready experience.
+# Each GitHub org -> display name. LinkedIn is login-walled, so rows link to a LinkedIn company search, not a scrape.
+# Keep each sector <= 12 orgs: GitHub search queries max out at 256 chars.
+ORGS = {
+    "nonprofit": ("🌱 Non-profit", {"mozilla": "Mozilla", "OWASP": "OWASP", "wikimedia": "Wikimedia", "EFForg": "EFF",
+                                    "datakind": "DataKind", "ushahidi": "Ushahidi", "hackforla": "Hack for LA",
+                                    "codeforamerica": "Code for America", "openstreetmap": "OpenStreetMap",
+                                    "torproject": "Tor Project", "creativecommons": "Creative Commons",
+                                    "freeCodeCamp": "freeCodeCamp"}),
+    "public": ("🏛 Public sector", {"cisagov": "CISA", "GSA": "US GSA", "18F": "18F", "usds": "US Digital Service",
+                                   "nasa": "NASA", "usnistgov": "NIST", "CDCgov": "CDC",
+                                   "department-of-veterans-affairs": "US Dept of Veterans Affairs",
+                                   "CityOfNewYork": "City of New York", "alphagov": "UK GDS"}),
+    "private": ("🏢 Private sector", {"microsoft": "Microsoft", "google": "Google", "aws": "AWS", "IBM": "IBM",
+                                     "cloudflare": "Cloudflare", "elastic": "Elastic", "grafana": "Grafana Labs",
+                                     "hashicorp": "HashiCorp", "goldmansachs": "Goldman Sachs", "man-group": "Man Group",
+                                     "jpmorganchase": "JPMorgan Chase", "bloomberg": "Bloomberg"}),
+}
+ORG_NAME = {o: n for _, orgs in ORGS.values() for o, n in orgs.items()}
+
+
+def org_query(orgs: dict, anchor: str = "") -> str:
+    return f"{anchor} {' '.join('org:' + o for o in orgs)} good-first-issues:>0 archived:false pushed:>={ago(90)}".strip()
+
+
+def linkedin(name: str) -> str:
+    return "https://www.linkedin.com/search/results/companies/?keywords=" + urllib.parse.quote(name)
+
 
 def gh_search(q: str, sort: str = "stars", n: int = 15) -> list[dict]:
     url = "https://api.github.com/search/repositories?" + urllib.parse.urlencode(
@@ -118,6 +146,14 @@ def render_repo(it: dict, lane: str) -> str:
             f"  {esc(desc) or '(no description)'}{tail}")
 
 
+def render_org(it: dict, sector_label: str) -> str:
+    org = it["full_name"].split("/")[0]
+    name = ORG_NAME.get(org, org)
+    return (render_repo(it, "oss") +
+            f'\n  🏷 {sector_label} · {esc(name)} · <a href="{linkedin(name)}">LinkedIn</a>'
+            f'\n  📝 Resume: Open-Source Contributor, {esc(name)} ({esc(it["full_name"].split("/")[1])})')
+
+
 def build_digest(seen: dict) -> list[str]:
     """One chunk per major that has unseen repos; empty list = nothing new, send nothing."""
     chunks = []
@@ -133,6 +169,18 @@ def build_digest(seen: dict) -> list[str]:
                 parts.append(f"<i>{lane_label}</i>\n" + "\n".join(render_repo(p, lane) for p in picks))
         if parts:
             chunks.append(f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>')
+    parts = []
+    for sector, (sector_label, orgs) in ORGS.items():
+        try:
+            picks = pick(gh_search(org_query(orgs), "updated"), seen, 2)
+        except Exception as e:
+            print(f"orgs/{sector}: {e}", file=sys.stderr)
+            continue
+        parts += [render_org(p, sector_label) for p in picks]
+    if parts:
+        chunks.append("\n<b>🤝 Contribute to mission-driven orgs — resume-ready experience</b>\n" + "\n".join(parts) +
+                      '\n  🔎 <a href="https://www.linkedin.com/jobs/search/?keywords=%22open%20source%22%20volunteer">'
+                      "open-source volunteer roles on LinkedIn</a>")
     if not chunks:
         return []
     chunks.insert(0, "<b>🧪 Project Scout — new on GitHub</b>\n"

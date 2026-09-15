@@ -27,7 +27,46 @@ export const LANES = {
 };
 // a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
 const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"' };
-const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build" };
+const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
+                     org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs" };
+// Mission-driven orgs whose repos welcome outside contributors (mirrors ORGS in ../project_scout.py).
+// <= 12 orgs per sector: GitHub search queries max out at 256 chars.
+export const ORGS = {
+  nonprofit: { label: "🌱 Non-profit", orgs: { mozilla: "Mozilla", OWASP: "OWASP", wikimedia: "Wikimedia", EFForg: "EFF",
+    datakind: "DataKind", ushahidi: "Ushahidi", hackforla: "Hack for LA", codeforamerica: "Code for America",
+    openstreetmap: "OpenStreetMap", torproject: "Tor Project", creativecommons: "Creative Commons", freeCodeCamp: "freeCodeCamp" } },
+  public: { label: "🏛 Public sector", orgs: { cisagov: "CISA", GSA: "US GSA", "18F": "18F", usds: "US Digital Service",
+    nasa: "NASA", usnistgov: "NIST", CDCgov: "CDC", "department-of-veterans-affairs": "US Dept of Veterans Affairs",
+    CityOfNewYork: "City of New York", alphagov: "UK GDS" } },
+  private: { label: "🏢 Private sector", orgs: { microsoft: "Microsoft", google: "Google", aws: "AWS", IBM: "IBM",
+    cloudflare: "Cloudflare", elastic: "Elastic", grafana: "Grafana Labs", hashicorp: "HashiCorp", goldmansachs: "Goldman Sachs",
+    "man-group": "Man Group", jpmorganchase: "JPMorgan Chase", bloomberg: "Bloomberg" } },
+};
+const ORG_SECTOR = {};
+for (const [sector, { label, orgs }] of Object.entries(ORGS)) for (const [o, n] of Object.entries(orgs)) ORG_SECTOR[o.toLowerCase()] = { label, name: n };
+const linkedin = (name) => "https://www.linkedin.com/search/results/companies/?keywords=" + encodeURIComponent(name);
+
+// One query per sector (3 calls, each cached 15 min), merged and sorted by recent activity.
+export async function orgSearch(env, text) {
+  const qs = Object.values(ORGS).map(({ orgs }) =>
+    `${text} ${Object.keys(orgs).map((o) => "org:" + o).join(" ")} good-first-issues:>0 archived:false pushed:>=${ago(90)}`.trim());
+  const results = await Promise.all(qs.map((q) => search(env, q, "updated")));
+  return results.flat().sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
+}
+
+export function renderOrgs(head, items, md = false) {
+  if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
+  const e = md ? (s) => String(s) : esc;
+  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
+  const rows = items.map((it) => {
+    const [org, repo] = it.full_name.split("/");
+    const s = ORG_SECTOR[org.toLowerCase()] || { label: "🏢", name: org };
+    return render("", "oss", [it], md).trimStart() +
+      `\n  🏷 ${s.label} · ${e(s.name)} · ${link("LinkedIn", linkedin(s.name))}` +
+      `\n  📝 Resume: Open-Source Contributor, ${e(s.name)} (${e(repo)})`;
+  });
+  return `${head}\n${rows.join("\n")}`;
+}
 const MAX = 6;
 const GFI = "/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22";
 
@@ -37,7 +76,8 @@ const HELP =
   "<b>Project Scout</b> — GitHub project ideas by major.\n\n" +
   "/quant · /fintech · /swe · /cyber · /data — fresh repos to build\n" +
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
-  "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n\n" +
+  "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
+  "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n\n" +
   "Add keywords to narrow: <code>/cyber honeypot</code>, <code>/oss data pandas</code>, <code>/research quant</code>.\n" +
   "Any other text = keyword search across all majors.\n\n" +
   "<i>New repos are pushed here automatically as they appear (checked every 2 h).</i>";
@@ -88,7 +128,7 @@ export function parse(text) {
   // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
   const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
-  lane = LANES[lane] ? lane : LANE_ALIAS[lane];
+  lane = LANES[lane] || lane === "orgs" ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
   let major = (words[0] || "").toLowerCase();
   major = MAJORS[major] ? major : ALIAS[major] || null;
@@ -115,8 +155,13 @@ async function handleUpdate(env, update) {
 
   const { lane, major, extra } = parse(t);
   if (lane === "build" && !major && !extra) return tgSend(env, chatId, HELP);
-  const head = `<b>${LANES[lane].label} · ${major ? MAJORS[major].label : "🔎 All majors"}</b>${extra ? ` · <i>${esc(extra)}</i>` : ""}`;
+  const laneLabel = lane === "orgs" ? "🤝 Mission-driven orgs" : LANES[lane].label;
+  const head = `<b>${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}</b>${extra ? ` · <i>${esc(extra)}</i>` : ""}`;
   try {
+    if (lane === "orgs") {
+      await tgSend(env, chatId, renderOrgs(head, await orgSearch(env, terms(lane, major, extra))));
+      return;
+    }
     const items = await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
     await tgSend(env, chatId, render(head, lane, items));
   } catch (e) {

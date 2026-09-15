@@ -25,7 +25,8 @@ TOKEN = os.environ.get("DISCORD_BOT_TOKEN") or getattr(s, "DISCORD_BOT_TOKEN", "
 MAJORS = [("Quant", "quant"), ("Finance / FinTech", "fintech"), ("Software Engineering", "swe"),
           ("Cybersecurity", "cyber"), ("Data Analytics", "data")]
 LANES = [("Build this (fresh repos)", "build"), ("Contribute (good first issues)", "oss"),
-         ("Research (fresh paper code)", "research")]
+         ("Research (fresh paper code)", "research"),
+         ("Orgs (non-profit / public / private sector, resume-ready)", "orgs")]
 COMMANDS = [{
     "name": "scout",
     "description": "GitHub project ideas, open-source issues and paper code by major",
