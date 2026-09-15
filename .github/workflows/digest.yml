@@ -32,5 +32,8 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CAMPUS_BOT_TOKEN: ${{ secrets.CAMPUS_BOT_TOKEN }}
+          CAMPUS_CHAT_ID: ${{ secrets.CAMPUS_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GITHUB_TOKEN: ${{ github.token }}
         run: python project_scout.py

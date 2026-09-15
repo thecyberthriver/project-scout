@@ -141,16 +141,24 @@ def build_digest(seen: dict) -> list[str]:
     return chunks
 
 
+def targets() -> list[tuple[str, str]]:
+    """(bot token, chat id) pairs: your private bot + optional campus bot -> public channel students join."""
+    t = [(os.environ["TELEGRAM_BOT_TOKEN"], os.environ["TELEGRAM_CHAT_ID"])]
+    if os.environ.get("CAMPUS_BOT_TOKEN") and os.environ.get("CAMPUS_CHAT_ID"):
+        t.append((os.environ["CAMPUS_BOT_TOKEN"], os.environ["CAMPUS_CHAT_ID"]))
+    return t
+
+
 def send(text: str) -> None:
-    tok, chat = os.environ["TELEGRAM_BOT_TOKEN"], os.environ["TELEGRAM_CHAT_ID"]
-    body = json.dumps({"chat_id": chat, "text": text, "parse_mode": "HTML",
-                       "disable_web_page_preview": True}).encode()
-    req = urllib.request.Request(f"https://api.telegram.org/bot{tok}/sendMessage", data=body,
-                                 headers={"Content-Type": "application/json"})
-    try:
-        urllib.request.urlopen(req, timeout=30)
-    except urllib.error.HTTPError as e:  # 400 "chat not found" = press Start on the bot first; 404 = bad token
-        raise SystemExit(f"telegram {e.code}: {e.read()[:200].decode(errors='replace')}")
+    for tok, chat in targets():
+        body = json.dumps({"chat_id": chat, "text": text, "parse_mode": "HTML",
+                           "disable_web_page_preview": True}).encode()
+        req = urllib.request.Request(f"https://api.telegram.org/bot{tok}/sendMessage", data=body,
+                                     headers={"Content-Type": "application/json"})
+        try:
+            urllib.request.urlopen(req, timeout=30)
+        except urllib.error.HTTPError as e:  # 400 "chat not found" = press Start / make bot channel admin; 404 = bad token
+            print(f"telegram {e.code} for chat {chat}: {e.read()[:200].decode(errors='replace')}", file=sys.stderr)  # other targets still get it
 
 
 def discord(text: str) -> None:

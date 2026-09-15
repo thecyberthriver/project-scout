@@ -40,3 +40,30 @@ Local dry run: `python project_scout.py --preview`. Self-check: `--self-check`.
 `MAJORS` (search terms + anchor word per major), `LANES` (window, star floor, picks)
 and `RESEARCH_ANCHOR` live at the top of `project_scout.py`; the same tables are
 mirrored in `worker.js`.
+
+## Students on Discord (slash commands + channel feed)
+
+`cloudflare-webhook/discord.js` is a second Worker that serves a `/scout` slash
+command (Ed25519-verified Discord Interactions endpoint, deferred reply, same
+GitHub search + 15-min cache as the Telegram Worker). The 2-hourly feed is
+mirrored into a channel through a plain Discord webhook.
+
+1. **Create the app:** discord.com/developers → New Application "Project Scout" →
+   copy **Application ID** and **Public Key** (General Information) → Bot tab →
+   Reset Token → copy the **bot token**.
+2. **Deploy + secrets:**
+   ```
+   cd cloudflare-webhook
+   npx wrangler deploy -c wrangler.discord.toml
+   npx wrangler secret put DISCORD_PUBLIC_KEY -c wrangler.discord.toml
+   npx wrangler secret put DISCORD_APP_ID    -c wrangler.discord.toml
+   ```
+3. **Register the command:** `DISCORD_APP_ID=… DISCORD_BOT_TOKEN=… python register_discord.py`
+4. **Point Discord at the Worker:** General Information → Interactions Endpoint URL =
+   `https://project-scout-discord.<subdomain>.workers.dev` → Save (Discord pings it to verify).
+5. **Invite to your server:** OAuth2 → URL Generator → scope `applications.commands` → open the URL.
+6. **Feed channel:** channel settings → Integrations → Webhooks → New Webhook → copy URL →
+   `gh secret set DISCORD_WEBHOOK_URL -b "<url>"`. Every alert now lands there too.
+
+Discord vs Telegram: Discord server roles let you gate who sees the feed and who
+can run `/scout`; the Telegram campus bot answers anyone who finds it.

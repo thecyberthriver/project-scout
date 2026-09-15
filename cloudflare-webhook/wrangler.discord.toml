@@ -1,0 +1,9 @@
+name = "project-scout-discord"
+main = "discord.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+# Deploy:  npx wrangler deploy -c wrangler.discord.toml
+# Secrets: npx wrangler secret put DISCORD_PUBLIC_KEY -c wrangler.discord.toml
+#          npx wrangler secret put DISCORD_APP_ID     -c wrangler.discord.toml
+#          optional GITHUB_TOKEN (30 searches/min instead of 10)

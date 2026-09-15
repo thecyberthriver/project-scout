@@ -10,7 +10,7 @@
  * Secrets: TELEGRAM_BOT_TOKEN, WEBHOOK_SECRET, OWNER_CHAT_ID (lock to one user; remove to open to students),
  *          optional GITHUB_TOKEN (30 searches/min instead of 10).
  */
-const MAJORS = {
+export const MAJORS = {
   quant:   { label: "📈 Quant",                anchor: "trading",  terms: '"quantitative finance" OR backtesting OR "algorithmic trading" OR "options pricing" OR "portfolio optimization"' },
   fintech: { label: "💳 Finance / FinTech",    anchor: "finance",  terms: 'fintech OR payments OR "personal finance" OR "open banking" OR budgeting OR "stock market"' },
   swe:     { label: "💻 Software Engineering", anchor: "software", terms: '"build your own" OR "from scratch" OR "project ideas" OR "portfolio project" OR "full stack"' },
@@ -20,7 +20,7 @@ const MAJORS = {
 const ALIAS = { finance: "fintech", software: "swe", security: "cyber", analytics: "data" };
 const ago = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
 // GitHub search has no parentheses, so only the build lane uses the OR list; others use the anchor word.
-const LANES = {
+export const LANES = {
   build:    { label: "🧪 Build this", sort: "stars",   q: (t) => `${t} created:>=${ago(90)} stars:>=10 archived:false` },
   oss:      { label: "🤝 Contribute", sort: "updated", q: (t) => `${t} good-first-issues:>0 stars:>=50 pushed:>=${ago(30)} archived:false` },
   research: { label: "🔬 Research",  sort: "stars",   q: (t) => `${t} arxiv in:readme,description created:>=${ago(90)} stars:>=5 archived:false` },
@@ -50,31 +50,43 @@ async function tgSend(env, chatId, text) {
   });
 }
 
-async function search(env, q, sort) {
+export async function search(env, q, sort) {
   const url = "https://api.github.com/search/repositories?" +
     new URLSearchParams({ q, sort, order: "desc", per_page: String(MAX) });
   const headers = { accept: "application/vnd.github+json", "user-agent": "project-scout-bot" };
   if (env.GITHUB_TOKEN) headers.authorization = `Bearer ${env.GITHUB_TOKEN}`;
-  const r = await fetch(url, { headers });
-  if (!r.ok) throw new Error(`GitHub HTTP ${r.status}`);
+  // Cache each query 15 min so a room full of students tapping /cyber costs one GitHub call, not one per tap.
+  const cache = caches.default;
+  const key = new Request(url, { method: "GET" });
+  let r = await cache.match(key);
+  if (!r) {
+    r = await fetch(url, { headers });
+    if (!r.ok) throw new Error(`GitHub HTTP ${r.status}`);
+    r = new Response(await r.text(), { headers: { "content-type": "application/json", "cache-control": "s-maxage=900" } });
+    await cache.put(key, r.clone());
+  }
   return (await r.json()).items || [];
 }
 
-function render(head, lane, items) {
+// md=true renders Discord markdown (<url> suppresses link embeds) instead of Telegram HTML.
+export function render(head, lane, items, md = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
+  const e = md ? (s) => String(s) : esc;
+  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
   const rows = items.map((it) => {
     let d = (it.description || "").trim();
     if (d.length > 140) d = d.slice(0, 140) + "…";
-    const lang = it.language ? ` · ${esc(it.language)}` : "";
-    const tail = lane === "oss" ? `\n  👉 <a href="${it.html_url}${GFI}">open good-first-issues</a>` : "";
-    return `• <a href="${it.html_url}">${esc(it.full_name)}</a> ⭐${it.stargazers_count}${lang}\n  ${esc(d) || "(no description)"}${tail}`;
+    const lang = it.language ? ` · ${e(it.language)}` : "";
+    const tail = lane === "oss" ? `\n  👉 ${link("open good-first-issues", it.html_url + GFI)}` : "";
+    return `• ${link(it.full_name, it.html_url)} ⭐${it.stargazers_count}${lang}\n  ${e(d) || "(no description)"}${tail}`;
   });
   return `${head}\n${rows.join("\n")}`;
 }
 
 // "/oss cyber honeypot" -> {lane:"oss", major:"cyber", extra:"honeypot"}; "nba stats" -> {lane:"build", major:null, extra:"nba stats"}
 export function parse(text) {
-  const words = text.trim().replace(/^\//, "").split(/\s+/);
+  // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
+  const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
   lane = LANES[lane] ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
