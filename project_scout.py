@@ -44,6 +44,12 @@ MAJORS = {
     "data": ("📊 Data Analytics",
              '"data analytics" OR "data analysis" OR "exploratory data analysis" OR "data pipeline" OR "data visualization"',
              "data", "https://github.com/academic/awesome-datascience"),
+    "pm": ("📋 Project Management",
+           '"project management" OR scrum OR kanban OR "task management" OR "agile" OR roadmap',
+           '"project management"', "https://github.com/topics/project-management"),
+    "marketing": ("📣 Digital Marketing",
+                  '"digital marketing" OR SEO OR "marketing analytics" OR "social media" OR "email marketing" OR "growth hacking"',
+                  "marketing", "https://github.com/topics/marketing"),
 }
 
 
@@ -63,7 +69,8 @@ LANES = {
 }
 # a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
 RESEARCH_ANCHOR = {"trading": '"quantitative finance"', "finance": '"financial"', "software": '"software engineering"',
-                   "security": "cybersecurity", "data": '"data analysis"'}
+                   "security": "cybersecurity", "data": '"data analysis"', '"project management"': '"project management"',
+                   "marketing": '"digital marketing"'}
 
 # Mission-driven orgs whose GitHub repos welcome outside contributors (good-first-issues) — resume-ready experience.
 # Each GitHub org -> display name. LinkedIn is login-walled, so rows link to a LinkedIn company search, not a scrape.
@@ -183,7 +190,7 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
         return []
     chunks.insert(0, "<b>🧪 Project Scout — new on GitHub</b>\n"
                      "Build it, contribute to it, or reproduce the research — steal the idea, make your own version.")
-    chunks[-1] += "\n\n<i>/quant /fintech /swe /cyber /data · /oss &lt;major&gt; · /research &lt;major&gt; — live search anytime.</i>"
+    chunks[-1] += "\n\n<i>/quant /fintech /swe /cyber /data /pm /marketing · /oss &lt;major&gt; · /research &lt;major&gt; — live search anytime.</i>"
     return chunks
 
 

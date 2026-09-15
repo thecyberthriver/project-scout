@@ -16,8 +16,10 @@ export const MAJORS = {
   swe:     { label: "💻 Software Engineering", anchor: "software", terms: '"build your own" OR "from scratch" OR "project ideas" OR "portfolio project" OR "full stack"' },
   cyber:   { label: "🔐 Cybersecurity",        anchor: "security", terms: 'cybersecurity OR "penetration testing" OR "threat detection" OR "malware analysis" OR "security tool" OR CTF' },
   data:    { label: "📊 Data Analytics",       anchor: "data",     terms: '"data analytics" OR "data analysis" OR "exploratory data analysis" OR "data pipeline" OR "data visualization"' },
+  pm:      { label: "📋 Project Management",   anchor: '"project management"', terms: '"project management" OR scrum OR kanban OR "task management" OR "agile" OR roadmap' },
+  marketing: { label: "📣 Digital Marketing",  anchor: "marketing", terms: '"digital marketing" OR SEO OR "marketing analytics" OR "social media" OR "email marketing" OR "growth hacking"' },
 };
-const ALIAS = { finance: "fintech", software: "swe", security: "cyber", analytics: "data" };
+const ALIAS = { finance: "fintech", software: "swe", security: "cyber", analytics: "data", project: "pm", projectmanagement: "pm", digitalmarketing: "marketing", seo: "marketing" };
 const ago = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
 // GitHub search has no parentheses, so only the build lane uses the OR list; others use the anchor word.
 export const LANES = {
@@ -26,7 +28,7 @@ export const LANES = {
   research: { label: "🔬 Research",  sort: "stars",   q: (t) => `${t} arxiv in:readme,description created:>=${ago(90)} stars:>=5 archived:false` },
 };
 // a bare word + arxiv returns generic AI repos; a field phrase keeps research on-major
-const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"' };
+const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"', swe: '"software engineering"', cyber: "cybersecurity", data: '"data analysis"', pm: '"project management"', marketing: '"digital marketing"' };
 const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
                      org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs" };
 // Mission-driven orgs whose repos welcome outside contributors (mirrors ORGS in ../project_scout.py).

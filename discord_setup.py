@@ -40,11 +40,13 @@ LAYOUT = {
         ("introductions", "Name · major · what you want to build this semester.", None),
     ],
     "🧪 PROJECT SCOUT FEED": [
-        ("quant-projects", "Fresh quant repos, good-first-issues and paper code. Auto-posted every 2 h.", "quant"),
-        ("fintech-projects", "Fresh finance/fintech repos, good-first-issues and paper code. Auto-posted every 2 h.", "fintech"),
-        ("swe-projects", "Fresh software projects, good-first-issues and paper code. Auto-posted every 2 h.", "swe"),
-        ("cyber-projects", "Fresh cybersecurity repos, good-first-issues and paper code. Auto-posted every 2 h.", "cyber"),
-        ("data-projects", "Fresh data analytics repos, good-first-issues and paper code. Auto-posted every 2 h.", "data"),
+        ("data-analytics", "Fresh data analytics repos, good-first-issues and paper code. Auto-posted every 2 h.", "data"),
+        ("swe", "Fresh software projects, good-first-issues and paper code. Auto-posted every 2 h.", "swe"),
+        ("cybersecurity", "Fresh cybersecurity repos, good-first-issues and paper code. Auto-posted every 2 h.", "cyber"),
+        ("quant", "Fresh quant repos, good-first-issues and paper code. Auto-posted every 2 h.", "quant"),
+        ("finance-fintech", "Fresh finance/fintech repos, good-first-issues and paper code. Auto-posted every 2 h.", "fintech"),
+        ("project-management", "Fresh project-management tools, templates and good-first-issues. Auto-posted every 2 h.", "pm"),
+        ("digital-marketing", "Fresh marketing/SEO/analytics repos and good-first-issues. Auto-posted every 2 h.", "marketing"),
         ("open-source-orgs", "Non-profit, public-sector and company repos you can contribute to — resume-ready. Auto-posted every 2 h.", "orgs"),
     ],
     "🤝 COLLABORATE": [
@@ -62,7 +64,7 @@ WELCOME = """**Welcome to TLDP Students** 🎓
 This is a private server for the 45 TLDP students. Please don't share the invite link.
 
 **What's here**
-• **#quant-projects … #data-projects** — every 2 hours the Project Scout bot posts fresh GitHub repos for your major: things to build, open-source repos with *good first issues*, and new paper code.
+• **#data-analytics, #swe, #cybersecurity, #quant, #finance-fintech, #project-management, #digital-marketing** — every 2 hours the Project Scout bot posts fresh GitHub repos for your major: things to build, open-source repos with *good first issues*, and new paper code.
 • **#open-source-orgs** — non-profit, public-sector and company repos that welcome contributors, with a LinkedIn link and a ready-to-paste resume line.
 • **#scout-search** — search on demand: `/scout major:Cyber`, `/scout lane:Contribute major:Data`, `/scout lane:Orgs keywords:python`.
 • **#find-a-team** → pick a repo, post it, find 1-3 teammates.
