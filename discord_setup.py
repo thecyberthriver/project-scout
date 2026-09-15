@@ -11,7 +11,7 @@ Manage Channels, Manage Webhooks, Create Invite, Send/Manage Messages (permissio
 What it does:
   1. Server: verification level Medium (verified email), notifications = mentions only,
      @everyone loses "Create Invite" -> only you hand out the 45-use invite.
-  2. Roles: "TLDP Staff" (admin, hoisted).
+  2. Roles: "TLDP Staff" (manage server/channels/messages, hoisted; you are Owner anyway).
   3. Categories + channels (see LAYOUT). #announcements is read-only for students.
   4. One webhook per feed channel -> printed as JSON for the DISCORD_WEBHOOKS repo secret.
   5. A 45-use, 7-day invite on #welcome + a pinned welcome post.
@@ -30,7 +30,8 @@ GUILD = os.environ.get("DISCORD_GUILD_ID") or getattr(s, "DISCORD_GUILD_ID", "")
 API = "https://discord.com/api/v10"
 MAX_STUDENTS = 45
 
-CREATE_INVITE, SEND_MESSAGES, ADMIN = 0x1, 0x800, 0x8
+CREATE_INVITE, SEND_MESSAGES = 0x1, 0x800
+STAFF_PERMS = 805317681  # what the bot itself was invited with — a bot cannot grant more than it holds
 
 # category -> [(channel name, topic, feed key or None)]; feed key = key posted by project_scout.py
 LAYOUT = {
@@ -103,7 +104,7 @@ def main() -> int:
 
     # 2. staff role
     if "TLDP Staff" not in roles:
-        api("POST", f"/guilds/{GUILD}/roles", {"name": "TLDP Staff", "permissions": str(ADMIN), "hoist": True, "color": 0x5865F2, "mentionable": True})
+        api("POST", f"/guilds/{GUILD}/roles", {"name": "TLDP Staff", "permissions": str(STAFF_PERMS), "hoist": True, "color": 0x5865F2, "mentionable": True})
         print("role: TLDP Staff created")
 
     # 3. channels
@@ -137,11 +138,16 @@ def main() -> int:
             api("DELETE", f"/channels/{existing[old]['id']}")
             print("deleted default:", old)
 
-    # 5. invite + welcome
+    # 5. invite + welcome (reused on rerun)
     welcome = existing["welcome"]
-    inv = api("POST", f"/channels/{welcome['id']}/invites", {"max_age": 7 * 86400, "max_uses": MAX_STUDENTS, "unique": True})
-    msg = api("POST", f"/channels/{welcome['id']}/messages", {"content": WELCOME})
-    api("PUT", f"/channels/{welcome['id']}/pins/{msg['id']}")
+    inv = next((i for i in api("GET", f"/guilds/{GUILD}/invites") if i.get("max_uses") == MAX_STUDENTS), None) or \
+        api("POST", f"/channels/{welcome['id']}/invites", {"max_age": 7 * 86400, "max_uses": MAX_STUDENTS, "unique": True})
+    if not api("GET", f"/channels/{welcome['id']}/messages?limit=1"):
+        msg = api("POST", f"/channels/{welcome['id']}/messages", {"content": WELCOME})
+        try:
+            api("PUT", f"/channels/{welcome['id']}/messages/pins/{msg['id']}")
+        except SystemExit as e:  # pinning is cosmetic; never abort the run for it
+            print("pin skipped:", e)
     print(f"\nINVITE (45 uses, 7 days): https://discord.gg/{inv['code']}")
     print("\nSet this repo secret (feed -> per-major channels):")
     print("gh secret set DISCORD_WEBHOOKS -R thecyberthriver/project-scout -b '" + json.dumps(webhooks) + "'")
