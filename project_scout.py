@@ -147,8 +147,10 @@ def send(text: str) -> None:
                        "disable_web_page_preview": True}).encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{tok}/sendMessage", data=body,
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        assert r.status == 200, r.status
+    try:
+        urllib.request.urlopen(req, timeout=30)
+    except urllib.error.HTTPError as e:  # 400 "chat not found" = press Start on the bot first; 404 = bad token
+        raise SystemExit(f"telegram {e.code}: {e.read()[:200].decode(errors='replace')}")
 
 
 def discord(text: str) -> None:
