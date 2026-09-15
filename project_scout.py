@@ -351,6 +351,7 @@ def gh_search(q: str, sort: str = "stars", n: int = 15) -> list[dict]:
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout"}
     if os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
+    __import__("time").sleep(2.1)  # GitHub search: 30 req/min with a token; a run now makes ~40 calls
     with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as r:
         return json.load(r).get("items", [])
 
@@ -592,9 +593,10 @@ def main() -> int:
     if "--self-check" in sys.argv:
         self_check()
         return 0
-    if "--courses" in sys.argv:  # one-time evergreen map: top repos per course/topic, posted per major
-        for key, courses in COURSES.items():
-            label = MAJORS[key][0]
+    if "--courses" in sys.argv:  # one-time evergreen map: top repos per course/topic, posted per major (optionally: --courses pm fintech)
+        wanted = [a for a in sys.argv[sys.argv.index("--courses") + 1:] if a in COURSES] or list(COURSES)
+        for key in wanted:
+            courses, label = COURSES[key], MAJORS[key][0]
             rows = []
             for name, terms in courses:
                 try:
@@ -605,11 +607,12 @@ def main() -> int:
                     continue
                 if items:
                     rows.append(f"<i>🎓 {esc(name)}</i>\n" + "\n".join(render_repo(r, "build") for r in items))
-            text = (f"\n<b>🎓 {label} — course-aligned project ideas (Baruch)</b>\n"
-                    "<i>Two well-known repos per course or topic. Live search: /courses in the bot lists the codes.</i>\n" + "\n".join(rows))
-            for m in messages([text]):
+            head = (f"\n<b>🎓 {label} — course-aligned project ideas (Baruch)</b>\n"
+                    "<i>Two well-known repos per course or topic, easiest first. Live search: /courses in the bot lists the codes.</i>")
+            for m in messages([head] + rows):  # packs under Telegram's 4096-char limit across course rows
                 send(m)
-            discord(key, text)
+            if os.environ.get("DISCORD_WEBHOOKS"):
+                discord(key, head + "\n" + "\n".join(rows))
             print(f"posted course map: {key} ({len(rows)} courses)")
         return 0
     if "--cyber-domains" in sys.argv:  # one-time: 8 curated posts (one per CISSP domain) into the cyber channel
