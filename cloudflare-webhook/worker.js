@@ -49,6 +49,64 @@ export const SWE_FLAVORS = {
 const SWE_DEFAULT = ["python", "sql", "frontend"];
 // Data Analytics tool flavors: "/data powerbi", "/data tableau" (plain keywords also work).
 export const DATA_FLAVORS = { powerbi: '"power bi" OR powerbi OR DAX OR "power query"', "power": '"power bi" OR powerbi OR DAX', tableau: 'tableau OR "tableau public" OR tabpy OR hyper' };
+// Course-aligned searches (Baruch MFE + Zicklin finance core + PM tools). Mirrors COURSES in ../project_scout.py.
+// Keys are what a student types: "/quant mth9821", "/fintech fin3710", "/fintech options", "/pm jira", "/courses quant".
+export const COURSES = {
+  quant: {
+    mth9814: ["MTH 9814 Financial Markets & Securities", '"bond pricing" OR "yield curve" OR "financial instruments" OR "option payoff"'],
+    mth9815: ["MTH 9815 Software Engineering for Finance", '"trading system" OR "order book" OR "market data" language:C++'],
+    mth9816: ["MTH 9816 Fundamentals of Trading", '"algorithmic trading" OR "order execution" OR "order book" OR backtest'],
+    mth9821: ["MTH 9821 Numerical Methods for Finance", '"finite difference" OR "monte carlo" OR "binomial tree" OR "option pricing"'],
+    mth9831: ["MTH 9831 Probability & Stochastic Processes", '"stochastic calculus" OR "brownian motion" OR "stochastic process" OR "ito"'],
+    mth9842: ["MTH 9842 Optimization Techniques in Finance", '"portfolio optimization" OR "mean-variance" OR "quadratic programming" OR "efficient frontier"'],
+    mth9845: ["MTH 9845 Market & Credit Risk Management", '"value at risk" OR "expected shortfall" OR "credit risk" OR "risk model"'],
+    mth9855: ["MTH 9855 Asset Allocation & Portfolio Management", '"asset allocation" OR "black-litterman" OR "risk parity" OR "portfolio construction"'],
+    mth9863: ["MTH 9863 Volatility Filtering & Estimation", 'GARCH OR "realized volatility" OR "volatility estimation" OR "kalman filter"'],
+    mth9866: ["MTH 9866 FX Modeling & Market Making", '"foreign exchange" OR "market making" OR "fx options" OR "currency pairs"'],
+    mth9878: ["MTH 9873 / 9878 Interest Rate Models", '"interest rate model" OR "hull-white" OR "term structure" OR swaption'],
+    mth9875: ["MTH 9875 The Volatility Surface", '"volatility surface" OR "implied volatility" OR "local volatility" OR heston OR SABR'],
+    mth9876: ["MTH 9876 Credit Risk Models", '"credit default swap" OR "default probability" OR "merton model" OR "credit risk"'],
+    mth9879: ["MTH 9879 Market Microstructure Models", '"market microstructure" OR "limit order book" OR "order flow" OR "high frequency"'],
+    mth9882: ["MTH 9882 Fixed Income Risk Management", '"fixed income" OR duration OR convexity OR "bond portfolio"'],
+    mth9887: ["MTH 9887 Blockchain Technologies in Finance", 'blockchain OR "smart contract" OR DeFi OR "on-chain"'],
+    mth9893: ["MTH 9893 / 9867 Time Series & Algorithmic Trading", '"time series" OR ARIMA OR cointegration OR "pairs trading"'],
+    mth9894: ["MTH 9894 / 9897 Algorithmic & Systematic Trading", '"systematic trading" OR "trading strategy" OR backtesting OR "momentum strategy"'],
+    mth9896: ["MTH 9896 Behavioral Finance", '"behavioral finance" OR "investor sentiment" OR "sentiment analysis" stocks'],
+    mth9899: ["MTH 9898 / 9899 Data Science & ML in Finance", '"machine learning" finance OR "stock prediction" OR "factor model" OR "financial data"'],
+  },
+  fintech: {
+    fin3000: ["FIN 3000 Principles of Finance", '"time value of money" OR "capital budgeting" OR NPV OR IRR OR "financial calculator"'],
+    fin3610: ["FIN 3610 Corporate Finance", '"corporate finance" OR WACC OR "capital structure" OR "dividend policy" OR DCF'],
+    fin3710: ["FIN 3710 Investment Analysis", '"investment analysis" OR "portfolio theory" OR CAPM OR "security analysis" OR "efficient frontier"'],
+    modeling: ["Financial modeling & valuation", '"financial modeling" OR "three statement" OR "DCF model" OR LBO OR "valuation model"'],
+    statements: ["Financial statement analysis", '"financial statements" OR "ratio analysis" OR "10-K" OR "SEC EDGAR" OR XBRL'],
+    options: ["Derivatives & options", '"black-scholes" OR "option pricing" OR "options strategy" OR greeks'],
+    bonds: ["Fixed income", '"fixed income" OR "bond valuation" OR "yield curve" OR duration'],
+    fx: ["International finance & FX", '"foreign exchange" OR "exchange rate" OR forex OR "currency hedging"'],
+    markets: ["Financial markets & trading", '"stock market" OR "market data" OR "trading platform" OR brokerage'],
+    personal: ["Personal finance & fintech apps", '"personal finance" OR budgeting OR "open banking" OR "robo-advisor" OR payments'],
+    risk: ["Risk management & credit", '"risk management" OR "credit scoring" OR "fraud detection" OR "credit risk"'],
+    realestate: ["Real estate finance", '"real estate" OR mortgage OR amortization OR REIT'],
+  },
+  pm: {
+    scrum: ["Scrum", 'scrum OR sprint OR "scrum master" OR "sprint planning" OR retrospective'],
+    jira: ["Jira", 'jira OR "jira api" OR "jira automation" OR "jira dashboard"'],
+    confluence: ["Confluence", 'confluence OR "confluence api" OR atlassian OR "team wiki"'],
+    kanban: ["Kanban", 'kanban OR "kanban board" OR "task board" OR "work in progress"'],
+    metrics: ["Agile metrics & reporting", 'velocity OR burndown OR "agile metrics" OR "cycle time" OR "sprint report"'],
+    roadmap: ["Roadmaps & OKRs", 'roadmap OR OKR OR "product roadmap" OR "release planning"'],
+    stories: ["Requirements & user stories", '"user stories" OR "acceptance criteria" OR backlog OR "requirements management"'],
+    risk: ["Risk, stakeholders & schedules", '"risk register" OR stakeholder OR "project charter" OR gantt'],
+  },
+};
+export function coursesHelp(major) {
+  const m = COURSES[major] ? major : null;
+  if (!m) return "<b>🎓 Course-aligned searches</b>\n/courses quant · /courses fintech · /courses pm";
+  const cmd = { quant: "/quant", fintech: "/fintech", pm: "/pm" }[m];
+  return `<b>🎓 ${MAJORS[m].label} — course codes you can search</b>\n` +
+    Object.entries(COURSES[m]).map(([k, [name]]) => `${cmd} ${k} — ${name}`).join("\n") +
+    `\nAdd keywords after the code: <code>${cmd} ${Object.keys(COURSES[m])[0]} python</code>`;
+}
 // Cybersecurity by the 8 CISSP domains: "/cyber d7", "/cyber d7 sigma". Mirrors CYBER_DOMAINS in ../project_scout.py.
 export const CYBER_DOMAINS = {
   d1: ["D1 Security & Risk Management (GRC)", 'grc OR "risk management" OR compliance OR "security policy" OR "nist csf"'],
@@ -133,7 +191,7 @@ export async function startItems(env, major) {
   const majors = major ? [major] : Object.keys(STARTERS);
   const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 11 : 14);
   const items = await Promise.all(names.map((n) => ghJson(env, `https://api.github.com/repos/${n}`).catch(() => null)));
-  return items.filter(Boolean);
+  return ordered(items.filter(Boolean));
 }
 // Mission-driven orgs whose repos welcome outside contributors (mirrors ORGS in ../project_scout.py).
 // <= 12 orgs per sector: GitHub search queries max out at 256 chars.
@@ -182,6 +240,7 @@ const HELP =
   "/quant · /fintech · /swe · /cyber · /data · /pm · /marketing — fresh repos to build\n" +
   "  /swe = Python + SQL + frontend mixed · /swe sql · /swe frontend · /swe java (any language)\n" +
   "  /data powerbi · /data tableau · /cyber d1…d8 (CISSP domains, /domains lists them)\n" +
+  "  /quant mth9821 · /fintech fin3710 · /pm jira — Baruch course-aligned searches (/courses quant lists codes)\n" +
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
   "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
@@ -246,21 +305,24 @@ export async function lookup(env, lane, major, extra) {
       queries = [[DATA_FLAVORS[first], rest]];
     } else if (major === "cyber" && CYBER_DOMAINS[first]) {
       queries = [[CYBER_DOMAINS[first][1], rest]];
+    } else if (COURSES[major] && COURSES[major][first.replace(/\s+/g, "")]) {
+      queries = [[COURSES[major][first.replace(/\s+/g, "")][1], rest]];
     }
     if (queries) {
       const lists = await Promise.all(queries.map(([q, kw]) =>
         search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars")));
       const out = [];  // interleave so /swe shows Python, SQL, frontend, Python, SQL, …
       for (let i = 0; out.length < MAX + 3 && lists.some((l) => l[i]); i++) for (const l of lists) if (l[i]) out.push(l[i]);
-      return out.filter(english).slice(0, MAX + 3);
+      return ordered(out.filter(english), ceilingFor(extra)).slice(0, MAX + 3);
     }
   }
   const gh = search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
   const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
   const [a, b] = await Promise.all([gh, gl]);
   const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
-  return spamFree.concat(b).filter(english).slice(0, MAX + 3);
+  return ordered(spamFree.concat(b).filter(english), ceilingFor(extra)).slice(0, MAX + 3);
 }
+const ceilingFor = (extra) => (/\b(advanced|any|all)\b/i.test(extra || "") ? null : phase()[0]);
 // English-only: drop repos whose name+description is mostly non-ASCII (CJK, Cyrillic, ...) or has no description.
 export function english(it) {
   const s = `${it.full_name} ${it.description || ""}`;
@@ -272,6 +334,18 @@ export function english(it) {
 // Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors (typed keywords override).
 const AI_SPAM = /\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b/i;
 const AI_OK = new Set(["swe", "data"]);
+// Difficulty ceiling rises through the school year (mirrors phase() in ../project_scout.py): 0 starter, 1 intermediate, 2 advanced.
+const RANK = { "🟢 starter": 0, "🟡 intermediate": 1, "🔴 advanced": 2 };
+export function phase(d = new Date()) {
+  const m = d.getMonth() + 1;
+  return [9, 10].includes(m) ? [0, "Phase 1 · Sep–Oct · starter"] : [11, 12, 1].includes(m) ? [1, "Phase 2 · Nov–Jan · up to intermediate"] : [2, "Phase 3 · Feb–May · all levels"];
+}
+// Easiest first, then stars; with a ceiling, harder repos sink to the bottom. "advanced"/"any" in keywords lifts the ceiling.
+export function ordered(items, ceiling = null) {
+  const ranked = [...items].sort((a, b) => RANK[difficulty(a)] - RANK[difficulty(b)] || (b.stargazers_count || 0) - (a.stargazers_count || 0));
+  if (ceiling === null) return ranked;
+  return ranked.filter((it) => RANK[difficulty(it)] <= ceiling).concat(ranked.filter((it) => RANK[difficulty(it)] > ceiling));
+}
 // Rough on-ramp hint from repo size (KB) and stars — so freshmen don't pick a 20k-star monorepo.
 export function difficulty(it) {
   const size = it.size || 0, stars = it.stargazers_count || 0;
@@ -283,6 +357,7 @@ export function difficulty(it) {
 // md=true renders Discord markdown (<url> suppresses link embeds) instead of Telegram HTML.
 export function render(head, lane, items, md = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
+  head += md ? `\n*${phase()[1]} · easiest first*` : `\n<i>📶 ${phase()[1]} · easiest first</i>`;
   const e = md ? (s) => String(s) : esc;
   const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
   const rows = items.map((it) => {
@@ -325,6 +400,8 @@ async function handleUpdate(env, update) {
   const t = (msg.text || "").trim();
   if (!t || /^\/?(start|help)$/i.test(t)) return tgSend(env, chatId, HELP);
   if (/^\/?domains$/i.test(t)) return tgSend(env, chatId, DOMAINS_HELP);
+  const cm = t.match(/^\/?courses(?:\s+(\w+))?$/i);
+  if (cm) return tgSend(env, chatId, coursesHelp(ALIAS[(cm[1] || "").toLowerCase()] || (cm[1] || "").toLowerCase()));
 
   const { lane, major, extra } = parse(t);
   if (lane === "build" && !major && !extra) return tgSend(env, chatId, HELP);

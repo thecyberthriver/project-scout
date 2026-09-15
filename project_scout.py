@@ -108,6 +108,66 @@ CYBER_DOMAINS = {
 }
 
 
+# Course-aligned searches. Quant = Baruch MFE curriculum (mfe.baruch.cuny.edu/curriculum, fetched 2026-09-15);
+# Finance = Zicklin finance major core (FIN 3000/3610/3710) + the elective topics; PM = the tools TLDP asked for.
+# One course per major per run rotates through the feed; `--courses` posts an evergreen "top repos per course" map.
+COURSES = {
+    "quant": [
+        ("MTH 9814 Financial Markets & Securities", '"bond pricing" OR "yield curve" OR "financial instruments" OR "option payoff"'),
+        ("MTH 9815 Software Engineering for Finance", '"trading system" OR "order book" OR "market data" language:C++'),
+        ("MTH 9816 Fundamentals of Trading", '"algorithmic trading" OR "order execution" OR "order book" OR backtest'),
+        ("MTH 9821 Numerical Methods for Finance", '"finite difference" OR "monte carlo" OR "binomial tree" OR "option pricing"'),
+        ("MTH 9831 Probability & Stochastic Processes", '"stochastic calculus" OR "brownian motion" OR "stochastic process" OR "ito"'),
+        ("MTH 9842 Optimization Techniques in Finance", '"portfolio optimization" OR "mean-variance" OR "quadratic programming" OR "efficient frontier"'),
+        ("MTH 9845 Market & Credit Risk Management", '"value at risk" OR "expected shortfall" OR "credit risk" OR "risk model"'),
+        ("MTH 9855 Asset Allocation & Portfolio Management", '"asset allocation" OR "black-litterman" OR "risk parity" OR "portfolio construction"'),
+        ("MTH 9863 Volatility Filtering & Estimation", 'GARCH OR "realized volatility" OR "volatility estimation" OR "kalman filter"'),
+        ("MTH 9866 FX Modeling & Market Making", '"foreign exchange" OR "market making" OR "fx options" OR "currency pairs"'),
+        ("MTH 9873 / 9878 Interest Rate Models", '"interest rate model" OR "hull-white" OR "term structure" OR swaption'),
+        ("MTH 9875 The Volatility Surface", '"volatility surface" OR "implied volatility" OR "local volatility" OR heston OR SABR'),
+        ("MTH 9876 Credit Risk Models", '"credit default swap" OR "default probability" OR "merton model" OR "credit risk"'),
+        ("MTH 9879 Market Microstructure Models", '"market microstructure" OR "limit order book" OR "order flow" OR "high frequency"'),
+        ("MTH 9882 Fixed Income Risk Management", '"fixed income" OR duration OR convexity OR "bond portfolio"'),
+        ("MTH 9887 Blockchain Technologies in Finance", 'blockchain OR "smart contract" OR DeFi OR "on-chain"'),
+        ("MTH 9893 / 9867 Time Series & Algorithmic Trading", '"time series" OR ARIMA OR cointegration OR "pairs trading"'),
+        ("MTH 9894 / 9897 Algorithmic & Systematic Trading", '"systematic trading" OR "trading strategy" OR backtesting OR "momentum strategy"'),
+        ("MTH 9896 Behavioral Finance", '"behavioral finance" OR "investor sentiment" OR "sentiment analysis" stocks'),
+        ("MTH 9898 / 9899 Data Science & Machine Learning in Finance", '"machine learning" finance OR "stock prediction" OR "factor model" OR "financial data"'),
+    ],
+    "fintech": [
+        ("FIN 3000 Principles of Finance", '"time value of money" OR "capital budgeting" OR NPV OR IRR OR "financial calculator"'),
+        ("FIN 3610 Corporate Finance", '"corporate finance" OR WACC OR "capital structure" OR "dividend policy" OR DCF'),
+        ("FIN 3710 Investment Analysis", '"investment analysis" OR "portfolio theory" OR CAPM OR "security analysis" OR "efficient frontier"'),
+        ("Financial modeling & valuation", '"financial modeling" OR "three statement" OR "DCF model" OR LBO OR "valuation model"'),
+        ("Financial statement analysis", '"financial statements" OR "ratio analysis" OR "10-K" OR "SEC EDGAR" OR XBRL'),
+        ("Derivatives & options", '"black-scholes" OR "option pricing" OR "options strategy" OR greeks'),
+        ("Fixed income", '"fixed income" OR "bond valuation" OR "yield curve" OR duration'),
+        ("International finance & FX", '"foreign exchange" OR "exchange rate" OR forex OR "currency hedging"'),
+        ("Financial markets & trading", '"stock market" OR "market data" OR "trading platform" OR brokerage'),
+        ("Personal finance & fintech apps", '"personal finance" OR budgeting OR "open banking" OR "robo-advisor" OR payments'),
+        ("Risk management & credit", '"risk management" OR "credit scoring" OR "fraud detection" OR "credit risk"'),
+        ("Real estate finance", '"real estate" OR mortgage OR amortization OR REIT'),
+    ],
+    "pm": [
+        ("Scrum", 'scrum OR sprint OR "scrum master" OR "sprint planning" OR retrospective'),
+        ("Jira", 'jira OR "jira api" OR "jira automation" OR "jira dashboard"'),
+        ("Confluence", 'confluence OR "confluence api" OR atlassian OR "team wiki"'),
+        ("Kanban", 'kanban OR "kanban board" OR "task board" OR "work in progress"'),
+        ("Agile metrics & reporting", 'velocity OR burndown OR "agile metrics" OR "cycle time" OR "sprint report"'),
+        ("Roadmaps & OKRs", 'roadmap OR OKR OR "product roadmap" OR "release planning"'),
+        ("Requirements & user stories", '"user stories" OR "acceptance criteria" OR backlog OR "requirements management"'),
+        ("Risk, stakeholders & schedules", '"risk register" OR stakeholder OR "project charter" OR gantt'),
+    ],
+}
+
+
+def course_rotation(major: str) -> list[tuple[str, str, int]]:
+    """One course per run per major; every course comes around every len(COURSES[major]) runs."""
+    cs = COURSES[major]
+    i = (datetime.now().timetuple().tm_yday * 4 + datetime.now().hour // 6) % len(cs)
+    return [(f"🎓 {cs[i][0]}", cs[i][1], 1)]
+
+
 def cyber_rotation() -> list[tuple[str, str, int]]:
     """Two CISSP domains per run (all eight covered every 4 runs) plus the general cyber search."""
     keys = list(CYBER_DOMAINS)
@@ -270,7 +330,7 @@ def starters() -> list[tuple[str, str]]:
     """One evergreen 'Start here' chunk per major: ideas + basics to get going."""
     chunks = []
     for key, (label, *_rest) in MAJORS.items():
-        repos = [r for r in (gh_repo(f) for f in STARTERS[key]) if r]
+        repos = ordered([r for r in (gh_repo(f) for f in STARTERS[key]) if r])
         rows = "\n".join(render_repo(r, "build") for r in repos)
         chunks.append((key, f"\n<b>📚 Start here — {label}: ideas &amp; basics</b>\n<i>{esc(STARTER_WHY[key])}</i>\n{rows}\n"
                             "  💡 Pick one, read its README, then run /scout for something fresh to build on top of it."))
@@ -319,9 +379,30 @@ def difficulty(it: dict) -> str:
     return "🔴 advanced"
 
 
+RANK = {"🟢 starter": 0, "🟡 intermediate": 1, "🔴 advanced": 2}
+PHASES = [(0, "Phase 1 · Sep–Oct · starter projects"), (1, "Phase 2 · Nov–Jan · starter + intermediate"),
+          (2, "Phase 3 · Feb–May · everything, including advanced")]
+
+
+def phase(today: date | None = None) -> tuple[int, str]:
+    """Difficulty ceiling rises through the school year so students ease in: 0 starter, 1 intermediate, 2 advanced."""
+    m = (today or date.today()).month
+    return PHASES[0] if m in (9, 10) else PHASES[1] if m in (11, 12, 1) else PHASES[2]
+
+
+def ordered(items: list[dict], ceiling: int | None = None) -> list[dict]:
+    """Easiest first (starter → intermediate → advanced), then most stars. With a ceiling, harder repos come last
+    and are used only if nothing easier exists."""
+    ranked = sorted(items, key=lambda it: (RANK[difficulty(it)], -(it.get("stargazers_count") or 0)))
+    if ceiling is None:
+        return ranked
+    easy = [it for it in ranked if RANK[difficulty(it)] <= ceiling]
+    return easy + [it for it in ranked if RANK[difficulty(it)] > ceiling]
+
+
 def pick(items: list[dict], seen: dict, n: int, major: str = "") -> list[dict]:
     out = []
-    for it in items:
+    for it in ordered(items, phase()[0]):
         if it["full_name"] in seen or not english(f'{it["full_name"]} {it.get("description") or ""}') or not (it.get("description") or "").strip():
             continue
         if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
@@ -365,6 +446,8 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
         for lane, (lane_label, n, sort, q) in LANES.items():
             subs = ([(None, terms, n)] if lane != "build" else
                     cyber_rotation() if key == "cyber" else BUILD_QUERIES.get(key, [(None, terms, n)]))
+            if lane == "build" and key in COURSES:  # one course-aligned search per run
+                subs = [(s[0], s[1], 1) for s in subs] + course_rotation(key)
             for sub_label, sub_terms, sub_n in subs:
                 try:
                     picks = pick(gh_search(q(sub_terms, anchor), sort), seen, sub_n, key)
@@ -400,7 +483,8 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
 
 
 HEADER = ("<b>🧪 Project Scout — new on GitHub</b>\n"
-          "Build it, contribute to it, or reproduce the research — steal the idea, make your own version.")
+          "Build it, contribute to it, or reproduce the research — steal the idea, make your own version.\n"
+          f"<i>📶 {phase()[1]}. Lists run easiest → hardest.</i>")
 FOOTER = "\n\n<i>/quant /fintech /swe /cyber /data /pm /marketing · /oss &lt;major&gt; · /research &lt;major&gt; · /orgs — live search anytime.</i>"
 
 
@@ -498,6 +582,9 @@ def self_check() -> None:
     assert pick([{"full_name": "x/gpt-agent", "description": "an LLM agent"}, {"full_name": "y/scanner", "description": "port scanner"}], {}, 5, "cyber") \
         == [{"full_name": "y/scanner", "description": "port scanner"}]
     assert difficulty({"size": 100, "stargazers_count": 10}) == "🟢 starter" and difficulty({"size": 99999, "stargazers_count": 10}) == "🔴 advanced"
+    hard, easy = {"full_name": "h", "size": 99999, "stargazers_count": 9}, {"full_name": "e", "size": 10, "stargazers_count": 1}
+    assert [r["full_name"] for r in ordered([hard, easy])] == ["e", "h"]
+    assert phase(date(2026, 9, 15))[0] == 0 and phase(date(2026, 12, 1))[0] == 1 and phase(date(2027, 3, 1))[0] == 2
     print("self-check ok")
 
 
@@ -505,9 +592,29 @@ def main() -> int:
     if "--self-check" in sys.argv:
         self_check()
         return 0
+    if "--courses" in sys.argv:  # one-time evergreen map: top repos per course/topic, posted per major
+        for key, courses in COURSES.items():
+            label = MAJORS[key][0]
+            rows = []
+            for name, terms in courses:
+                try:
+                    items = ordered([r for r in gh_search(f"{terms} stars:>=50 archived:false", "stars", 8)
+                                     if english(f'{r["full_name"]} {r.get("description") or ""}') and (r.get("description") or "").strip()])[:2]
+                except Exception as e:
+                    print(f"{key}/{name}: {e}", file=sys.stderr)
+                    continue
+                if items:
+                    rows.append(f"<i>🎓 {esc(name)}</i>\n" + "\n".join(render_repo(r, "build") for r in items))
+            text = (f"\n<b>🎓 {label} — course-aligned project ideas (Baruch)</b>\n"
+                    "<i>Two well-known repos per course or topic. Live search: /courses in the bot lists the codes.</i>\n" + "\n".join(rows))
+            for m in messages([text]):
+                send(m)
+            discord(key, text)
+            print(f"posted course map: {key} ({len(rows)} courses)")
+        return 0
     if "--cyber-domains" in sys.argv:  # one-time: 8 curated posts (one per CISSP domain) into the cyber channel
         for k, (label, _t, repos, (ref_name, ref_url)) in CYBER_DOMAINS.items():
-            items = [r for r in (gh_repo(f) for f in repos) if r]
+            items = ordered([r for r in (gh_repo(f) for f in repos) if r])
             text = (f"\n<b>🔐 {esc(label)} — legit projects to learn from and contribute to</b>\n" +
                     "\n".join(render_repo(r, "oss") for r in items) +
                     f'\n  📖 Reference: <a href="{ref_url}">{esc(ref_name)}</a>\n  💡 Live search: /cyber {k}')
