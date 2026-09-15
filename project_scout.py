@@ -67,6 +67,55 @@ LANES = {
     "research": ("🔬 Research — fresh paper code (cites arXiv)", 2, "stars",
                  lambda terms, anchor: f"{RESEARCH_ANCHOR[anchor]} {anchor} arxiv in:readme,description created:>={ago(30)} stars:>=20 archived:false"),
 }
+# Build-lane sub-queries for majors that need more than one search. (label, GitHub query text, picks per run)
+# GitHub allows one `language:` per query, so languages are separate searches. SWE is weighted to Python + SQL.
+BUILD_QUERIES = {
+    "swe": [("🐍 Python backend", '"backend" OR api OR "web app" OR cli OR automation language:Python', 2),
+            ("🗄 SQL & databases", 'sql OR postgres OR sqlite OR "data model" OR analytics language:SQL', 1),
+            ("🗄 SQL with Python", 'sql OR postgres OR sqlalchemy OR "data pipeline" language:Python', 1),
+            ("🖥 Frontend", 'frontend OR react OR vue OR "web app" OR dashboard language:TypeScript', 1),
+            ("☕ Other languages", '"backend" OR api OR microservice OR cli language:Go', 1)],
+    "data": [("📊 Analysis & pipelines", MAJORS["data"][1], 2),
+             ("📈 Power BI", '"power bi" OR powerbi OR DAX OR "power query"', 1),
+             ("📉 Tableau", 'tableau OR "tableau public" OR tabpy OR hyper', 1)],
+}
+
+# Cybersecurity by the 8 CISSP domains: live search terms + curated legit projects + a reference link each.
+CYBER_DOMAINS = {
+    "d1": ("D1 Security & Risk Management (GRC)", 'grc OR "risk management" OR compliance OR "security policy" OR "nist csf"',
+           ["cisagov/cset", "usnistgov/OSCAL", "mitre/saf"], ("NIST Cybersecurity Framework", "https://www.nist.gov/cyberframework")),
+    "d2": ("D2 Asset Security", '"data loss prevention" OR "secrets detection" OR "data classification" OR "asset inventory" OR "pii detection"',
+           ["gitleaks/gitleaks", "trufflesecurity/trufflehog", "data-privacy-stack/presidio", "cisagov/ScubaGear", "hashicorp/vault"],
+           ("CISA: Asset & data protection resources", "https://www.cisa.gov/resources-tools")),
+    "d3": ("D3 Security Architecture & Engineering", '"threat modeling" OR cryptography OR "zero trust" OR "secure design" OR "secrets management"',
+           ["OWASP/threat-dragon", "pyca/cryptography", "openbao/openbao", "sigstore/cosign"],
+           ("OWASP Threat Modeling", "https://owasp.org/www-community/Threat_Modeling")),
+    "d4": ("D4 Communication & Network Security", '"network security" OR firewall OR "intrusion detection" OR "packet capture" OR "network monitoring"',
+           ["wireshark/wireshark", "zeek/zeek", "OISF/suricata", "nmap/nmap", "snort3/snort3"],
+           ("Wireshark University / sample captures", "https://wiki.wireshark.org/SampleCaptures")),
+    "d5": ("D5 Identity & Access Management", 'IAM OR authentication OR "single sign-on" OR OAuth OR passkeys OR "access control"',
+           ["keycloak/keycloak", "goauthentik/authentik", "authelia/authelia", "ory/kratos", "oauth2-proxy/oauth2-proxy"],
+           ("NIST SP 800-63 Digital Identity Guidelines", "https://pages.nist.gov/800-63-4/")),
+    "d6": ("D6 Security Assessment & Testing", '"penetration testing" OR "vulnerability scanner" OR CTF OR fuzzing OR "security testing"',
+           ["projectdiscovery/nuclei", "zaproxy/zaproxy", "OWASP/wstg", "juice-shop/juice-shop", "OWASP/Nettacker"],
+           ("OWASP Web Security Testing Guide", "https://owasp.org/www-project-web-security-testing-guide/")),
+    "d7": ("D7 Security Operations", 'SIEM OR "incident response" OR "threat hunting" OR "detection rules" OR "digital forensics" OR SOC',
+           ["SigmaHQ/sigma", "elastic/detection-rules", "wazuh/wazuh", "Velocidex/velociraptor", "mitre-attack/attack-navigator"],
+           ("MITRE ATT&CK", "https://attack.mitre.org/")),
+    "d8": ("D8 Software Development Security", '"secure coding" OR SAST OR DevSecOps OR "dependency scanning" OR "supply chain security" OR sbom',
+           ["OWASP/ASVS", "semgrep/semgrep", "aquasecurity/trivy", "OWASP/CheatSheetSeries", "dependency-check/DependencyCheck", "github/codeql"],
+           ("OWASP Top 10 & ASVS", "https://owasp.org/www-project-application-security-verification-standard/")),
+}
+
+
+def cyber_rotation() -> list[tuple[str, str, int]]:
+    """Two CISSP domains per run (all eight covered every 4 runs) plus the general cyber search."""
+    keys = list(CYBER_DOMAINS)
+    i = (datetime.now().timetuple().tm_yday * 4 + datetime.now().hour // 6) * 2 % len(keys)
+    picked = [keys[i], keys[(i + 1) % len(keys)]]
+    return [("🔐 General", MAJORS["cyber"][1], 1)] + [(f"🔐 {CYBER_DOMAINS[k][0]}", CYBER_DOMAINS[k][1], 1) for k in picked]
+
+
 # Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors.
 AI_SPAM = __import__("re").compile(r"\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b", __import__("re").I)
 AI_OK = {"swe", "data"}
@@ -107,7 +156,9 @@ STARTERS = {
     "cyber": ["sbilly/awesome-security", "OWASP/CheatSheetSeries", "juice-shop/juice-shop", "OWASP/wstg",
               "swisskyrepo/PayloadsAllTheThings", "mitre-attack/attack-navigator"],
     "data": ["microsoft/Data-Science-For-Beginners", "jakevdp/PythonDataScienceHandbook", "Yorko/mlcourse.ai",
-             "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience"],
+             "awesomedata/awesome-public-datasets", "streamlit/streamlit", "academic/awesome-datascience",
+             "microsoft/PowerBI-Developer-Samples", "microsoft/powerbi-desktop-samples", "tableau/TabPy",
+             "tableau/server-client-python", "tableau/hyper-api-samples"],
     "pm": ["dend/awesome-product-management", "opf/openproject", "makeplane/plane", "wekan/wekan",
            "mattermost-community/focalboard"],
     "marketing": ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk",
@@ -118,7 +169,7 @@ STARTER_WHY = {
     "fintech": "open-source Bloomberg-style terminal → bank-linking sample app → payments sample → two budgeting apps to study → market data",
     "swe": "project tutorials → build-your-own-X → app idea lists (easy/medium/hard) → roadmaps → a full CS curriculum",
     "cyber": "tools & resources list → OWASP cheat sheets → a deliberately vulnerable app to practice on → testing guide → payloads → ATT&CK map",
-    "data": "beginner course → free textbook with notebooks → ML course → public datasets → dashboards in Python → resources list",
+    "data": "beginner course → free textbook with notebooks → ML course → public datasets → dashboards in Python → resources list → Power BI samples (Microsoft) → Tableau TabPy, API client and Hyper samples",
     "pm": "PM resources list → three open-source PM tools to run, study or contribute to → kanban you can extend",
     "marketing": "product analytics → two web-analytics platforms → marketing automation → newsletters → workflow automation",
 }
@@ -312,13 +363,17 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
     for key, (label, terms, anchor, evergreen) in MAJORS.items():
         parts = []
         for lane, (lane_label, n, sort, q) in LANES.items():
-            try:
-                picks = pick(gh_search(q(terms, anchor), sort), seen, n, key)
-            except Exception as e:  # one bad query must not kill the run
-                print(f"{key}/{lane}: {e}", file=sys.stderr)
-                continue
-            if picks:
-                parts.append(f"<i>{lane_label}</i>\n" + "\n".join(render_repo(p, lane) for p in picks))
+            subs = ([(None, terms, n)] if lane != "build" else
+                    cyber_rotation() if key == "cyber" else BUILD_QUERIES.get(key, [(None, terms, n)]))
+            for sub_label, sub_terms, sub_n in subs:
+                try:
+                    picks = pick(gh_search(q(sub_terms, anchor), sort), seen, sub_n, key)
+                except Exception as e:  # one bad query must not kill the run
+                    print(f"{key}/{lane}/{sub_label}: {e}", file=sys.stderr)
+                    continue
+                if picks:
+                    head = f"<i>{lane_label}{' · ' + sub_label if sub_label else ''}</i>"
+                    parts.append(head + "\n" + "\n".join(render_repo(p, lane) for p in picks))
         if parts:
             chunks.append((key, f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>'))
     parts = []
@@ -449,6 +504,17 @@ def self_check() -> None:
 def main() -> int:
     if "--self-check" in sys.argv:
         self_check()
+        return 0
+    if "--cyber-domains" in sys.argv:  # one-time: 8 curated posts (one per CISSP domain) into the cyber channel
+        for k, (label, _t, repos, (ref_name, ref_url)) in CYBER_DOMAINS.items():
+            items = [r for r in (gh_repo(f) for f in repos) if r]
+            text = (f"\n<b>🔐 {esc(label)} — legit projects to learn from and contribute to</b>\n" +
+                    "\n".join(render_repo(r, "oss") for r in items) +
+                    f'\n  📖 Reference: <a href="{ref_url}">{esc(ref_name)}</a>\n  💡 Live search: /cyber {k}')
+            for m in messages([text]):
+                send(m)
+            discord("cyber", text)
+        print("posted 8 cyber-domain sections")
         return 0
     if "--starters" in sys.argv:  # one-time evergreen post per major (Telegram + Discord); rerun after editing STARTERS
         chunks = starters()

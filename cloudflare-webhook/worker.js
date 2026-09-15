@@ -33,6 +33,36 @@ const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", pa
                      org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
                      basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start",
                      hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons" };
+// SWE flavors: one language per GitHub query, so /swe runs Python + SQL + frontend in parallel by default;
+// "/swe sql", "/swe frontend", "/swe java" … pick one. Mirrors BUILD_QUERIES in ../project_scout.py.
+export const SWE_FLAVORS = {
+  python:   '"backend" OR api OR "web app" OR cli OR automation language:Python',
+  backend:  '"backend" OR api OR "web app" OR cli OR automation language:Python',
+  sql:      'sql OR postgres OR sqlite OR "data model" OR analytics language:SQL',
+  frontend: 'frontend OR react OR vue OR "web app" OR dashboard language:TypeScript',
+  react: 'react language:TypeScript', vue: 'vue language:TypeScript', javascript: '"web app" OR frontend OR api language:JavaScript',
+  typescript: '"web app" OR frontend OR api language:TypeScript', java: '"backend" OR api OR microservice language:Java',
+  go: '"backend" OR api OR microservice OR cli language:Go', rust: 'cli OR "backend" OR api language:Rust',
+  csharp: '"backend" OR api OR "web app" language:"C#"', "c#": '"backend" OR api OR "web app" language:"C#"', kotlin: 'android OR "backend" language:Kotlin',
+  swift: 'ios OR app language:Swift', php: '"web app" OR api language:PHP', ruby: '"web app" OR api language:Ruby',
+};
+const SWE_DEFAULT = ["python", "sql", "frontend"];
+// Data Analytics tool flavors: "/data powerbi", "/data tableau" (plain keywords also work).
+export const DATA_FLAVORS = { powerbi: '"power bi" OR powerbi OR DAX OR "power query"', "power": '"power bi" OR powerbi OR DAX', tableau: 'tableau OR "tableau public" OR tabpy OR hyper' };
+// Cybersecurity by the 8 CISSP domains: "/cyber d7", "/cyber d7 sigma". Mirrors CYBER_DOMAINS in ../project_scout.py.
+export const CYBER_DOMAINS = {
+  d1: ["D1 Security & Risk Management (GRC)", 'grc OR "risk management" OR compliance OR "security policy" OR "nist csf"'],
+  d2: ["D2 Asset Security", '"data loss prevention" OR "secrets detection" OR "data classification" OR "asset inventory" OR "pii detection"'],
+  d3: ["D3 Security Architecture & Engineering", '"threat modeling" OR cryptography OR "zero trust" OR "secure design" OR "secrets management"'],
+  d4: ["D4 Communication & Network Security", '"network security" OR firewall OR "intrusion detection" OR "packet capture" OR "network monitoring"'],
+  d5: ["D5 Identity & Access Management", 'IAM OR authentication OR "single sign-on" OR OAuth OR passkeys OR "access control"'],
+  d6: ["D6 Security Assessment & Testing", '"penetration testing" OR "vulnerability scanner" OR CTF OR fuzzing OR "security testing"'],
+  d7: ["D7 Security Operations", 'SIEM OR "incident response" OR "threat hunting" OR "detection rules" OR "digital forensics" OR SOC'],
+  d8: ["D8 Software Development Security", '"secure coding" OR SAST OR DevSecOps OR "dependency scanning" OR "supply chain security" OR sbom'],
+};
+export const DOMAINS_HELP = "<b>🔐 Cybersecurity — the 8 CISSP domains</b>\n" +
+  Object.entries(CYBER_DOMAINS).map(([k, [l]]) => `/cyber ${k} — ${l}`).join("\n") +
+  "\nAdd keywords: <code>/cyber d7 sigma</code>. Curated projects per domain are posted in the cyber channel.";
 // "Start here": curated evergreen repos with project IDEAS and the basics (mirrors STARTERS in ../project_scout.py).
 export const STARTERS = {
   quant: ["wilsonfreitas/awesome-quant", "stefan-jansen/machine-learning-for-trading", "je-suis-tm/quant-trading", "microsoft/qlib", "QuantConnect/Lean", "ranaroussi/yfinance"],
@@ -204,6 +234,25 @@ async function gitlab(kw) {
 
 // Items for a non-orgs lane: GitHub (cached), plus GitLab when the student typed keywords.
 export async function lookup(env, lane, major, extra) {
+  if (lane === "build") {  // major-specific build searches: SWE languages, Data tools, cyber domains
+    const first = (extra || "").split(/\s+/)[0].toLowerCase(), rest = (extra || "").split(/\s+/).slice(1).join(" ");
+    let queries = null;
+    if (major === "swe") {
+      const flavors = SWE_FLAVORS[first] ? [[SWE_FLAVORS[first], rest]] : extra ? null : SWE_DEFAULT.map((f) => [SWE_FLAVORS[f], ""]);
+      if (flavors) queries = flavors;
+    } else if (major === "data" && DATA_FLAVORS[first]) {
+      queries = [[DATA_FLAVORS[first], rest]];
+    } else if (major === "cyber" && CYBER_DOMAINS[first]) {
+      queries = [[CYBER_DOMAINS[first][1], rest]];
+    }
+    if (queries) {
+      const lists = await Promise.all(queries.map(([q, kw]) =>
+        search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars")));
+      const out = [];  // interleave so /swe shows Python, SQL, frontend, Python, SQL, …
+      for (let i = 0; out.length < MAX + 3 && lists.some((l) => l[i]); i++) for (const l of lists) if (l[i]) out.push(l[i]);
+      return out.filter(english).slice(0, MAX + 3);
+    }
+  }
   const gh = search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
   const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
   const [a, b] = await Promise.all([gh, gl]);
@@ -273,6 +322,7 @@ async function handleUpdate(env, update) {
 
   const t = (msg.text || "").trim();
   if (!t || /^\/?(start|help)$/i.test(t)) return tgSend(env, chatId, HELP);
+  if (/^\/?domains$/i.test(t)) return tgSend(env, chatId, DOMAINS_HELP);
 
   const { lane, major, extra } = parse(t);
   if (lane === "build" && !major && !extra) return tgSend(env, chatId, HELP);
