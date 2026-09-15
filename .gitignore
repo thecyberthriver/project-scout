@@ -4,3 +4,4 @@ __pycache__/
 docs/*.pdf
 docs/*_guide.html
 roster_local.json
+docs/server.png
