@@ -128,7 +128,7 @@ STARTER_WHY = {
 # Sources with public data: Devpost's listing JSON (filtered to NYC-area in-person events) and Major League
 # Hacking's season page (embeds event JSON). Everything else is login-walled, so it's linked, not scraped.
 NYC_RE = __import__("re").compile(
-    r"\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark|"
+    r"\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark, ?nj|"
     r"long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b", __import__("re").I)
 # note: "<city>, New York" upstate (Ithaca, Troy, Rochester) is deliberately NOT matched — commutable NYC area only.
 HACK_LINKS = [

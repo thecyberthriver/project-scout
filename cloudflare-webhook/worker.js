@@ -45,7 +45,7 @@ export const STARTERS = {
 };
 // NYC in-person hackathons: Devpost listing JSON + MLH season page (embedded JSON). Mirrors hackathons_nyc() in ../project_scout.py.
 // Commutable NYC area only: "<city>, New York" upstate (Ithaca, Troy, Rochester) is deliberately not matched.
-const NYC_RE = /\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark|long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b/i;
+const NYC_RE = /\b(new york, ?ny|new york, new york|nyc|brooklyn|manhattan|queens|bronx|staten island|flushing|jamaica, ny|jersey city|hoboken|newark, ?nj|long island city|columbia university|nyu|cornell tech|cuny|baruch|fordham|pace university|stevens|stony brook|hofstra)\b/i;
 export const HACK_LINKS = [
   ["MLH season calendar", "https://mlh.io/seasons/2027/events"],
   ["Devpost in-person", "https://devpost.com/hackathons?challenge_type[]=in-person&order_by=deadline&search=new+york"],
