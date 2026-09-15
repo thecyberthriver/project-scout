@@ -11,7 +11,7 @@
  *   DISCORD_APP_ID       General Information → Application ID
  *   optional GITHUB_TOKEN
  */
-import { MAJORS, LANES, search, render, terms, orgSearch, renderOrgs } from "./worker.js";
+import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs } from "./worker.js";
 
 const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
@@ -39,7 +39,7 @@ async function answer(env, interaction, lane, major, extra) {
     try {
       content = lane === "orgs"
         ? renderOrgs(head, await orgSearch(env, terms(lane, major, extra)), true)
-        : render(head, lane, await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort), true);
+        : render(head, lane, await lookup(env, lane, major, extra), true);
     } catch (e) {
       content = `⚠️ ${e.message} — GitHub search is rate-limited; try again in a minute.`;
     }

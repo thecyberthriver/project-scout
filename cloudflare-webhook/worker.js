@@ -109,6 +109,27 @@ export async function search(env, q, sort) {
   return (await r.json()).items || [];
 }
 
+// Second source for keyword searches: GitLab's public projects API (no auth). Rows are tagged "(GitLab)".
+async function gitlab(kw) {
+  const url = "https://gitlab.com/api/v4/projects?" + new URLSearchParams({
+    search: kw, order_by: "last_activity_at", sort: "desc", per_page: "3", simple: "true", archived: "false" });
+  try {
+    const r = await fetch(url, { headers: { "user-agent": "project-scout-bot" } });
+    if (!r.ok) return [];
+    return (await r.json()).filter((p) => p.description).map((p) => ({
+      full_name: `${p.path_with_namespace} (GitLab)`, html_url: p.web_url, stargazers_count: p.star_count || 0,
+      description: p.description, language: null }));
+  } catch { return []; }
+}
+
+// Items for a non-orgs lane: GitHub (cached), plus GitLab when the student typed keywords.
+export async function lookup(env, lane, major, extra) {
+  const gh = search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
+  const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
+  const [a, b] = await Promise.all([gh, gl]);
+  return a.concat(b).slice(0, MAX + 3);
+}
+
 // md=true renders Discord markdown (<url> suppresses link embeds) instead of Telegram HTML.
 export function render(head, lane, items, md = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
@@ -163,8 +184,7 @@ async function handleUpdate(env, update) {
       await tgSend(env, chatId, renderOrgs(head, await orgSearch(env, terms(lane, major, extra))));
       return;
     }
-    const items = await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
-    await tgSend(env, chatId, render(head, lane, items));
+    await tgSend(env, chatId, render(head, lane, await lookup(env, lane, major, extra)));
   } catch (e) {
     await tgSend(env, chatId, `⚠️ ${esc(e.message)} — GitHub search is rate-limited to 10/min; try again shortly.`);
   }
