@@ -1,0 +1,10 @@
+name = "project-scout-bot"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+# Secrets (never committed), set with `npx wrangler secret put <NAME>`:
+#   TELEGRAM_BOT_TOKEN   this bot's token from BotFather
+#   WEBHOOK_SECRET       random string; must match setWebhook secret_token
+#   OWNER_CHAT_ID        your Telegram user id (locks the bot to you; remove to open it up)
+#   GITHUB_TOKEN         optional — any GitHub token raises search limit 10 -> 30/min

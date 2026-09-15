@@ -1,0 +1,36 @@
+name: Project Scout digest
+
+on:
+  schedule:
+    - cron: "17 */2 * * *"   # every 2 h (off-the-hour slots run more reliably); sends only when something is new
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-scout
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - name: Restore de-dupe cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: seen.json
+          key: project-seen-${{ github.run_id }}
+          restore-keys: |
+            project-seen-
+      - run: python project_scout.py --self-check
+      - name: Search GitHub and send digest
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python project_scout.py
