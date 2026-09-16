@@ -31,7 +31,7 @@ jobs:
       - name: Weekly full index rebuild (Mondays)
         if: github.event.schedule == '0 12 * * 1' || inputs.day == 'monday'
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_SCOUT_TOKEN || github.token }}
           SEARCH_BUDGET: "120"
         run: |
           python project_scout.py --index-only

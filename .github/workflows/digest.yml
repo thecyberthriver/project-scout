@@ -29,7 +29,7 @@ jobs:
           CAMPUS_CHAT_ID: ${{ secrets.CAMPUS_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_SCOUT_TOKEN || github.token }}   # machine-account token once set; Actions token until then
         run: python project_scout.py
       - name: Commit de-dupe state
         run: |

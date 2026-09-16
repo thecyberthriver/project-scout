@@ -331,7 +331,7 @@ export async function loadIndex() {
 const SWE_LABEL = { python: "Python backend", backend: "Python backend", sql: "SQL", frontend: "Frontend", go: "Other languages" };
 const DATA_LABEL = { powerbi: "Power BI", power: "Power BI", tableau: "Tableau" };
 const dedupe = (rows) => { const s = new Set(); return rows.filter((r) => !s.has(r.full_name) && s.add(r.full_name)); };
-function fromIndex(idx, lane, major, extra) {
+export function fromIndex(idx, lane, major, extra) {
   if (!idx?.keys) return null;
   const tokens = (extra || "").toLowerCase().split(/\s+/).filter((t) => t && !/^(advanced|any|all)$/.test(t));
   let keys = Object.keys(idx.keys).filter((k) => (!major || k.startsWith(`${major}|`)) && k.includes(`|${lane}|`));

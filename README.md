@@ -49,8 +49,14 @@ block an account or IP that keeps hammering after a 403. The feed is built to ne
 - Every run ends by printing the remaining search quota (free call) in the Actions log.
 - The Workers cache every result 15 min and, after one 403/429, refuse further GitHub calls for
   two minutes ("try again in 2 minutes") so a classroom can't trigger a block by retrying.
-- Add a no-permissions fine-grained token as `GITHUB_TOKEN` on each Worker to move student
-  searches from the shared anonymous limit to the token's own limit.
+- **Students never hit the API for normal searches.** Every run merges everything it found into
+  `index.json` (committed; ~430 rows, 45-day TTL, curated sets refreshed weekly, full rebuild every
+  Monday). The Workers read that file from `raw.githubusercontent.com` (a CDN, no rate limit),
+  cached 30 min, and only fall back to the live API, one request at a time, for a keyword the
+  index can't answer.
+- Give the bot its own identity: a machine account (e.g. `tldp-project-scout`) with a fine-grained
+  token that has no permissions, set as `GITHUB_TOKEN` on each Worker and as a repo secret used by
+  the workflows. If anything is ever limited, it's that account, not yours.
 
 ## Tuning
 
