@@ -35,6 +35,23 @@ API (10 req/min anonymous, 30 with a token). stdlib-only Python.
 
 Local dry run: `python project_scout.py --preview`. Self-check: `--self-check`.
 
+## GitHub rate-limit safety
+
+GitHub allows 30 search requests per minute with a token (10 without) and can temporarily
+block an account or IP that keeps hammering after a 403. The feed is built to never get there:
+
+- `SEARCH_BUDGET` (default 26) caps searches per run and `SEARCH_SPACING` (2.5 s) keeps the rate
+  under 24/min regardless. When the budget is spent the run stops cleanly; majors rotate order
+  each run so nothing is starved.
+- On a 403/429 the run waits exactly as long as `Retry-After` / `X-RateLimit-Reset` says, once,
+  then stops. It never loops. Your private Telegram bot gets an alert with the remaining quota.
+- Contribute and Research lanes alternate runs; SWE's five languages rotate three per run.
+- Every run ends by printing the remaining search quota (free call) in the Actions log.
+- The Workers cache every result 15 min and, after one 403/429, refuse further GitHub calls for
+  two minutes ("try again in 2 minutes") so a classroom can't trigger a block by retrying.
+- Add a no-permissions fine-grained token as `GITHUB_TOKEN` on each Worker to move student
+  searches from the shared anonymous limit to the token's own limit.
+
 ## Tuning
 
 `MAJORS` (search terms + anchor word per major), `LANES` (window, star floor, picks)
