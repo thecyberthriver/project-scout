@@ -1,0 +1,11 @@
+{
+  "_": "Repositories that must never be published, whatever any scan says. Matched case-insensitively on full_name. Add a line, commit; the gate reads this file on every run.",
+  "entries": [
+    {"full_name": "ElementTrail/Multichain-Drainer", "reason": "wallet-drainer tooling found in the posted catalog (2026-09-16 incident)", "added": "2026-09-16"},
+    {"full_name": "WildOctopusCrack/Ghostfolio-Privacy-First-Personal-Finance-Wealth-Tracker", "reason": "deceptive download-trap clone of Ghostfolio (2026-09-16 incident)", "added": "2026-09-16"},
+    {"full_name": "sitimas9/cdcrafthh", "reason": "account-farm / coupon-abuse tool with harvested API keys (2026-09-16 review)", "added": "2026-09-16"}
+  ],
+  "name_patterns": [
+    {"pattern": "(?i)/ghostfolio-.*(privacy|wealth|finance|tracker)", "reason": "clone-farm naming pattern from the 2026-09-16 incident"}
+  ]
+}

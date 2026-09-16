@@ -12,15 +12,21 @@ Three lanes per major:
 | 🤝 Contribute | Active repos with **open "good first issue" tickets** (⭐50+, pushed in the last 30 days). Link goes straight to the issue list. | `<anchor> good-first-issues:>0 pushed:>=…` |
 | 🔬 Research | Fresh repos whose README **cites arXiv** = paper code to reproduce, extend, or join. | `"<field>" arxiv in:readme created:>=…` |
 
-## Two halves
+## Two halves, one gate
+
+Discovery is separated from what students see, and **every** student-visible path goes through the same gate
+(`gate.eligible`). See **`docs/SCREENING.md`** for the full model and the honest limits.
 
 | Part | Where it runs | What it does |
 |---|---|---|
-| `project_scout.py` | GitHub Actions, every 2 hours (`.github/workflows/digest.yml`) | Push alerts: anything new in any lane, de-duped for 60 days via `seen.json`. Sends nothing when nothing is new. Optional mirror to a Discord channel (`DISCORD_WEBHOOK_URL`). |
-| `cloudflare-webhook/worker.js` | Cloudflare Worker (Telegram webhook) | Instant answers: `/quant` `/fintech` `/swe` `/cyber` `/data` [+ keywords], `/oss <major>`, `/research <major>` — queries the GitHub Search API live. |
+| `project_scout.py --discover` → `--publish` | GitHub Actions, two jobs (`.github/workflows/digest.yml`) | **screen** (untrusted, no secrets): search GitHub, screen every candidate through the gate (clone + Semgrep + deep vet + link screen), write `build/`. **publish** (secrets): re-validate offline, send, commit `published.json`/`screening.json`/`seen.json`/`index.json`. |
+| `cloudflare-webhook/worker.js`, `discord.js` | Cloudflare Workers | Render the pre-screened `published.json` snapshot only. **No live GitHub/GitLab search.** Fail closed (pause) if screening is stale, degraded, or missing. |
 
-No scraping, no third parties: everything comes from the public GitHub Search
-API (10 req/min anonymous, 30 with a token). stdlib-only Python.
+`published.json` (served to the Workers from the repo) contains only repositories that passed the gate and are inside
+the 30-day freshness window; each row carries its screening record (reviewed SHA + expiry) and the label
+"Automated checks completed; not a safety guarantee." stdlib-only Python; the Workers make no GitHub calls.
+
+Status any time: `python gate.py --status`.
 
 ## Setup
 
@@ -58,26 +64,43 @@ block an account or IP that keeps hammering after a 403. The feed is built to ne
   token that has no permissions, set as `GITHUB_TOKEN` on each Worker and as a repo secret used by
   the workflows. If anything is ever limited, it's that account, not yours.
 
-## Safety vetting (three layers, nothing posts until all pass)
+## Safety: the one publishing gate
 
-Scam and malware repos do show up in GitHub search. Every repo goes through three gates before a student sees it:
+Scam and malware repos show up in GitHub search. **Discovery** finds candidates; **screening** decides what students
+see; the two are separate files and separate CI jobs. Full detail and honest limits: **`docs/SCREENING.md`**; scanner
+choices and coverage: **`docs/SCANNERS.md`**.
 
-1. **Cheap filter** (`legit()` in `project_scout.py`, mirrored in the Workers): no detected language, tiny size, scam
-   vocabulary (drainer, stealer, cracked, keygen, account farm…), non-English descriptions, sock-puppet owner names,
-   bought stars on tiny repos, the same repo name under three-plus owners.
-2. **Deep vet** (`vet.py`, ~4 core API calls per repo, cached 30 days in `vet_cache.json`): binaries or archives in the
-   root, README-only shells, README links to download hosts or archive passwords, very young repos with many stars,
-   brand-new owners, commit history, OpenSSF Scorecard. `python vet.py` re-vets the whole index and writes
-   `docs/vetting-report.md`; `python vet.py owner/repo` explains one verdict.
-3. **Code scan** (`scan.py`): shallow-clone (size-capped) and run Semgrep with `semgrep-rules/malware.yml` plus the
-   public `p/security-audit` rules. The custom rules match what malware *does*: decode-then-exec, download-and-run,
-   browser/wallet/Discord credential stores, hardcoded webhook or Telegram exfiltration, reverse shells, startup
-   persistence, antivirus tampering, miners, keyloggers. One hit fails the repo. Runs at post time in the digest
-   workflow (`semgrep_ok()`), weekly across the index (`python scan.py --index`), and cached in `scan_cache.json`.
-   `python scan.py owner/repo` scans one repo by hand.
+A repo is published only if `gate.eligible` says yes: **not quarantined** (`quarantine.json`), a **passing screening
+record** whose reviewed commit SHA matches and has not expired, adequate scan **coverage** for its language, and — for
+a fresh row — **pushed within 30 days**. Anything that fails, times out, is incomplete, or is unsupported is
+**withheld**; nothing is silently downgraded. If nothing qualifies, a self-contained synthetic project idea is offered
+instead of an unchecked repo.
 
-A failure at any layer marks the repo seen so it is never re-considered; `purge_posts.py` edits already-posted
-Discord messages if something slipped through before a rule existed.
+Screening (`gate.screen_one`, only stage that touches an untrusted repo) runs, per candidate:
+
+1. **Quarantine** — named incident repos and clone-name patterns can never return.
+2. **Content policy** (`gate.py`) — prohibited wording (drainers, stealers, phishing kits, cracked software) fails;
+   ambiguous dual-use offensive tooling is kept out of the general feed; curated security tools are not flagged.
+3. **Deep vet** (`vet.py`) — root binaries, README-only shells, bought stars, brand-new owners, clone farms, Scorecard.
+4. **Link + install screening** (`links.py`) — download hosts, executable links, archive passwords, "disable your
+   antivirus", `curl | sh` all block; shorteners warn. Repo text is data, never instructions. Optional shortener
+   resolution is **SSRF-guarded** (refuses private/loopback/link-local/metadata IPs, re-validates every redirect hop).
+5. **Isolated code scan** (`scan.py`) — clone at the pinned commit into an empty-HOME throwaway dir, no hooks, no LFS,
+   no submodules, non-https disabled; **nothing in the repo is executed**. Semgrep static-only with
+   `semgrep-rules/malware.yml` + `p/security-audit` + `p/secrets`, timeouts and caps. Any malware-rule or secrets hit
+   withholds; matched text is discarded so a discovered secret never lands in a report or message.
+
+Records (`screening.json`) carry identity, reviewed SHA, scan time, scanner + rule versions, coverage and result, and
+**expire** (14 days fresh, 30 curated); a changed commit forces a re-screen. The Cloudflare Workers render only
+`published.json` and **pause** if screening is stale. `python vet.py` still writes the private `docs/vetting-report.md`;
+`purge_posts.py` edits already-posted Discord messages if a rule is added later.
+
+## Enrollment (roster-gated, no name oracle)
+
+Your roster of student names is the distribution list, not a self-typed password. `python enroll.py --invites` mints
+one unique, single-use, 7-day Discord invite per roster entry (into gitignored `roster_invites_local.json`, never
+printed); staff DM each student their link. `python enroll.py --grant` gives the Student role to everyone who joined.
+`/verify` no longer checks names. Stronger SSO / signed-token options are documented but not enabled.
 
 ## Tuning
 

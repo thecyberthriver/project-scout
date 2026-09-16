@@ -23,6 +23,8 @@ import time
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 
+import links  # README link / install-instruction screening (SSRF-guarded; resolve off by default)
+
 INDEX, CACHE, REPORT = "index.json", "vet_cache.json", "docs/vetting-report.md"
 TOKEN = os.environ.get("GITHUB_TOKEN") or ""
 if not TOKEN:
@@ -100,6 +102,11 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
             soft.append(f"README links to {m2.group(0)}")
         if len(text) < 200 and stars >= 20:
             soft.append("near-empty README with stars")
+        # thorough link + install-instruction screening (data, not instructions). resolve=False → no network here.
+        lk = links.screen_readme(text, full_name, resolve=False)
+        if not established:
+            hard += [f"README link: {b}" for b in lk["block"]]
+            soft += [f"README link: {w}" for w in lk["warn"]]
     except Exception as e:
         if getattr(e, "code", None) == 404:
             soft.append("no README")

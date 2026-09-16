@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-register_discord.py — register the /scout slash command with Discord (run once, and after edits).
+register_discord.py — register the /scout and /verify slash commands with Discord (run once, and after edits).
+/verify has no options: enrollment is done by staff, never by name matching.
 
   DISCORD_APP_ID=... DISCORD_BOT_TOKEN=... python register_discord.py
 
@@ -33,21 +34,18 @@ LANES = [("Learning path (your year in order — start here)", "path"),
          ("Case studies (collections you can contribute to)", "cases")]
 COMMANDS = [{
     "name": "verify",
-    "description": "Unlock the server: match your name against the TLDP roster",
-    "options": [
-        {"type": 3, "name": "name", "description": "Your full name as TLDP has it on file", "required": True},
-        {"type": 3, "name": "major", "description": "Your major (gives you the @major role)", "required": False,
-         "choices": [{"name": n, "value": v} for n, v in MAJORS]},
-    ],
+    "description": "How to get enrolled in the TLDP server (staff-handled)",
+    "options": [],
 }, {
     "name": "scout",
-    "description": "GitHub project ideas, open-source issues and paper code by major",
+    "description": "Pre-screened GitHub project ideas, open-source issues and paper code by major",
     "options": [
         {"type": 3, "name": "major", "description": "Your major", "required": False,
          "choices": [{"name": n, "value": v} for n, v in MAJORS]},
         {"type": 3, "name": "lane", "description": "What kind of repos (default: fresh repos to build)", "required": False,
          "choices": [{"name": n, "value": v} for n, v in LANES]},
-        {"type": 3, "name": "keywords", "description": "Narrow the search, e.g. honeypot", "required": False},
+        {"type": 3, "name": "keywords", "description": "Narrow the search, e.g. honeypot (letters, digits, spaces, . , & + # -)", "required": False,
+         "max_length": 60},
         {"type": 3, "name": "level", "description": "Beginner (default this fall), Intermediate, or Advanced = hardest first", "required": False,
          "choices": [{"name": "Beginner", "value": "beginner"}, {"name": "Intermediate", "value": "intermediate"}, {"name": "Advanced (challenge me)", "value": "advanced"}]},
     ],

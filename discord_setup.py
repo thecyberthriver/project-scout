@@ -47,7 +47,7 @@ MAJOR_ROLES = {"quant": ("Quant", 0x2ECC71), "fintech": ("Finance/FinTech", 0x1A
 # category -> gated? , [(name, topic, type, feed key)]
 LAYOUT = {
     "📌 START HERE": (False, [
-        ("welcome", "Rules, how the bot works, and /verify to unlock the server.", TEXT, None),
+        ("welcome", "Rules, how the bot works, and how to get your student role. Post in #introductions to unlock the server.", TEXT, None),
         ("announcements", "TLDP staff announcements + weekly hackathon list. Read-only.", TEXT, "announcements"),
         ("introductions", "Name · major · what you want to build this semester.", TEXT, None),
     ]),
@@ -77,6 +77,8 @@ LAYOUT = {
         ("🧑‍💻│code-review-practice", "All tech majors: post code, a repo link or a short video walkthrough and get an interview-style code review from peers and staff. Read the pinned rubric first.", FORUM, None),
         ("🛡️│cyber-review-practice", "Cybersecurity: post lab write-ups, detection rules, scripts or video walkthroughs and get reviewed the way a security interview panel would. Read the pinned rubric first.", FORUM, None),
         ("🐙│github-academy", "Beginner GitHub videos and tutorials, in order. Start with 'Week 0'. Ask questions inside any post.", FORUM, None),
+        ("🧰│safe-sandboxes", "Run other people's code WITHOUT risking your laptop. Which free sandbox to use and the safety rules. Read the pinned post first.", FORUM, None),
+        ("🛠️│build-your-sandbox", "DO IT here: build your own reusable sandbox (Google Colab or a Codespaces dev container), then post that you built it. Step-by-step inside.", FORUM, None),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }
@@ -130,7 +132,106 @@ Check, in order: is the methodology clear and repeatable · is every claim backe
 
 Specific, evidence-first, and it reads like a report a SOC lead would accept."""),
     ],
+    "🛠️│build-your-sandbox": [
+        ("📌 Build your sandbox — do this first", """You will build **one** reusable sandbox and use it all year. A sandbox is a throwaway computer for running code you did not write, so a bad project can't touch your real laptop. It **minimizes** risk — it does not remove it, and a passed check is not proof code is safe.
+
+**Pick one and follow its post below:**
+• **Build A — Google Colab.** Completely free, no bill possible, just a Google account. Best for Python and data. **Start here if unsure.**
+• **Build B — Codespaces dev container.** More powerful (full apps), free within a monthly limit via the Student Pack. Best for SWE / web projects.
+
+**The rules that matter more than the tool:**
+1. **Public or synthetic data only.**
+2. **Never** put a real password, API key, token or `.env` file in a sandbox. A sandbox holding your real login is not protecting you.
+3. Treat it as **disposable** — delete the session when you're done.
+4. **Read code before you run it.** If an install step says "disable your antivirus" or downloads from an odd site, stop and post it for staff.
+
+Files and full instructions: https://github.com/thecyberthriver/project-scout/tree/main/sandbox"""),
+        ("🟢 Build A — your Google Colab sandbox (start here)", """Runs on Google's computers, so nothing touches your laptop. Completely free.
+
+1. Go to **colab.research.google.com** and sign in with a Google account.
+2. `File → Open notebook → GitHub`. Paste `thecyberthriver/project-scout` and open **sandbox/colab_sandbox.ipynb**.
+3. `File → Save a copy in Drive`. That copy is now **your** reusable sandbox — you built it.
+4. Work through the numbered cells: it checks you're really in Colab, clones a repo you name, shows you the code to **read first**, then installs and runs it — all on Google's machine.
+5. Finished? `Runtime → Disconnect and delete runtime`. Everything is destroyed.
+
+Then post in this channel: "Built my Colab sandbox ✅". Stuck on a step? Reply on your post and tag a mentor."""),
+        ("🟣 Build B — your Codespaces dev-container sandbox", """A full VS Code + Linux machine in your browser, tied to a repo. The code runs on GitHub's servers. Free up to a monthly limit; the Student Pack adds more.
+
+1. Get the free **GitHub Student Developer Pack** with your Baruch email: **education.github.com/pack**
+2. Copy the folder **sandbox/.devcontainer/** from `thecyberthriver/project-scout` into the repo you want to try (or into your own template repo). It builds an Ubuntu container that runs as a **non-root** user with **capped CPU/memory** and **no-new-privileges** — a reproducible, least-privilege sandbox.
+3. On that repo: green **Code** button → **Codespaces** tab → **Create codespace on main**.
+4. VS Code opens in the browser with Python + Node ready. Run the project there.
+5. Done? Go to **github.com/codespaces** and **delete** the codespace so it stops using your quota.
+
+Prefer it on your own machine? Install **Podman Desktop** (free) + VS Code Dev Containers, open the repo, "Reopen in Container". A local container is weaker than the cloud (it shares your kernel) but still sealed and disposable.
+
+Then post: "Built my Codespaces sandbox ✅"."""),
+        ("✅ Post here once you've built it", """Reply to this thread (or start your own post) with:
+• Which sandbox you built — **Colab** or **Codespaces**.
+• One repo you ran inside it and what it did.
+
+That's your proof you can run unfamiliar code safely — a real habit employers care about. Help a classmate who's stuck; walking someone through it counts too.""")],
+    "🧰│safe-sandboxes": [
+        ("📌 Read first — why a sandbox, and the rules", """A repo passing our automated checks is **not** proof it is safe to run. Checks reduce risk; they do not remove it. So before you run code you did not write, run it somewhere that is not your real laptop.
+
+**The rules (they matter more than any tool):**
+1. **Best option: keep the code off your machine entirely.** Use a browser sandbox — start with **Google Colab** (next post). Nothing installs, nothing can touch your files.
+2. **Never put secrets in a sandbox.** No passwords, no API keys, no `.env` files, no personal data. A sandbox holding your real GitHub login is no longer protecting your GitHub.
+3. **Use public or synthetic data only.**
+4. **Treat it as disposable.** When you are done, delete the session. Do not save personal files inside it.
+5. **A container or VM limits damage but is not a perfect wall.** The strongest rule is simply: do not run unfamiliar code on hardware you care about.
+6. **See a suspicious link or install step?** Do not click or run it. Post it for staff instead.
+
+**Which free tool?**
+• **Google Colab** — completely free, no bill possible, just a Google account. Best for Python, data, notebooks. **Start here.**
+• **Binder** — completely free, no account at all, fully disposable. Great for trying a public repo instantly; sessions are short.
+• **GitHub Codespaces** — the most powerful, runs full apps in VS Code. Free up to a monthly limit, so not strictly "no cost," but you won't hit it easily and it won't surprise-bill you."""),
+        ("🟢 Google Colab — completely free, start here", """**What it is:** a free notebook that runs on Google's computers, in your browser. Your laptop only shows the results, so bad code cannot touch your files. Best for anything Python, data, or machine learning.
+
+**Set it up (2 minutes, no install):**
+1. Go to **colab.research.google.com** and sign in with a Google account.
+2. Click **New notebook**.
+3. To run code from a repo, in a cell type a command starting with `!` to fetch it, then run the files. Example for a public repo:
+```
+!git clone https://github.com/OWNER/REPO
+%cd REPO
+!pip install -r requirements.txt
+```
+4. Run cells with **Shift+Enter**. Everything happens on Google's machine.
+5. When you finish, close the tab or **Runtime → Disconnect and delete runtime**. Gone.
+
+**Remember:** public/synthetic data only, and never paste a real password or API key into a cell. Post here if you get stuck."""),
+        ("🔵 Binder — instant, no account, fully disposable", """**What it is:** launches any public GitHub repo in a free, throwaway Jupyter environment. No sign-up, nothing tied to you. Perfect for a quick, safe look at a repo. Sessions are short and low-powered, and they vanish when you close them.
+
+**Use it (1 minute):**
+1. Go to **mybinder.org**.
+2. Paste the repo URL (for example `https://github.com/OWNER/REPO`) into the GitHub box.
+3. Click **launch**. Wait for it to build, then it opens a notebook environment.
+4. Explore and run. Close the tab when done — it is destroyed automatically.
+
+**Note:** Binder works best on repos set up for it; some repos will open but not install everything. If it struggles, use Colab. Same rules: public/synthetic data only, no secrets."""),
+        ("🟣 GitHub Codespaces — for full projects (free monthly quota)", """**What it is:** a full VS Code and Linux machine in your browser, tied to a repo. The most powerful option — it can run web apps, databases, and real projects — and the code still runs on GitHub's servers, not your laptop.
+
+**Cost, honestly:** free up to a monthly amount of hours and storage on a personal account, and more through the **GitHub Student Developer Pack** (education.github.com/pack). Past the free amount it can bill, but GitHub stops you at the limit rather than surprising you, and beginners rarely hit it. If you want zero chance of a charge, use Colab or Binder.
+
+**Set it up:**
+1. Get the **Student Developer Pack** first (free, uses your Baruch email): education.github.com/pack
+2. Open any repo on GitHub → green **Code** button → **Codespaces** tab → **Create codespace on main**.
+3. It opens VS Code in the browser with the repo loaded. Run it there.
+4. When done, go to **github.com/codespaces** and **delete** the codespace so it stops using your quota.
+
+**Remember:** do not add real secrets; use the repo's example/sample env values. Ask here if you get stuck.""")],
     "🐙│github-academy": [
+        ("Run it safely — sandbox before you run anyone's code", """Before Week 0, one habit that protects your laptop: **never run code you did not write on your real machine first.** A repo passing our checks is not proof it is safe.
+
+**Do this instead:** open it in a free browser sandbox so bad code cannot touch your files.
+• **Google Colab** (colab.research.google.com) — completely free, just a Google account. Best for Python and data. **Start here.**
+• **Binder** (mybinder.org) — completely free, no account, disposable. Paste a repo URL and go.
+• **GitHub Codespaces** — most powerful, free within a monthly limit via the Student Pack (education.github.com/pack).
+
+Full step-by-step setup and the safety rules are pinned in **🧰│safe-sandboxes**. Two rules to remember everywhere: use **public or synthetic data only**, and **never put a password, API key or `.env` file** into a sandbox.
+
+An automated check reduces risk; it does not make a project safe to run. Read code before you run it, and prefer a sandbox for anything unfamiliar."""),
         ("Week 0 — GitHub in one hour (start here)", """No installs needed for this one. Everything runs in the browser.
 
 1. **Watch:** Git and GitHub for Beginners – Crash Course (freeCodeCamp, 1 h) — https://www.youtube.com/watch?v=RGOj5yH7evk
@@ -168,7 +269,7 @@ WELCOME = """**Welcome to TLDP_2026_2027** 🎓
 
 Private server for the 45 TLDP students. Please don't share the invite link.
 
-**Step 1 — unlock the server:** type `/verify name:<your full name>` (add `major:` to get your major role). Your name is matched against the TLDP roster; if it fails, post in #introductions and staff will let you in.
+**Step 1 — unlock the server:** you joined with a personal, single-use invite from TLDP staff, so you're on the list. Post in #introductions with your name and major; a staff member gives you the **TLDP Student** role and your major role. (Typing a name proves nothing, so the bot never grants access by name.)
 
 **What's here once you're in**
 • **Feed forums** (📊 data-analytics · 💻 swe · 🔐 cybersecurity · 📈 quant · 💳 finance-fintech · 📋 project-management · 📣 digital-marketing) — every 6 hours the Project Scout bot opens a post with fresh GitHub repos for that major: things to build, open-source repos with *good first issues*, and new paper code. Each row shows 🟢 starter / 🟡 intermediate / 🔴 advanced.
@@ -179,13 +280,17 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 • **#announcements** — staff posts.
 • **🧑‍💻 code-review-practice / 🛡️ cyber-review-practice** — post code, write-ups or a short video and get an interview-style review (3-2-1 format, rubric pinned). Reviewing others counts too.
 • **🐙 github-academy** — new to GitHub? Four short weekly lessons, videos and tutorials, in order. Start at Week 0.
+• **🧰 safe-sandboxes** — which free sandbox to use and the safety rules.
+• **🛠️ build-your-sandbox** — build your own reusable sandbox (Colab or a Codespaces dev container) before you run anyone's code. Start with Colab.
 
 **Spring requirements (both graded)**
 • **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
 • **🎓 capstone** — your capstone project, judged in spring. Post your idea, your repo, and weekly progress there.
 • **📁 case-studies** — contribute to real case collections (Tidy Tuesday, Atomic Red Team, Sigma, OWASP, Open Case Studies…) and write one case of your own in the TLDP case library on GitHub. Merged cases are announced here with your name.
 
-**Start now:** /verify, introduce yourself, pick one repo this week and open one good-first-issue PR.
+**Start now:** introduce yourself in #introductions, then pick one repo this week and open one good-first-issue PR.
+
+**A note on safety:** every repo the feed shows has completed automated checks, but *automated checks are not a safety guarantee.* Use public or synthetic data only — never put passwords, API keys, `.env` files or personal data in a repo or message. Report suspicious links to staff instead of clicking. **Read code before you run it, and run anything unfamiliar in a free browser sandbox — see 🧰 safe-sandboxes (start with Google Colab, completely free).**
 """
 
 

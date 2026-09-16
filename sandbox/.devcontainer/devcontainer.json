@@ -1,0 +1,40 @@
+// TLDP Safe Sandbox — a reproducible, least-privilege dev container.
+//
+// Open this in GitHub Codespaces (cloud: the code never touches your laptop) or in VS Code with the
+// Dev Containers extension + Docker/Podman (local: the code runs in an isolated container, not on your host).
+// Either way you get a throwaway Ubuntu with Python and Node, a NON-root user, and capped resources.
+//
+// It reduces risk. It does not remove it: a container shares the host kernel, so treat it as disposable and
+// never put real secrets, passwords, API keys or personal data inside it. Use public or synthetic data only.
+{
+  "name": "TLDP Safe Sandbox",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  // run as the unprivileged 'vscode' user, never root
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true,
+
+  // resource ceilings + drop the ability to gain new privileges (least privilege)
+  "runArgs": [
+    "--cpus=2",
+    "--memory=4g",
+    "--pids-limit=512",
+    "--security-opt", "no-new-privileges"
+  ],
+
+  // languages most student projects need
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" }
+  },
+
+  // a visible reminder every time the sandbox starts
+  "postCreateCommand": "echo 'Sandbox ready. PUBLIC or SYNTHETIC data only. Never paste real secrets. This is disposable.'",
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "dbaeumer.vscode-eslint"]
+    }
+  }
+}

@@ -13,6 +13,7 @@ Env: DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_WEBHOOKS (needs the "announcem
 """
 import json
 import os
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -70,18 +71,36 @@ def leaderboard(channel_id: str) -> str:
     return "🏆 **This week's leaderboard** (links posted in #show-your-work)\n" + "\n".join(rows)
 
 
+def _published_hackathons() -> list[dict]:
+    """Read the screened snapshot the feed publishes (no live fetch here — no path bypasses screening)."""
+    try:
+        return json.load(open("published.json", encoding="utf-8")).get("hackathons", {}).get("items", [])
+    except (OSError, ValueError):
+        return []
+
+
 def hackathons() -> str:
-    """Friday reminder: every NYC in-person hackathon currently listed (spring requirement), pointing at the forum."""
-    from project_scout import hackathons_nyc, HACK_LINKS
-    hs = hackathons_nyc()
-    rows = [f"• [{h['title']}](<{h['url']}>) — {h['when']} · {h['where']} · via {h['src']}" for h in hs[:10]]
-    more = " · ".join(f"[{n}](<{u}>)" for n, u in HACK_LINKS[:5])
+    """Friday reminder: NYC in-person hackathons from the screened snapshot (spring requirement)."""
+    from project_scout import HACK_LINKS
+    import links
+    hs = [h for h in _published_hackathons() if not (links.classify(h.get("url", "")) or (None,))[0] == "block"]
+    rows = [f"• [{md_esc(h['title'])}](<{h['url']}>) — {md_esc(h['when'])} · {md_esc(h['where'])} · via {md_esc(h['src'])}" for h in hs[:10]]
+    more = " · ".join(f"[{md_esc(n)}](<{u}>)" for n, u in HACK_LINKS[:5])
     body = "\n".join(rows) if rows else "Nothing listed this week — check the links below and post what you find in 🏁 nyc-hackathons."
     return ("🏁 **Spring requirement: attend one in-person hackathon.** Currently listed in the NYC area:\n" + body +
             f"\n\nNew listings post automatically in 🏁 nyc-hackathons. More: {more}")
 
 
+MENTION_SAFE = {"parse": []}  # never let a webhook message ping @everyone/@here/roles from third-party text
+
+
+def md_esc(s: str) -> str:
+    """Neutralise Discord markdown in third-party text: masked links, bold, code, mentions."""
+    return re.sub(r"([\\*_~`|<>\[\]()])", r"\\\1", str(s)).replace("@", "@​")
+
+
 def webhook_post_body(url: str, body: dict) -> None:
+    body = {**body, "allowed_mentions": MENTION_SAFE}
     urllib.request.urlopen(urllib.request.Request(url + "?wait=true", data=json.dumps(body).encode(),
                                                   headers={"Content-Type": "application/json", "User-Agent": UA}), timeout=30)
 
@@ -110,7 +129,7 @@ def newest_issues(repo: str, n: int = 2) -> list[str]:
     time.sleep(2.5)
     q = urllib.parse.quote(f"repo:{repo} is:issue is:open")
     items = gh(f"/search/issues?q={q}&sort=created&order=desc&per_page={n}").get("items", [])
-    return [f"  · [{i['title'][:80]}](<{i['html_url']}>)" for i in items]
+    return [f"  · [{md_esc(i['title'][:80])}](<{i['html_url']}>)" for i in items if i.get('html_url', '').startswith('https://github.com/')]
 
 
 def case_of_the_week() -> dict[str, str]:
@@ -143,9 +162,22 @@ def case_of_the_week() -> dict[str, str]:
     return out
 
 
+def _day_arg() -> str:
+    """The day comes only from --day (validated) or --friday/--monday; anything else falls back to the weekday."""
+    if "--day" in sys.argv:
+        i = sys.argv.index("--day")
+        v = sys.argv[i + 1].lower() if i + 1 < len(sys.argv) else ""
+        if v in ("friday", "monday"):
+            return v
+    if "--friday" in sys.argv:
+        return "friday"
+    if "--monday" in sys.argv:
+        return "monday"
+    return "friday" if datetime.now(timezone.utc).weekday() == 4 else "monday"
+
+
 def main() -> int:
-    day = "friday" if "--friday" in sys.argv else "monday" if "--monday" in sys.argv else \
-        ("friday" if datetime.now(timezone.utc).weekday() == 4 else "monday")
+    day = _day_arg()
     if day == "monday":
         telegram("📌 Pick of the week: choose 1 repo per major from this week's drops in TLDP_2026_2027, "
                  "post it in #announcements and pin it. 45 people focus better on 7 shared projects than on 200.")

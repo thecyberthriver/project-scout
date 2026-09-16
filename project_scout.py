@@ -627,7 +627,8 @@ _index: dict = {}
 def row(it: dict) -> dict:
     return {"full_name": it["full_name"], "html_url": it["html_url"], "stargazers_count": it.get("stargazers_count") or 0,
             "language": it.get("language"), "description": (it.get("description") or "")[:200], "size": it.get("size") or 0,
-            "pushed_at": (it.get("pushed_at") or "")[:10], "seen_at": date.today().isoformat()}
+            "pushed_at": (it.get("pushed_at") or "")[:10], "created_at": (it.get("created_at") or "")[:10],
+            "open_issues_count": it.get("open_issues_count", 0), "seen_at": date.today().isoformat()}
 
 
 def load_index() -> dict:
@@ -1119,10 +1120,28 @@ def self_check() -> None:
     print("self-check ok")
 
 
+def _arg_after(flag: str, default: str) -> str:
+    i = sys.argv.index(flag)
+    return sys.argv[i + 1] if i + 1 < len(sys.argv) and not sys.argv[i + 1].startswith("-") else default
+
+
 def main() -> int:
     if "--self-check" in sys.argv:
         self_check()
         return 0
+    # ---- the gated pipeline (screen → publish); see pipeline.py ----
+    if "--discover" in sys.argv:
+        import pipeline
+        return pipeline.discover(_arg_after("--out", "build"), full=False)
+    if "--index-discover" in sys.argv:
+        import pipeline
+        return pipeline.discover(_arg_after("--out", "build"), full=True)
+    if "--publish" in sys.argv:
+        import pipeline
+        return pipeline.publish(_arg_after("--publish", "build"), index_only=False)
+    if "--publish-index" in sys.argv:
+        import pipeline
+        return pipeline.publish(_arg_after("--publish-index", "build"), index_only=True)
     if "--courses" in sys.argv:  # one-time evergreen map: top repos per course/topic, posted per major (optionally: --courses pm fintech)
         wanted = [a for a in sys.argv[sys.argv.index("--courses") + 1:] if a in COURSES] or list(COURSES)
         for key in wanted:

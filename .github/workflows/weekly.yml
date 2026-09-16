@@ -1,45 +1,152 @@
-name: TLDP weekly (claims, leaderboard, hackathons, pick-of-week reminder)
+name: TLDP weekly (claims, leaderboard, hackathons, index rebuild)
+
+# Jobs and trust boundaries:
+#   friday        — discord_weekly.py posts claims/leaderboard/hackathons. Needs Discord + Telegram secrets, never
+#                   clones or scans anything, contents: read.
+#   screen-index  — UNTRUSTED: full GitHub index rebuild + shallow-clone/Semgrep screening of every index repo.
+#                   No Discord/Telegram secrets, no git credential, contents: read.
+#   publish-index — TRUSTED: offline validation of the artifact, then commits the state files.
+# Why contents: write remains (publish-index only): published.json is what the Cloudflare Workers serve to
+# students (from raw.githubusercontent); index.json and screening.json are the discovery/evidence state.
+# Alternative: a deploy key or GitHub App scoped to this repo with contents: write, used only for the commit.
+# The workflow_dispatch "day" input is a fixed choice and reaches the script only through an env var
+# (never interpolated into a shell line) — validated again inside discord_weekly.py.
 
 on:
   schedule:
-    - cron: "0 12 * * 1"   # Monday 8 AM ET: pick-of-the-week reminder to staff (Telegram)
+    - cron: "0 12 * * 1"   # Monday 8 AM ET: pick-of-the-week reminder + full index rebuild and screening
     - cron: "0 20 * * 5"   # Friday 4 PM ET: claims + leaderboard + hackathons in Discord
   workflow_dispatch:
     inputs:
       day:
-        description: "friday or monday"
-        default: "friday"
+        description: "Which weekly job to run"
+        type: choice
+        options: [friday, monday]
+        default: friday
 
-permissions:
-  contents: write   # Monday index rebuild commits index.json
+permissions: {}
+
+concurrency:
+  group: project-scout
+  cancel-in-progress: false
 
 jobs:
-  weekly:
+  friday:
+    if: github.event.schedule == '0 20 * * 5' || inputs.day == 'friday'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
-      - env:
+      - name: Post claims, leaderboard and hackathons
+        env:
+          DAY: ${{ inputs.day || 'friday' }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
           DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GH_SCOUT_TOKEN || github.token }}
-        run: python discord_weekly.py ${{ inputs.day && format('--{0}', inputs.day) || '' }}
-      - name: Weekly full index rebuild (Mondays)
-        if: github.event.schedule == '0 12 * * 1' || inputs.day == 'monday'
+        run: python discord_weekly.py --day "${DAY:-friday}"
+
+  monday-reminder:
+    if: github.event.schedule == '0 12 * * 1' || inputs.day == 'monday'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - name: Pick-of-the-week reminder + case of the week
         env:
+          DAY: ${{ inputs.day || 'monday' }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+          DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GH_SCOUT_TOKEN || github.token }}
-          SEARCH_BUDGET: "120"
+        run: python discord_weekly.py --day "${DAY:-monday}"
+
+  screen-index:
+    if: github.event.schedule == '0 12 * * 1' || inputs.day == 'monday'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - run: pip install semgrep==1.177.0
+      - name: Install extra screening engines (yara, clamav, osv-scanner)
         run: |
-          python project_scout.py --index-only
-          python vet.py            # deep vetting: contents, README links, history, owner age; prunes failures, writes docs/vetting-report.md
-          pip install --quiet semgrep
-          python scan.py --index   # clone + Semgrep malware-behavior ruleset on every index repo not scanned in 30 days; prunes hits
+          pip install yara-python==4.5.4
+          sudo apt-get update
+          sudo apt-get install -y clamav
+          sudo systemctl stop clamav-freshclam 2>/dev/null || true
+          sudo freshclam || echo "freshclam failed; clamav signatures unavailable this run (recorded as not-run)"
+          OSV_VERSION=v1.9.2
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_amd64" -o osv-scanner
+          sudo install -m 0755 osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
+      - run: python -m unittest -v
+      - name: Full index rebuild + screening (untrusted stage, no secrets)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_SCOUT_TOKEN || github.token }}   # no-permission machine-account token
+          SEARCH_BUDGET: "120"
+        run: python project_scout.py --index-discover --out build/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: screened-index
+          path: build/
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-index:
+    needs: screen-index
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        with:
+          name: screened-index
+          path: build/
+      - name: Validate and write published index (no sending)
+        run: python project_scout.py --publish-index build/
+      - name: Commit state
+        run: |
           git config user.name "project-scout-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add index.json vet_cache.json scan_cache.json docs/vetting-report.md
-          git diff --cached --quiet || (git commit -m "chore: weekly index rebuild + vetting [skip ci]" && git pull --rebase && git push)
+          git add seen.json index.json published.json screening.json
+          git diff --cached --quiet || (git commit -m "chore: weekly index rebuild + screening [skip ci]" && git pull --rebase && git push)
+      - name: Alert owner on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=Project Scout weekly index rebuild FAILED. The previous published index stays in place. ${RUN_URL}"

@@ -1,7 +1,9 @@
-secrets_local.py
-__pycache__/
 .wrangler/
+__pycache__/
+build/
 docs/*.pdf
 docs/*_guide.html
-roster_local.json
 docs/server.*
+roster_invites_local.json
+roster_local.json
+secrets_local.py

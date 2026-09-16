@@ -1,0 +1,80 @@
+name: Security scan of this repository
+
+# Scans THIS project's own code (not the student-facing third-party repos — those are screened by the digest and
+# weekly workflows). Read-only: contents: read, no secrets. Findings appear only in the job log and step summary;
+# nothing is uploaded anywhere else. Semgrep runs with metrics off (rules are downloaded from semgrep.dev; no code
+# leaves the runner). osv-scanner sends package names/versions to api.osv.dev. gitleaks sends nothing.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "30 9 * * 1"   # weekly Monday: rule updates catch things a stale ruleset missed
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - run: pip install semgrep==1.177.0
+      - name: Semgrep (registry security rules + custom malware ruleset)
+        run: |
+          semgrep scan --config p/security-audit --config p/secrets --config p/python --config p/javascript \
+            --config p/github-actions --severity ERROR --error --metrics=off \
+            --exclude docs --exclude __pycache__ --json --output semgrep-project.json . || status=$?
+          # the malware ruleset matches its own regex strings, so it is scanned separately with its folder excluded
+          semgrep scan --config semgrep-rules/malware.yml --severity ERROR --error --metrics=off \
+            --exclude docs --exclude __pycache__ --exclude semgrep-rules --json --output semgrep-malware.json . || status=$?
+          python - <<'EOF'
+          import json, os
+          rows = []
+          for f in ("semgrep-project.json", "semgrep-malware.json"):
+              d = json.load(open(f)) if os.path.exists(f) else {"results": []}
+              rows += [f"- `{r['path']}:{r['start']['line']}` {r['check_id'].split('.')[-1]}" for r in d["results"]]  # rule + location only, never matched text
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as s:
+              s.write(f"## Semgrep: {len(rows)} ERROR-level finding(s)\n\n" + ("\n".join(rows) if rows else "None.") + "\n")
+          EOF
+          exit ${status:-0}
+
+  dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - name: osv-scanner (known-vulnerable dependencies)
+        # This repo is stdlib Python + dependency-free Workers, so there are no lockfiles today and osv-scanner exits
+        # non-zero with "no package sources found". continue-on-error keeps the job honest without failing on an empty
+        # scan; flip it to false the day a requirements.txt / package-lock.json is added.
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc  # v2.6.0
+        with:
+          scan-args: |-
+            --recursive
+            ./
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0   # gitleaks scans history, not just the tip
+          persist-credentials: false
+      - name: gitleaks (secrets in history and working tree)
+        # No licence key is needed for a personal-account repository (per the action's README); an organisation
+        # would need GITLEAKS_LICENSE. The p/secrets Semgrep ruleset above is the fallback if this step is removed.
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
