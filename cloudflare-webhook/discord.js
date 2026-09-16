@@ -11,10 +11,11 @@
  *   DISCORD_APP_ID       General Information → Application ID
  *   optional GITHUB_TOKEN
  */
-import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs, startItems, hackathonsNyc, renderHacks, caseItems, renderCases } from "./worker.js";
+import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs, startItems, hackathonsNyc, renderHacks, caseItems, renderCases, pathFor, renderPath } from "./worker.js";
 
 const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
+  "**New here? Run `/scout lane:Learning path major:<yours>`** — your whole year in order, stage by stage.\n" +
   "`/scout major:Cyber` fresh repos to build · `lane:Contribute` open good-first-issues · `lane:Research` fresh paper code.\n" +
   "Add `keywords:` to narrow, e.g. `/scout major:Data keywords:nba`.";
 
@@ -65,6 +66,9 @@ async function answer(env, interaction, lane, major, extra) {
   else if (lane === "hackathons") {
     try { content = renderHacks("**🏁 NYC in-person hackathons** (Devpost + MLH, live)", await hackathonsNyc(), true); }
     catch (e) { content = `⚠️ ${e.message}`; }
+  } else if (lane === "path") {
+    const data = await pathFor(major || "swe");
+    content = data ? renderPath(major || "swe", data, true) : "The learning path isn't in the index yet — try again after the next feed run.";
   } else if (lane === "cases") {
     const items = await caseItems(major || "swe");
     content = items ? renderCases(`**📁 Case studies you can contribute to · ${MAJORS[major || "swe"].label}**`, items, true)
@@ -99,7 +103,7 @@ export default {
     if (i.type !== 2) return json({ type: 4, data: { content: "Unsupported interaction." } });
     const o = Object.fromEntries((i.data.options || []).map((x) => [x.name, x.value]));
     if (i.data.name === "verify") return json({ type: 4, data: { content: await verifyStudent(env, i, o), flags: 64 } });
-    const lane = LANES[o.lane] || ["orgs", "start", "hackathons", "cases"].includes(o.lane) ? o.lane : "build";
+    const lane = LANES[o.lane] || ["orgs", "start", "hackathons", "cases", "path"].includes(o.lane) ? o.lane : "build";
     const major = MAJORS[o.major] ? o.major : null;
     ctx.waitUntil(answer(env, i, lane, major, (o.keywords || "").trim()).catch((e) => console.log("answer error", e)));
     return json({ type: 5 });                                          // deferred reply; edited by answer()

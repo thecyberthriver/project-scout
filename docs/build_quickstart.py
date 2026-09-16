@@ -51,7 +51,7 @@ HTML = f"""
 <p class="cap">Left: the channel list — START HERE, then the PROJECT SCOUT FEED forums (one post per drop, every 6 hours), then COLLABORATE. Right: the posts in a forum. Tap a post to discuss it; react with the raised-hand emoji to claim it.</p>
 
 <h2>Three commands to know (type them in #scout-search)</h2>
-<div class="cmd"><code>/scout lane:Start here major:Cybersecurity</code> — curated idea lists, roadmaps and beginner basics. <b>Use this first.</b></div>
+<div class="cmd"><code>/scout lane:Learning path major:Cybersecurity</code> — your whole year in four stages, from first lessons to capstone. <b>Use this first.</b></div>
 <div class="cmd"><code>/scout major:Cybersecurity keywords:honeypot</code> — fresh repos matching a keyword (any major, any keyword).</div>
 <div class="cmd"><code>/scout lane:Contribute major:Data Analytics</code> — active open-source projects with beginner-friendly issues, plus a resume line.</div>
 

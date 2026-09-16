@@ -33,7 +33,8 @@ const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", pa
                      org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
                      basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start",
                      hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons",
-                     case: "cases", casestudy: "cases", casestudies: "cases", contribute2: "cases" };
+                     case: "cases", casestudy: "cases", casestudies: "cases",
+                     path: "path", paths: "path", roadmap: "path", year: "path", plan: "path" };
 // SWE flavors: one language per GitHub query, so /swe runs Python + SQL + frontend in parallel by default;
 // "/swe sql", "/swe frontend", "/swe java" … pick one. Mirrors BUILD_QUERIES in ../project_scout.py.
 export const SWE_FLAVORS = {
@@ -107,6 +108,30 @@ export function coursesHelp(major) {
   return `<b>🎓 ${MAJORS[m].label} — course codes you can search</b>\n` +
     Object.entries(COURSES[m]).map(([k, [name]]) => `${cmd} ${k} — ${name}`).join("\n") +
     `\nAdd keywords after the code: <code>${cmd} ${Object.keys(COURSES[m])[0]} python</code>`;
+}
+// Learning path: the year in order per major — served from index.static.paths (refreshed weekly by the feed).
+export async function pathFor(major) {
+  const idx = await loadIndex().catch(() => null);
+  const p = idx?.static?.paths?.[major];
+  return p ? { stages: idx.static.stages, path: p } : null;
+}
+export function renderPath(major, data, md = false) {
+  const e = md ? (s) => String(s) : esc;
+  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
+  const b = (s) => (md ? `**${s}**` : `<b>${s}</b>`);
+  const cur = Math.min(phase()[0], 3);
+  const out = [b(`🗺 ${MAJORS[major].label} — your year, in order`),
+    md ? `*Start at Stage 1 even if it feels easy. ▶ = now (${phase()[1]}).*` : `<i>Start at Stage 1 even if it feels easy. ▶ = now (${phase()[1]}).</i>`];
+  data.stages.forEach(([num, months, title], i) => {
+    out.push("", b(`${i === cur ? "▶" : "•"} Stage ${num} · ${months} · ${e(title)}`));
+    for (const { target, todo, repo } of data.path[i]) {
+      const isRepo = target.includes("/") && !target.startsWith("http");
+      const name = repo ? repo.full_name : target.replace("https://", "").replace(/\/$/, "");
+      const url = repo ? repo.html_url : isRepo ? `https://github.com/${target}` : target;
+      out.push(`  ${link(name, url)}${repo ? ` ⭐${repo.stargazers_count}` : ""}\n    ${e(todo)}`);
+    }
+  });
+  return out.join("\n");
 }
 // Case studies students can contribute to — served from index.static.cases (refreshed weekly by the feed).
 export async function caseItems(major) {
@@ -266,6 +291,7 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 const HELP =
   "<b>Project Scout</b> — GitHub project ideas by major.\n\n" +
+  "<b>New here? Start with /path &lt;major&gt;</b> — your whole year in order, stage by stage.\n" +
   "/quant · /fintech · /swe · /cyber · /data · /pm · /marketing — fresh repos to build\n" +
   "  /swe = Python + SQL + frontend mixed · /swe sql · /swe frontend · /swe java (any language)\n" +
   "  /data powerbi · /data tableau · /cyber d1…d8 (CISSP domains, /domains lists them)\n" +
@@ -353,6 +379,10 @@ export function fromIndex(idx, lane, major, extra) {
   if (!idx?.keys) return null;
   const tokens = (extra || "").toLowerCase().split(/\s+/).filter((t) => t && !/^(advanced|any|all)$/.test(t));
   let keys = Object.keys(idx.keys).filter((k) => (!major || k.startsWith(`${major}|`)) && k.includes(`|${lane}|`));
+  if (lane === "build" && !tokens.length && phase()[0] < 2) {  // fall/winter default: the beginner-oriented keys only
+    const bk = keys.filter((k) => /\|build\|(learn|tutorial|starter)$/.test(k));
+    if (bk.length) keys = bk;
+  }
   const first = tokens[0];
   const label = first && ((major === "swe" && SWE_LABEL[first]) || (major === "data" && DATA_LABEL[first]) ||
     (major === "cyber" && CYBER_DOMAINS[first]?.[0]) || COURSES[major]?.[first]?.[0]);
@@ -371,6 +401,13 @@ export async function lookup(env, lane, major, extra) {
   const idx = await loadIndex().catch(() => null);
   const hit = fromIndex(idx, lane, major, extra);
   if (hit) return ordered(hit, ceilingFor(extra)).slice(0, MAX + 3);
+  if (lane === "build" && phase()[0] < 2 && major && !extra) {  // fall/winter: established beginner-oriented repos, not brand-new ones
+    const a = MAJORS[major].anchor;
+    const out = [];
+    for (const t of [`${a} beginner`, `${a} tutorial`, `${a} starter project`])
+      out.push(...await search(env, `${t} in:name,description,readme stars:>=200 pushed:>=${ago(365)} archived:false`, "stars"));
+    return ordered(dedupe(out).filter(english), ceilingFor(extra)).slice(0, MAX + 3);
+  }
   if (lane === "build") {  // major-specific build searches: SWE languages, Data tools, cyber domains
     const first = (extra || "").split(/\s+/)[0].toLowerCase(), rest = (extra || "").split(/\s+/).slice(1).join(" ");
     let queries = null;
@@ -451,7 +488,7 @@ export function parse(text) {
   // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
   const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
-  lane = LANES[lane] || ["orgs", "start", "hackathons", "cases"].includes(lane) ? lane : LANE_ALIAS[lane];
+  lane = LANES[lane] || ["orgs", "start", "hackathons", "cases", "path"].includes(lane) ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
   let major = (words[0] || "").toLowerCase();
   major = MAJORS[major] ? major : ALIAS[major] || null;
@@ -484,6 +521,11 @@ async function handleUpdate(env, update) {
   if (lane === "hackathons") {
     try { await tgSend(env, chatId, renderHacks("<b>🏁 NYC in-person hackathons (Devpost + MLH, live)</b>", await hackathonsNyc())); }
     catch (e) { await tgSend(env, chatId, `⚠️ ${esc(e.message)}`); }
+    return;
+  }
+  if (lane === "path") {
+    const data = await pathFor(major || "swe");
+    await tgSend(env, chatId, data ? renderPath(major || "swe", data) : "The learning path isn't in the index yet — try again after the next feed run.");
     return;
   }
   if (lane === "cases") {

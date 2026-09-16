@@ -200,6 +200,119 @@ CASES = {
 }
 
 
+# ---- Learning paths: the year, in order, per major. Undergrad-friendly, verified 2026-09-15. --------------------
+# Four stages that track the school year. Each item: (GitHub repo or URL, exactly what to do with it).
+STAGES = [("1", "Sep–Oct", "Foundations — learn the tools by following lessons"),
+          ("2", "Nov–Dec", "First projects — small, finishable, your own repo"),
+          ("3", "Jan–Feb", "Contribute — your first merged pull request"),
+          ("4", "Mar–May", "Capstone — one real project, written up as a case")]
+PATHS = {
+    "data": [
+        [("microsoft/Data-Science-For-Beginners", "do the 10-week lessons (2 per week); each has a notebook and a quiz"),
+         ("Asabeneh/30-Days-Of-Python", "if Python is new: one short day per day, do days 1–15")],
+        [("rfordatascience/tidytuesday", "pick one week's dataset, make 3 charts, write 5 sentences of findings"),
+         ("https://www.kaggle.com/competitions/titanic", "Kaggle Titanic: the classic first model, follow a public notebook then change one thing"),
+         ("https://www.makeovermonday.co.uk/", "one Makeover Monday in Tableau or Power BI, publish it")],
+        [("firstcontributions/first-contributions", "practice the fork → branch → pull request loop in 20 minutes, zero risk"),
+         ("pandas-dev/pandas", "pick a 'good first issue' labeled docs; fix one docstring or example")],
+        [("streamlit/streamlit", "build a dashboard on an NYC Open Data dataset; deploy it free on Streamlit Cloud"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "swe": [
+        [("microsoft/Web-Dev-For-Beginners", "24 lessons, build a terrarium, a typing game and a bank app along the way"),
+         ("Asabeneh/30-Days-Of-Python", "Python side: days 1–20"),
+         ("https://www.freecodecamp.org/learn/", "freeCodeCamp Responsive Web Design if you prefer guided exercises")],
+        [("florinpop17/app-ideas", "build two Tier-1 apps (Bin2Dec, Border Radius Previewer…), then one Tier-2"),
+         ("practical-tutorials/project-based-learning", "one guided project from the Python or JavaScript list, e.g. a to-do API")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("TheAlgorithms/Python", "add tests or a docstring to one algorithm; maintainers are used to beginners"),
+         ("public-apis/public-apis", "add or fix one API entry — a real merged PR")],
+        [("florinpop17/app-ideas", "one Tier-3 app with a backend and a database (Python + SQL) — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "cyber": [
+        [("microsoft/Security-101", "8 short lessons on the core concepts; do them before anything hands-on"),
+         ("https://overthewire.org/wargames/bandit/", "OverTheWire Bandit levels 0–15: the Linux basics every cyber job assumes"),
+         ("https://play.picoctf.org/", "picoCTF practice: 10 easy challenges, any category")],
+        [("juice-shop/juice-shop", "run it locally (one Docker command), solve the 1-star and 2-star challenges"),
+         ("https://tryhackme.com/", "TryHackMe 'Pre Security' then 'Intro to Cyber Security' paths (free rooms)")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("OWASP/CheatSheetSeries", "fix or clarify one cheat sheet section; open a good-first-issue"),
+         ("SigmaHQ/sigma", "write one detection rule for a technique you practiced")],
+        [("redcanaryco/atomic-red-team", "build a small home lab, run 5 atomics, write the detections — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "quant": [
+        [("Asabeneh/30-Days-Of-Python", "Python first: days 1–20"),
+         ("microsoft/Data-Science-For-Beginners", "the pandas and visualization lessons (weeks 2–5)"),
+         ("ranaroussi/yfinance", "pull 5 years of prices for 3 tickers, plot them, compute returns")],
+        [("kernc/backtesting.py", "backtest a moving-average crossover in 30 lines; then break it on purpose and see why"),
+         ("je-suis-tm/quant-trading", "read two simple strategies, reproduce one with your own tickers")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("ranaroussi/yfinance", "fix a docs example or a small issue"),
+         ("kernc/backtesting.py", "add an example notebook or test")],
+        [("stefan-jansen/machine-learning-for-trading", "pick one chapter's notebook and extend it to new data — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "fintech": [
+        [("Asabeneh/30-Days-Of-Python", "Python first: days 1–15"),
+         ("microsoft/Data-Science-For-Beginners", "spreadsheets-to-pandas lessons (weeks 1–3)"),
+         ("ranaroussi/yfinance", "pull prices and build a simple portfolio tracker in a notebook")],
+        [("actualbudget/actual", "run it, import 3 months of your own (or sample) transactions, build 2 reports"),
+         ("florinpop17/app-ideas", "build the Tier-1 'Calculator' then a loan-amortization calculator (TVM in code)")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("firefly-iii/firefly-iii", "improve one documentation page or translate a string"),
+         ("OpenBB-finance/OpenBB", "fix a docs example; browse 'good first issue'")],
+        [("OpenBB-finance/OpenBB", "a DCF or comparables analysis notebook on 3 public companies using OpenBB data — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "pm": [
+        [("https://scrumguides.org/", "read the Scrum Guide (13 pages) and write a one-page summary in your own words"),
+         ("https://openpracticelibrary.com/", "pick 5 practices; explain when you'd use each"),
+         ("https://www.atlassian.com/agile", "Atlassian Agile Coach: Scrum, Kanban and Jira basics")],
+        [("wekan/wekan", "run a Kanban board for a real 2-week task list (yours or a club's); track WIP"),
+         ("makeplane/plane", "plan a 3-sprint project with issues, cycles and a roadmap; export the burndown")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("makeplane/plane", "improve a docs page or reproduce and confirm a bug report"),
+         ("https://www.atlassian.com/software/jira/free", "Jira free tier: run one of the team's projects with sprints and a Confluence page")],
+        [("https://openpracticelibrary.com/", "manage a classmate's capstone in Jira: charter, backlog, 4 sprints, retros — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+    "marketing": [
+        [("https://learndigital.withgoogle.com/digitalgarage", "Google Digital Garage fundamentals (free certificate)"),
+         ("https://academy.hubspot.com/", "HubSpot Academy: Inbound Marketing and Email Marketing courses"),
+         ("microsoft/Web-Dev-For-Beginners", "lessons 1–6 so you can build a landing page yourself")],
+        [("umami-software/umami", "put analytics on a page you built; run a 2-week A/B headline test"),
+         ("PostHog/posthog", "define 3 events and a funnel for a small site or app")],
+        [("firstcontributions/first-contributions", "your first pull request, 20 minutes"),
+         ("PostHog/posthog.com", "write one tutorial page for the docs"),
+         ("mautic/user-documentation", "fix or add one documentation page")],
+        [("PostHog/posthog", "a full campaign: landing page, analytics, email flow, results deck — your capstone"),
+         ("tldpprojectscout/tldp-case-studies", "write it up as your case")],
+    ],
+}
+
+
+def render_path(key: str, repos: dict[str, dict | None]) -> str:
+    cur = phase()[0]
+    out = []
+    for i, (num, months, title) in enumerate(STAGES):
+        marker = "▶" if i == min(cur, 3) or (cur == 0 and i == 0) else "•"
+        out.append(f"\n<b>{marker} Stage {num} · {months} · {esc(title)}</b>")
+        for target, todo in PATHS[key][i]:
+            r = repos.get(target)
+            is_repo = "/" in target and not target.startswith("http")
+            name = r["full_name"] if r else target.replace("https://", "").rstrip("/")
+            url = r["html_url"] if r else (f"https://github.com/{target}" if is_repo else target)
+            tag = f" ⭐{r['stargazers_count']}" if r else ""
+            out.append(f'  <a href="{url}">{esc(name)}</a>{tag}\n    {esc(todo)}')
+    return "\n".join(out)
+
+
+def path_repos(key: str) -> dict[str, dict | None]:
+    return {t: (gh_repo(t) if "/" in t and not t.startswith("http") else None) for stage in PATHS[key] for t, _ in stage}
+
+
 def render_case(entry: tuple[str, str], repo: dict | None) -> str:
     target, blurb = entry
     if repo:
@@ -223,6 +336,8 @@ def cyber_rotation() -> list[tuple[str, str, int]]:
     return [("🔐 General", MAJORS["cyber"][1], 1)] + [(f"🔐 {CYBER_DOMAINS[k][0]}", CYBER_DOMAINS[k][1], 1) for k in picked]
 
 
+# Fall/winter build lane: popular, still-maintained, beginner-oriented repos (not brand-new ones).
+BEGINNER_Q = lambda terms, anchor: f"{terms} in:name,description,readme stars:>=200 pushed:>={ago(365)} archived:false"  # noqa: E731
 # Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors.
 AI_SPAM = __import__("re").compile(r"\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b", __import__("re").I)
 AI_OK = {"swe", "data"}
@@ -493,7 +608,13 @@ def refresh_static() -> None:
         cases[key] = [{"target": e[0], "blurb": e[1], "repo": row(r) | {"open_issues_count": r.get("open_issues_count", 0)} if r else None}
                       for e, r in (((e, gh_repo(e[0]) if "/" in e[0] and not e[0].startswith("http") else None) for e in CASES.get(key, [])))]
         time.sleep(0.3)
-    st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains, "cases": cases})
+    paths = {}
+    for key in PATHS:
+        repos = path_repos(key)
+        paths[key] = [[{"target": t, "todo": todo, "repo": row(repos[t]) if repos.get(t) else None} for t, todo in stage] for stage in PATHS[key]]
+        time.sleep(0.3)
+    st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains, "cases": cases,
+               "paths": paths, "stages": STAGES})
 
 
 def save_index() -> None:
@@ -597,8 +718,14 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
         for lane, (lane_label, n, sort, q) in LANES.items():
             if lane in ("oss", "research") and (lane == "oss") != (run_no % 2 == 0):
                 continue  # oss and research alternate runs → half the calls, still every 12 h each
+            if lane == "research" and phase()[0] < 2:
+                continue  # paper code is not undergrad fall material; it returns in Phase 3
             subs = ([(None, terms, n)] if lane != "build" else
                     cyber_rotation() if key == "cyber" else BUILD_QUERIES.get(key, [(None, terms, n)]))
+            if lane == "build" and phase()[0] < 2:
+                # Fall/winter: established, documented, beginner-oriented repos instead of "created this week".
+                q, sort, lane_label = BEGINNER_Q, "stars", "🌱 Beginner-friendly & well documented"
+                subs = [("learn", f"{anchor} beginner", 1), ("tutorial", f"{anchor} tutorial", 1), ("starter", f"{anchor} starter project", 1)]
             if lane == "build" and len(subs) > 3:                                   # e.g. SWE's 5 languages: 3 per run, rotating
                 subs = [subs[(run_no + i) % len(subs)] for i in range(3)]
             if lane == "build" and key in COURSES:  # one course-aligned search per run
@@ -630,6 +757,14 @@ def full_index() -> None:
         if key == "cyber":
             subs += [("🔐 General", terms, 0)] + [(f"🔐 {d[0]}", d[1], 0) for d in CYBER_DOMAINS.values()]
         subs += [(f"🎓 {c[0]}", c[1], 0) for c in COURSES.get(key, [])]
+        for sub_label, sub_terms in (("learn", f"{anchor} beginner"), ("tutorial", f"{anchor} tutorial"), ("starter", f"{anchor} starter project")):
+            try:  # beginner-oriented keys the Worker prefers in fall/winter
+                index_add(f"{key}|build|{sub_label}", gh_search(BEGINNER_Q(sub_terms, anchor), "stars"))
+            except BudgetExceeded as e:
+                print(f"full_index stopped: {e}", file=sys.stderr)
+                return
+            except Exception as e:
+                print(f"{key}/build/{sub_label}: {e}", file=sys.stderr)
         for lane, (lane_label, n, sort, q) in LANES.items():
             for sub_label, sub_terms, _n in (subs if lane == "build" else [(None, terms, 0)]):
                 try:
@@ -832,6 +967,16 @@ def main() -> int:
             if os.environ.get("DISCORD_WEBHOOKS"):
                 discord(key, head + "\n" + "\n".join(rows))
             print(f"posted course map: {key} ({len(rows)} courses)")
+        return 0
+    if "--paths" in sys.argv:  # one-time: "your year, in order" per major (rerun after editing PATHS)
+        for key, (label, *_r) in MAJORS.items():
+            text = (f"\n<b>🗺 {label} — your year, in order</b>\n"
+                    f"<i>Start at Stage 1 even if it feels easy; each stage assumes the one before. ▶ marks where we are now ({phase()[1]}).</i>"
+                    + render_path(key, path_repos(key)) + "\n\n  💡 Type /path in the bot any time to see this again.")
+            for m in messages([text]):
+                send(m)
+            discord(key, text)
+        print("posted learning paths for all majors")
         return 0
     if "--cases" in sys.argv:  # one-time: "case studies you can contribute to" per major
         for key, (label, *_r) in MAJORS.items():
