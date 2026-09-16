@@ -26,7 +26,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://discord.com/api/v10"
-UA = "project-scout-enroll (github.com/thecyberthriver/project-scout, 1.0)"
+UA = "project-scout-enroll (github.com/tldpprojectscout/project-scout, 1.0)"
 ROSTER_FILE = "roster_local.json"          # gitignored; a JSON list of names, or [{"name": "...", "email": "..."}]
 INVITES_FILE = "roster_invites_local.json"  # gitignored output; name -> invite; never committed, never printed
 INVITE_MAX_AGE = 7 * 86400

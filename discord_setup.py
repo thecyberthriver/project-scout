@@ -255,11 +255,11 @@ Give feedback in the 3-2-1 format: 3 solid things, 2 to change with the reason, 
 3. Treat it as **disposable** — delete the session when you're done.
 4. **Read code before you run it.** If an install step says "disable your antivirus" or downloads from an odd site, stop and post it for staff.
 
-Files and full instructions: https://github.com/thecyberthriver/project-scout/tree/main/sandbox"""),
+Files and full instructions: https://github.com/tldpprojectscout/project-scout/tree/main/sandbox"""),
         ("🟢 Build A — your Google Colab sandbox (start here)", """Runs on Google's computers, so nothing touches your laptop. Completely free.
 
 1. Go to **colab.research.google.com** and sign in with a Google account.
-2. `File → Open notebook → GitHub`. Paste `thecyberthriver/project-scout` and open **sandbox/colab_sandbox.ipynb**.
+2. `File → Open notebook → GitHub`. Paste `tldpprojectscout/project-scout` and open **sandbox/colab_sandbox.ipynb**.
 3. `File → Save a copy in Drive`. That copy is now **your** reusable sandbox — you built it.
 4. Work through the numbered cells: it checks you're really in Colab, clones a repo you name, shows you the code to **read first**, then installs and runs it — all on Google's machine.
 5. Finished? `Runtime → Disconnect and delete runtime`. Everything is destroyed.
@@ -268,7 +268,7 @@ Then post in this channel: "Built my Colab sandbox ✅". Stuck on a step? Reply 
         ("🟣 Build B — your Codespaces dev-container sandbox", """A full VS Code + Linux machine in your browser, tied to a repo. The code runs on GitHub's servers. Free up to a monthly limit; the Student Pack adds more.
 
 1. Get the free **GitHub Student Developer Pack** with your Baruch email: **education.github.com/pack**
-2. Copy the folder **sandbox/.devcontainer/** from `thecyberthriver/project-scout` into the repo you want to try (or into your own template repo). It builds an Ubuntu container that runs as a **non-root** user with **capped CPU/memory** and **no-new-privileges** — a reproducible, least-privilege sandbox.
+2. Copy the folder **sandbox/.devcontainer/** from `tldpprojectscout/project-scout` into the repo you want to try (or into your own template repo). It builds an Ubuntu container that runs as a **non-root** user with **capped CPU/memory** and **no-new-privileges** — a reproducible, least-privilege sandbox.
 3. On that repo: green **Code** button → **Codespaces** tab → **Create codespace on main**.
 4. VS Code opens in the browser with Python + Node ready. Run the project there.
 5. Done? Go to **github.com/codespaces** and **delete** the codespace so it stops using your quota.
@@ -408,7 +408,7 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 def api(method, path, body=None):
     req = urllib.request.Request(f"{API}{path}", method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Authorization": f"Bot {TOKEN}", "Content-Type": "application/json",
-                                          "User-Agent": "project-scout (github.com/thecyberthriver/project-scout, 1.0)"})
+                                          "User-Agent": "project-scout (github.com/tldpprojectscout/project-scout, 1.0)"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r) if r.status != 204 else None
@@ -565,7 +565,7 @@ def main() -> int:
 
     print(f"\nINVITE (45 uses, 7 days): https://discord.gg/{inv['code']}")
     print("\nRepo secret (feed -> per-channel):")
-    print("gh secret set DISCORD_WEBHOOKS -R thecyberthriver/project-scout -b '" + json.dumps(webhooks) + "'")
+    print("gh secret set DISCORD_WEBHOOKS -R tldpprojectscout/project-scout -b '" + json.dumps(webhooks) + "'")
     print("\nWorker secrets for /verify (wrangler secret bulk -c wrangler.discord.toml):")
     print(json.dumps({"STUDENT_ROLE_ID": student["id"], "MAJOR_ROLES": json.dumps(major_ids),
                       "SHOW_YOUR_WORK_ID": existing["show-your-work"]["id"], "FIND_A_TEAM_ID": existing["find-a-team"]["id"]}))

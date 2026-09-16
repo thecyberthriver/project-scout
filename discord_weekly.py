@@ -22,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 
 API = "https://discord.com/api/v10"
 TOKEN, GUILD = os.environ.get("DISCORD_BOT_TOKEN", ""), os.environ.get("DISCORD_GUILD_ID", "")
-UA = "project-scout (github.com/thecyberthriver/project-scout, 1.0)"
+UA = "project-scout (github.com/tldpprojectscout/project-scout, 1.0)"
 WEEK = datetime.now(timezone.utc) - timedelta(days=7)
 CLAIM = urllib.parse.quote("🙋")
 

@@ -144,7 +144,7 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
 <tr><td>Too many notifications</td><td>Right-click the server icon &rarr; Notification Settings &rarr; "Only @mentions". Then turn notifications on for #announcements and your major's channel only.</td></tr>
 </table>
 
-<p class="small">Project Scout is open source: github.com/thecyberthriver/project-scout. The bot only reads public GitHub and GitLab data; it never scrapes LinkedIn or stores anything about you.</p>
+<p class="small">Project Scout is open source: github.com/tldpprojectscout/project-scout. The bot only reads public GitHub and GitLab data; it never scrapes LinkedIn or stores anything about you.</p>
 </body></html>
 """
 

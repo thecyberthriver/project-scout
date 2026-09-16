@@ -59,7 +59,7 @@ def main() -> int:
     req = urllib.request.Request(f"https://discord.com/api/v10/applications/{APP}/commands", method="PUT",
                                  data=json.dumps(COMMANDS).encode(),
                                  headers={"Authorization": f"Bot {TOKEN}", "Content-Type": "application/json",
-                                          "User-Agent": "project-scout (github.com/thecyberthriver/project-scout, 1.0)"})
+                                          "User-Agent": "project-scout (github.com/tldpprojectscout/project-scout, 1.0)"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             print("registered:", [c["name"] for c in json.load(r)])

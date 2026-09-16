@@ -10,7 +10,7 @@
  *                    /orgs · /basics <major> · /path <major> · /cases <major> · /hackathons · /courses · /domains
  * Secrets: TELEGRAM_BOT_TOKEN, WEBHOOK_SECRET, OWNER_CHAT_ID (lock to one chat; remove to open to a channel).
  */
-export const PUBLISHED_URL = "https://raw.githubusercontent.com/thecyberthriver/project-scout/main/published.json";
+export const PUBLISHED_URL = "https://raw.githubusercontent.com/tldpprojectscout/project-scout/main/published.json";
 export const PAUSE_MSG = "Recommendations are paused: automated screening hasn't completed recently. TLDP staff have been notified.";
 export const DEFAULT_LABEL = "Automated checks completed; not a safety guarantee.";
 export const EVERGREEN_HEAD = "Evergreen reference (not a fresh repo)";

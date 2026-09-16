@@ -583,7 +583,7 @@ def gh_search(q: str, sort: str = "stars", n: int = 15) -> list[dict]:
         raise BudgetExceeded(f"search budget {SEARCH_BUDGET} spent")
     url = "https://api.github.com/search/repositories?" + urllib.parse.urlencode(
         {"q": q, "sort": sort, "order": "desc", "per_page": n})
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout (github.com/thecyberthriver/project-scout)"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout (github.com/tldpprojectscout/project-scout)"}
     if os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
     time.sleep(SEARCH_SPACING)

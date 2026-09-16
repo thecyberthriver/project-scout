@@ -33,7 +33,7 @@ if not TOKEN:
         TOKEN = getattr(s, "GH_SCOUT_TOKEN", "")
     except ImportError:
         pass
-H = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout-vet (github.com/thecyberthriver/project-scout)"}
+H = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout-vet (github.com/tldpprojectscout/project-scout)"}
 if TOKEN:
     H["Authorization"] = f"Bearer {TOKEN}"
 

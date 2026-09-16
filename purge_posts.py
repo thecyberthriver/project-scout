@@ -24,7 +24,7 @@ except ImportError:
 env = lambda k: os.environ.get(k) or getattr(s, k, "")  # noqa: E731
 TOKEN, GUILD = env("DISCORD_BOT_TOKEN"), env("DISCORD_GUILD_ID")
 HOOKS = json.loads(env("DISCORD_WEBHOOKS") or "{}")
-UA = "project-scout (github.com/thecyberthriver/project-scout, 1.0)"
+UA = "project-scout (github.com/tldpprojectscout/project-scout, 1.0)"
 APPLY = "--apply" in sys.argv
 
 
