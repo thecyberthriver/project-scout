@@ -259,14 +259,23 @@ async function tgSend(env, chatId, text) {
 }
 
 // GitHub GET with a 15-min edge cache so a room full of students tapping /cyber costs one call, not one per tap.
+// Circuit breaker: after one 403/429 from GitHub, every search short-circuits for 2 minutes instead of retrying
+// (a room full of students retrying is exactly how an IP gets blocked). Cached results keep serving meanwhile.
+const BACKOFF_KEY = new Request("https://project-scout.local/github-backoff", { method: "GET" });
 async function ghJson(env, url) {
-  const headers = { accept: "application/vnd.github+json", "user-agent": "project-scout-bot" };
+  const headers = { accept: "application/vnd.github+json", "user-agent": "project-scout-bot (github.com/thecyberthriver/project-scout)" };
   if (env.GITHUB_TOKEN) headers.authorization = `Bearer ${env.GITHUB_TOKEN}`;
   const cache = caches.default;
   const key = new Request(url, { method: "GET" });
   let r = await cache.match(key);
   if (!r) {
+    if (await cache.match(BACKOFF_KEY)) throw new Error("GitHub is rate-limiting searches right now — try again in 2 minutes");
     r = await fetch(url, { headers });
+    if (r.status === 403 || r.status === 429) {
+      const retry = Number(r.headers.get("retry-after")) || 120;
+      await cache.put(BACKOFF_KEY, new Response("1", { headers: { "cache-control": `s-maxage=${Math.min(retry, 300)}` } }));
+      throw new Error("GitHub is rate-limiting searches right now — try again in 2 minutes");
+    }
     if (!r.ok) throw new Error(`GitHub HTTP ${r.status}`);
     r = new Response(await r.text(), { headers: { "content-type": "application/json", "cache-control": "s-maxage=900" } });
     await cache.put(key, r.clone());

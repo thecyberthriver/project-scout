@@ -345,15 +345,54 @@ def linkedin(name: str) -> str:
     return "https://www.linkedin.com/search/results/companies/?keywords=" + urllib.parse.quote(name)
 
 
+# ---- GitHub budget: stay well inside the limits (30 search req/min with a token, 10 without) ----------------
+SEARCH_BUDGET = int(os.environ.get("SEARCH_BUDGET", 26))  # hard cap per run; the digest stops when it's spent (majors rotate, so all get covered)
+SEARCH_SPACING = 2.5        # seconds between searches → max 24/min even with no other pacing
+_calls = {"n": 0, "limited": 0}
+
+
+class BudgetExceeded(Exception):
+    pass
+
+
 def gh_search(q: str, sort: str = "stars", n: int = 15) -> list[dict]:
+    import time
+    if _calls["n"] >= SEARCH_BUDGET:
+        raise BudgetExceeded(f"search budget {SEARCH_BUDGET} spent")
     url = "https://api.github.com/search/repositories?" + urllib.parse.urlencode(
         {"q": q, "sort": sort, "order": "desc", "per_page": n})
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout"}
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "project-scout (github.com/thecyberthriver/project-scout)"}
     if os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
-    __import__("time").sleep(2.1)  # GitHub search: 30 req/min with a token; a run now makes ~40 calls
-    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as r:
-        return json.load(r).get("items", [])
+    time.sleep(SEARCH_SPACING)
+    _calls["n"] += 1
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as r:
+            return json.load(r).get("items", [])
+    except urllib.error.HTTPError as e:
+        if e.code in (403, 429):  # rate-limited: back off exactly as GitHub asks, once; never hammer
+            _calls["limited"] += 1
+            wait = int(e.headers.get("Retry-After") or 0) or max(0, int(e.headers.get("X-RateLimit-Reset") or 0) - int(time.time()))
+            if 0 < wait <= 90 and _calls["limited"] == 1:
+                print(f"github rate limit: waiting {wait}s once", file=sys.stderr)
+                time.sleep(wait + 1)
+                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as r:
+                    return json.load(r).get("items", [])
+            raise BudgetExceeded(f"GitHub rate-limited us ({e.code}); stopping this run early")
+        raise
+
+
+def rate_limit_status() -> str:
+    """Remaining search quota (free call, not counted). Used for the end-of-run report."""
+    try:
+        headers = {"User-Agent": "project-scout"}
+        if os.environ.get("GITHUB_TOKEN"):
+            headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
+        with urllib.request.urlopen(urllib.request.Request("https://api.github.com/rate_limit", headers=headers), timeout=20) as r:
+            s = json.load(r)["resources"]["search"]
+            return f"search quota {s['remaining']}/{s['limit']} left"
+    except Exception as e:
+        return f"rate_limit check failed: {e}"
 
 
 def load_seen() -> dict:
@@ -442,16 +481,27 @@ def render_org(it: dict, sector_label: str) -> str:
 def build_digest(seen: dict) -> list[tuple[str, str]]:
     """(key, chunk) per major/orgs section that has unseen repos; empty list = nothing new, send nothing."""
     chunks = []
-    for key, (label, terms, anchor, evergreen) in MAJORS.items():
+    run_no = datetime.now().timetuple().tm_yday * 4 + datetime.now().hour // 6   # 4 runs a day
+    order = list(MAJORS)
+    order = order[run_no % len(order):] + order[:run_no % len(order)]              # rotate who goes first, so the budget cap is fair
+    for key in order:
+        label, terms, anchor, evergreen = MAJORS[key]
         parts = []
         for lane, (lane_label, n, sort, q) in LANES.items():
+            if lane in ("oss", "research") and (lane == "oss") != (run_no % 2 == 0):
+                continue  # oss and research alternate runs → half the calls, still every 12 h each
             subs = ([(None, terms, n)] if lane != "build" else
                     cyber_rotation() if key == "cyber" else BUILD_QUERIES.get(key, [(None, terms, n)]))
+            if lane == "build" and len(subs) > 3:                                   # e.g. SWE's 5 languages: 3 per run, rotating
+                subs = [subs[(run_no + i) % len(subs)] for i in range(3)]
             if lane == "build" and key in COURSES:  # one course-aligned search per run
                 subs = [(s[0], s[1], 1) for s in subs] + course_rotation(key)
             for sub_label, sub_terms, sub_n in subs:
                 try:
                     picks = pick(gh_search(q(sub_terms, anchor), sort), seen, sub_n, key)
+                except BudgetExceeded as e:
+                    print(f"stopping early: {e}", file=sys.stderr)
+                    return finish(chunks, seen)
                 except Exception as e:  # one bad query must not kill the run
                     print(f"{key}/{lane}/{sub_label}: {e}", file=sys.stderr)
                     continue
@@ -460,10 +510,17 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
                     parts.append(head + "\n" + "\n".join(render_repo(p, lane) for p in picks))
         if parts:
             chunks.append((key, f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>'))
+    return finish(chunks, seen)
+
+
+def finish(chunks: list, seen: dict) -> list[tuple[str, str]]:
+    """Sections that don't depend on the per-major loop: hackathons (no GitHub) and mission-driven orgs (3 searches)."""
     parts = []
     for sector, (sector_label, orgs) in ORGS.items():
         try:
             picks = pick(gh_search(org_query(orgs), "updated"), seen, 2)
+        except BudgetExceeded:
+            break
         except Exception as e:
             print(f"orgs/{sector}: {e}", file=sys.stderr)
             continue
@@ -652,7 +709,11 @@ def main() -> int:
         alert(f"⚠️ Project Scout has posted nothing since {meta['last_sent']} — check the Actions log / GitHub search terms.")
     seen["_meta"] = meta
     json.dump(seen, open(SEEN, "w"), indent=0)
-    print(f"sent {len(msgs)} message(s) at {datetime.now():%Y-%m-%d %H:%M}")
+    status = rate_limit_status()
+    print(f"sent {len(msgs)} message(s) at {datetime.now():%Y-%m-%d %H:%M} · {_calls['n']} GitHub searches · {status}")
+    if _calls["limited"]:
+        alert(f"⚠️ Project Scout hit GitHub's rate limit {_calls['limited']}× this run ({_calls['n']} searches). "
+              f"It backed off and stopped early. If this repeats, lower SEARCH_BUDGET in project_scout.py. {status}")
     return 0
 
 
