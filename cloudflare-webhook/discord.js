@@ -17,7 +17,7 @@ const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
   "**New here? Run `/scout lane:Learning path major:<yours>`** — your whole year in order, stage by stage.\n" +
   "`/scout major:Cyber` fresh repos to build · `lane:Contribute` open good-first-issues · `lane:Research` fresh paper code.\n" +
-  "Add `keywords:` to narrow, e.g. `/scout major:Data keywords:nba`.";
+  "Add `keywords:` to narrow, e.g. `/scout major:Data keywords:nba`. Add `level:` to choose Beginner, Intermediate or Advanced (hardest first).";
 
 const hex = (h) => Uint8Array.from(h.match(/../g), (b) => parseInt(b, 16));
 
