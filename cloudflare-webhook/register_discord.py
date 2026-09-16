@@ -48,6 +48,8 @@ COMMANDS = [{
         {"type": 3, "name": "lane", "description": "What kind of repos (default: fresh repos to build)", "required": False,
          "choices": [{"name": n, "value": v} for n, v in LANES]},
         {"type": 3, "name": "keywords", "description": "Narrow the search, e.g. honeypot", "required": False},
+        {"type": 3, "name": "level", "description": "Beginner (default this fall), Intermediate, or Advanced = hardest first", "required": False,
+         "choices": [{"name": "Beginner", "value": "beginner"}, {"name": "Intermediate", "value": "intermediate"}, {"name": "Advanced (challenge me)", "value": "advanced"}]},
     ],
 }]
 

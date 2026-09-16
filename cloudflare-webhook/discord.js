@@ -105,7 +105,8 @@ export default {
     if (i.data.name === "verify") return json({ type: 4, data: { content: await verifyStudent(env, i, o), flags: 64 } });
     const lane = LANES[o.lane] || ["orgs", "start", "hackathons", "cases", "path"].includes(o.lane) ? o.lane : "build";
     const major = MAJORS[o.major] ? o.major : null;
-    ctx.waitUntil(answer(env, i, lane, major, (o.keywords || "").trim()).catch((e) => console.log("answer error", e)));
+    const extra = [o.keywords || "", o.level || ""].join(" ").trim();  // level choice rides along as a keyword
+    ctx.waitUntil(answer(env, i, lane, major, extra).catch((e) => console.log("answer error", e)));
     return json({ type: 5 });                                          // deferred reply; edited by answer()
   },
 };

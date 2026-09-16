@@ -293,24 +293,52 @@ PATHS = {
 }
 
 
+# Further along? A challenge track per major — for students who arrive with experience or want to be stretched.
+CHALLENGE = {
+    "data": [("https://www.kaggle.com/competitions", "enter a live competition and beat the median score"),
+             ("microsoft/ML-For-Beginners", "the full 12-week machine-learning course"),
+             ("streamlit/streamlit", "ship a multi-page app with a database behind it")],
+    "swe": [("codecrafters-io/build-your-own-x", "build your own interpreter, HTTP server or database from the list"),
+            ("donnemartin/system-design-primer", "design one system end to end and write it up"),
+            ("TheAlgorithms/Python", "implement an algorithm the repo doesn't have yet, with tests")],
+    "cyber": [("https://ctftime.org/", "play a live CTF this month with a teammate"),
+              ("redcanaryco/atomic-red-team", "run 10 atomics in a lab and write detections for each"),
+              ("SigmaHQ/sigma", "get a detection rule merged")],
+    "quant": [("QuantConnect/Lean", "write an algorithm on Lean, backtest it, paper-trade it"),
+              ("stefan-jansen/machine-learning-for-trading", "reproduce a chapter on new data and report what changed")],
+    "fintech": [("OpenBB-finance/OpenBB", "contribute a data integration or analysis command"),
+                ("plaid/pattern", "extend the sample banking app with a new feature end to end")],
+    "pm": [("makeplane/plane", "run a real club or hackathon team through a full sprint cycle and publish the metrics"),
+           ("https://www.pmi.org/certifications/certified-associate-capm", "start CAPM prep; use the capstone as your logged experience")],
+    "marketing": [("PostHog/posthog", "instrument a real product and run a proper A/B experiment"),
+                  ("mautic/mautic", "build a segmented automation flow and measure it")],
+}
+
+
 def render_path(key: str, repos: dict[str, dict | None]) -> str:
     cur = phase()[0]
     out = []
+
+    def line(target, todo):
+        r = repos.get(target)
+        is_repo = "/" in target and not target.startswith("http")
+        name = r["full_name"] if r else target.replace("https://", "").rstrip("/")
+        url = r["html_url"] if r else (f"https://github.com/{target}" if is_repo else target)
+        tag = f" ⭐{r['stargazers_count']}" if r else ""
+        return f'  <a href="{url}">{esc(name)}</a>{tag}\n    {esc(todo)}'
+
     for i, (num, months, title) in enumerate(STAGES):
         marker = "▶" if i == min(cur, 3) or (cur == 0 and i == 0) else "•"
         out.append(f"\n<b>{marker} Stage {num} · {months} · {esc(title)}</b>")
-        for target, todo in PATHS[key][i]:
-            r = repos.get(target)
-            is_repo = "/" in target and not target.startswith("http")
-            name = r["full_name"] if r else target.replace("https://", "").rstrip("/")
-            url = r["html_url"] if r else (f"https://github.com/{target}" if is_repo else target)
-            tag = f" ⭐{r['stargazers_count']}" if r else ""
-            out.append(f'  <a href="{url}">{esc(name)}</a>{tag}\n    {esc(todo)}')
+        out += [line(t, todo) for t, todo in PATHS[key][i]]
+    out.append("\n<b>🔥 Further along? Challenge track (any time)</b>\n<i>Already comfortable with a stage? Skip ahead, or take one of these on the side.</i>")
+    out += [line(t, todo) for t, todo in CHALLENGE[key]]
     return "\n".join(out)
 
 
 def path_repos(key: str) -> dict[str, dict | None]:
-    return {t: (gh_repo(t) if "/" in t and not t.startswith("http") else None) for stage in PATHS[key] for t, _ in stage}
+    targets = [t for stage in PATHS[key] for t, _ in stage] + [t for t, _ in CHALLENGE[key]]
+    return {t: (gh_repo(t) if "/" in t and not t.startswith("http") else None) for t in targets}
 
 
 def render_case(entry: tuple[str, str], repo: dict | None) -> str:
@@ -612,6 +640,7 @@ def refresh_static() -> None:
     for key in PATHS:
         repos = path_repos(key)
         paths[key] = [[{"target": t, "todo": todo, "repo": row(repos[t]) if repos.get(t) else None} for t, todo in stage] for stage in PATHS[key]]
+        paths[key].append([{"target": t, "todo": todo, "repo": row(repos[t]) if repos.get(t) else None} for t, todo in CHALLENGE[key]])  # 5th = challenge track
         time.sleep(0.3)
     st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains, "cases": cases,
                "paths": paths, "stages": STAGES})
@@ -668,9 +697,11 @@ def ordered(items: list[dict], ceiling: int | None = None) -> list[dict]:
     return easy + [it for it in ranked if RANK[difficulty(it)] > ceiling]
 
 
-def pick(items: list[dict], seen: dict, n: int, major: str = "") -> list[dict]:
+def pick(items: list[dict], seen: dict, n: int, major: str = "", hard: bool = False) -> list[dict]:
+    """hard=True: the challenge pick — intermediate/advanced only, hardest first, regardless of phase."""
     out = []
-    for it in ordered(items, phase()[0]):
+    pool = ([it for it in ordered(items) if RANK[difficulty(it)] >= 1][::-1] if hard else ordered(items, phase()[0]))
+    for it in pool:
         if it["full_name"] in seen or not english(f'{it["full_name"]} {it.get("description") or ""}') or not (it.get("description") or "").strip():
             continue
         if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
@@ -719,13 +750,15 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
             if lane in ("oss", "research") and (lane == "oss") != (run_no % 2 == 0):
                 continue  # oss and research alternate runs → half the calls, still every 12 h each
             if lane == "research" and phase()[0] < 2:
-                continue  # paper code is not undergrad fall material; it returns in Phase 3
+                n, lane_label = 1, lane_label + " — for the further along"  # kept, but one pick and clearly labelled
             subs = ([(None, terms, n)] if lane != "build" else
                     cyber_rotation() if key == "cyber" else BUILD_QUERIES.get(key, [(None, terms, n)]))
+            hard_sub = None
             if lane == "build" and phase()[0] < 2:
-                # Fall/winter: established, documented, beginner-oriented repos instead of "created this week".
+                # Fall/winter: established, documented, beginner-oriented repos first — plus one challenge pick.
                 q, sort, lane_label = BEGINNER_Q, "stars", "🌱 Beginner-friendly & well documented"
-                subs = [("learn", f"{anchor} beginner", 1), ("tutorial", f"{anchor} tutorial", 1), ("starter", f"{anchor} starter project", 1)]
+                subs = [("learn", f"{anchor} beginner", 1), ("tutorial", f"{anchor} tutorial", 1)]
+                hard_sub = ("🔥 Challenge — further along?", terms, 1)
             if lane == "build" and len(subs) > 3:                                   # e.g. SWE's 5 languages: 3 per run, rotating
                 subs = [subs[(run_no + i) % len(subs)] for i in range(3)]
             if lane == "build" and key in COURSES:  # one course-aligned search per run
@@ -744,6 +777,18 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
                 if picks:
                     head = f"<i>{lane_label}{' · ' + sub_label if sub_label else ''}</i>"
                     parts.append(head + "\n" + "\n".join(render_repo(p, lane) for p in picks))
+            if hard_sub:  # one intermediate/advanced repo per drop so nobody is bored
+                try:
+                    found = gh_search(BEGINNER_Q(hard_sub[1], anchor), "stars")
+                    index_add(f"{key}|build|challenge", found)
+                    picks = pick(found, seen, hard_sub[2], key, hard=True)
+                    if picks:
+                        parts.append(f"<i>{hard_sub[0]}</i>\n" + "\n".join(render_repo(p, "build") for p in picks))
+                except BudgetExceeded as e:
+                    print(f"stopping early: {e}", file=sys.stderr)
+                    return finish(chunks, seen)
+                except Exception as e:
+                    print(f"{key}/challenge: {e}", file=sys.stderr)
         if parts:
             chunks.append((key, f"\n<b>{label}</b>\n" + "\n".join(parts) + f'\n  📚 <a href="{evergreen}">evergreen idea list</a>'))
     return finish(chunks, seen)
@@ -757,7 +802,7 @@ def full_index() -> None:
         if key == "cyber":
             subs += [("🔐 General", terms, 0)] + [(f"🔐 {d[0]}", d[1], 0) for d in CYBER_DOMAINS.values()]
         subs += [(f"🎓 {c[0]}", c[1], 0) for c in COURSES.get(key, [])]
-        for sub_label, sub_terms in (("learn", f"{anchor} beginner"), ("tutorial", f"{anchor} tutorial"), ("starter", f"{anchor} starter project")):
+        for sub_label, sub_terms in (("learn", f"{anchor} beginner"), ("tutorial", f"{anchor} tutorial"), ("starter", f"{anchor} starter project"), ("challenge", terms)):
             try:  # beginner-oriented keys the Worker prefers in fall/winter
                 index_add(f"{key}|build|{sub_label}", gh_search(BEGINNER_Q(sub_terms, anchor), "stars"))
             except BudgetExceeded as e:
@@ -939,6 +984,10 @@ def self_check() -> None:
     hard, easy = {"full_name": "h", "size": 99999, "stargazers_count": 9}, {"full_name": "e", "size": 10, "stargazers_count": 1}
     assert [r["full_name"] for r in ordered([hard, easy])] == ["e", "h"]
     assert phase(date(2026, 9, 15))[0] == 0 and phase(date(2026, 12, 1))[0] == 1 and phase(date(2027, 3, 1))[0] == 2
+    hard2 = {"full_name": "m", "size": 20000, "stargazers_count": 900, "description": "mid"}
+    hard["description"], easy["description"] = "hard", "easy"
+    assert [r["full_name"] for r in pick([easy, hard2, hard], {}, 5, "swe", hard=True)] == ["h", "m"]  # hardest first, no starters
+    assert "Challenge track" in render_path("swe", {})
     print("self-check ok")
 
 

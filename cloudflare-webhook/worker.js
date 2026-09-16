@@ -122,8 +122,10 @@ export function renderPath(major, data, md = false) {
   const cur = Math.min(phase()[0], 3);
   const out = [b(`🗺 ${MAJORS[major].label} — your year, in order`),
     md ? `*Start at Stage 1 even if it feels easy. ▶ = now (${phase()[1]}).*` : `<i>Start at Stage 1 even if it feels easy. ▶ = now (${phase()[1]}).</i>`];
-  data.stages.forEach(([num, months, title], i) => {
-    out.push("", b(`${i === cur ? "▶" : "•"} Stage ${num} · ${months} · ${e(title)}`));
+  const stages = [...data.stages, ["🔥", "any time", "Further along? Challenge track — skip ahead or take one on the side"]];
+  stages.forEach(([num, months, title], i) => {
+    if (!data.path[i]) return;
+    out.push("", b(i < data.stages.length ? `${i === cur ? "▶" : "•"} Stage ${num} · ${months} · ${e(title)}` : `${num} ${e(title)}`));
     for (const { target, todo, repo } of data.path[i]) {
       const isRepo = target.includes("/") && !target.startsWith("http");
       const name = repo ? repo.full_name : target.replace("https://", "").replace(/\/$/, "");
@@ -296,6 +298,7 @@ const HELP =
   "  /swe = Python + SQL + frontend mixed · /swe sql · /swe frontend · /swe java (any language)\n" +
   "  /data powerbi · /data tableau · /cyber d1…d8 (CISSP domains, /domains lists them)\n" +
   "  /quant mth9821 · /fintech fin3710 · /pm jira — Baruch course-aligned searches (/courses quant lists codes)\n" +
+  "  Add a level to any search: <code>/cyber beginner</code> · <code>/data intermediate</code> · <code>/swe advanced</code> (hardest first)\n" +
   "/oss &lt;major&gt; — open-source repos with open <i>good first issue</i> tickets\n" +
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
   "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
@@ -397,16 +400,17 @@ export function fromIndex(idx, lane, major, extra) {
 }
 
 // Items for a non-orgs lane: index first; GitHub (cached, sequential) only when the index has nothing for the request.
-export async function lookup(env, lane, major, extra) {
+export async function lookup(env, lane, major, extraRaw) {
+  const extra = stripLevel(extraRaw);
   const idx = await loadIndex().catch(() => null);
   const hit = fromIndex(idx, lane, major, extra);
-  if (hit) return ordered(hit, ceilingFor(extra)).slice(0, MAX + 3);
+  if (hit) return levelFilter(ordered(hit, ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
   if (lane === "build" && phase()[0] < 2 && major && !extra) {  // fall/winter: established beginner-oriented repos, not brand-new ones
     const a = MAJORS[major].anchor;
     const out = [];
-    for (const t of [`${a} beginner`, `${a} tutorial`, `${a} starter project`])
+    for (const t of [`${a} beginner`, `${a} tutorial`, MAJORS[major].terms])  // two beginner searches + one general (challenge picks)
       out.push(...await search(env, `${t} in:name,description,readme stars:>=200 pushed:>=${ago(365)} archived:false`, "stars"));
-    return ordered(dedupe(out).filter(english), ceilingFor(extra)).slice(0, MAX + 3);
+    return levelFilter(ordered(dedupe(out).filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
   }
   if (lane === "build") {  // major-specific build searches: SWE languages, Data tools, cyber domains
     const first = (extra || "").split(/\s+/)[0].toLowerCase(), rest = (extra || "").split(/\s+/).slice(1).join(" ");
@@ -427,15 +431,24 @@ export async function lookup(env, lane, major, extra) {
         lists.push(await search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars"));
       const out = [];  // interleave so /swe shows Python, SQL, frontend, Python, SQL, …
       for (let i = 0; out.length < MAX + 3 && lists.some((l) => l[i]); i++) for (const l of lists) if (l[i]) out.push(l[i]);
-      return ordered(out.filter(english), ceilingFor(extra)).slice(0, MAX + 3);
+      return levelFilter(ordered(out.filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
     }
   }
   const a = await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
   const b = lane === "build" && extra ? await gitlab(extra) : [];
   const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
-  return ordered(spamFree.concat(b).filter(english), ceilingFor(extra)).slice(0, MAX + 3);
+  return levelFilter(ordered(spamFree.concat(b).filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
 }
-const ceilingFor = (extra) => (/\b(advanced|any|all)\b/i.test(extra || "") ? null : phase()[0]);
+const ceilingFor = (extra) => (/\b(advanced|hard|challenge|intermediate|medium|any|all)\b/i.test(extra || "") ? null : phase()[0]);
+// Level words in the keywords pick a band: beginner/easy = starter only; intermediate/medium; advanced/hard/challenge = hardest first.
+export function levelFilter(items, extra) {
+  const x = extra || "";
+  if (/\b(beginner|easy|starter)\b/i.test(x)) { const r = items.filter((it) => RANK[difficulty(it)] === 0); return r.length ? r : items; }
+  if (/\b(intermediate|medium)\b/i.test(x)) { const r = items.filter((it) => RANK[difficulty(it)] === 1); return r.length ? r : items.filter((it) => RANK[difficulty(it)] <= 1); }
+  if (/\b(advanced|hard|challenge)\b/i.test(x)) { const r = items.filter((it) => RANK[difficulty(it)] >= 1).reverse(); return r.length ? r : items.slice().reverse(); }
+  return items;
+}
+const stripLevel = (extra) => (extra || "").replace(/\b(beginner|easy|starter|intermediate|medium|advanced|hard|challenge|any|all)\b/gi, "").trim();
 // English-only: drop repos whose name+description is mostly non-ASCII (CJK, Cyrillic, ...) or has no description.
 export function english(it) {
   const s = `${it.full_name} ${it.description || ""}`;
