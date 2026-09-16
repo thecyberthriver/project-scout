@@ -128,7 +128,7 @@ COURSES = {
         ("MTH 9876 Credit Risk Models", '"credit default swap" OR "default probability" OR "merton model" OR "credit risk"'),
         ("MTH 9879 Market Microstructure Models", '"market microstructure" OR "limit order book" OR "order flow" OR "high frequency"'),
         ("MTH 9882 Fixed Income Risk Management", '"fixed income" OR duration OR convexity OR "bond portfolio"'),
-        ("MTH 9887 Blockchain Technologies in Finance", 'blockchain OR "smart contract" OR DeFi OR "on-chain"'),
+        ("MTH 9887 Blockchain Technologies in Finance", 'solidity OR ethereum OR "smart contract" tutorial OR web3 tutorial'),
         ("MTH 9893 / 9867 Time Series & Algorithmic Trading", '"time series" OR ARIMA OR cointegration OR "pairs trading"'),
         ("MTH 9894 / 9897 Algorithmic & Systematic Trading", '"systematic trading" OR "trading strategy" OR backtesting OR "momentum strategy"'),
         ("MTH 9896 Behavioral Finance", '"behavioral finance" OR "investor sentiment" OR "sentiment analysis" stocks'),
@@ -366,6 +366,37 @@ def cyber_rotation() -> list[tuple[str, str, int]]:
 
 # Fall/winter build lane: popular, still-maintained, beginner-oriented repos (not brand-new ones).
 BEGINNER_Q = lambda terms, anchor: f"{terms} in:name,description,readme stars:>=200 pushed:>={ago(365)} archived:false"  # noqa: E731
+# ---- Legitimacy filter (2026-09-16, after scam repos reached the feed) -------------------------------------------
+# Live GitHub search returns star-farmed download traps ("Ghostfolio-…" clones under 30 sock-puppet owners, MT4/forex
+# "strategies", wallet drainers, account harvesters). Every live result must pass ALL of these; curated tables are exempt.
+import re as _re
+SCAM_WORDS = _re.compile(
+    r"\b(drainer|stealer|steal(s|ing)?|drain(s|ing)?|crack(s|ed|ing)?|keygen|nulled|cheat(s)?|aimbot|spoofer|harvest(er|ing)?|"
+    r"account farm|free download|password|mediafire|mega\.nz|anonfiles|gofile|warez|torrent|captcha|turnstile|"
+    r"non-repainting|mt4|mt5|metatrader|forex|profit sniper|signals? engine|viral|growth (framework|hack)|affiliate|backlink|funnel|"
+    r"premium (free|unlocked)|unlocked version|activation|license key|casino|betting|adult|nsfw)\b", _re.I)
+NON_EN = _re.compile(r"\b(für|und|der|die|das|mit|auf|nicht|eine?|para|con|una|los|las|des|les|une|avec|pour)\b", _re.I)
+SOCK_OWNER = _re.compile(r"^[a-z]+\d{2,4}$", _re.I)  # lightningfast66, lisazhou886, elenahao66 …
+
+
+def legit(it: dict, siblings: list[dict] | None = None) -> bool:
+    """False for anything that looks like a download trap, star farm, scam, or non-code placeholder."""
+    name, desc = it.get("full_name", ""), it.get("description") or ""
+    owner, repo = (name.split("/") + [""])[:2]
+    size, stars = it.get("size") or 0, it.get("stargazers_count") or 0
+    if it.get("language") is None or size < 30:           # no code / a README-only shell
+        return False
+    if SCAM_WORDS.search(f"{name} {desc}") or NON_EN.search(desc):
+        return False
+    if stars > 100 and size < 60:                          # stars bought for a shell repo
+        return False
+    if SOCK_OWNER.match(owner) and stars < 200:            # throwaway "word+digits" accounts
+        return False
+    if siblings is not None and sum(1 for s in siblings if s.get("full_name", "").split("/")[-1].lower() == repo.lower()) >= 3:
+        return False                                       # same repo name under many owners = clone farm
+    return True
+
+
 # Most new GitHub repos right now are LLM wrappers; keep them out of the non-software majors.
 AI_SPAM = __import__("re").compile(r"\b(agents?|llms?|gpt|chatgpt|copilot|claude|openai|langchain|rag)\b", __import__("re").I)
 AI_OK = {"swe", "data"}
@@ -613,9 +644,11 @@ def index_add(key: str, items: list[dict]) -> None:
     """Merge search results under key "major|lane|sublabel"; newest first, de-duped, capped, 45-day TTL."""
     rows = _index["keys"].setdefault(key, [])
     cutoff = ago(INDEX_TTL_DAYS)
-    fresh = [row(it) for it in items if english(f'{it["full_name"]} {it.get("description") or ""}') and (it.get("description") or "").strip()]
+    fresh = [row(it) for it in items if english(f'{it["full_name"]} {it.get("description") or ""}') and (it.get("description") or "").strip()
+             and legit(it, items)]
     names = {r["full_name"] for r in fresh}
-    _index["keys"][key] = (fresh + [r for r in rows if r["full_name"] not in names and r.get("seen_at", "") >= cutoff])[:INDEX_ROWS_PER_KEY]
+    kept = [r for r in rows if r["full_name"] not in names and r.get("seen_at", "") >= cutoff and legit(r, rows)]  # re-vet carry-overs too
+    _index["keys"][key] = (fresh + kept)[:INDEX_ROWS_PER_KEY]
 
 
 def refresh_static() -> None:
@@ -697,6 +730,34 @@ def ordered(items: list[dict], ceiling: int | None = None) -> list[dict]:
     return easy + [it for it in ranked if RANK[difficulty(it)] > ceiling]
 
 
+def deep_ok(it: dict) -> bool:
+    """Gate at post time: the deep vetter (contents, README links, history, owner) must pass before anything is
+    shown to students. Verdicts are cached in vet_cache.json (committed by the workflow), so each repo costs ~4 core
+    API calls once a month. Curated tables are exempt; this only runs on live search results."""
+    global _vet_cache
+    if "--self-check" in sys.argv or os.environ.get("NO_DEEP_VET"):
+        return True
+    try:
+        import vet
+    except ImportError:
+        return True
+    if _vet_cache is None:
+        _vet_cache = vet.load_cache()
+    v = _vet_cache.get(it["full_name"])
+    if v is None or v.get("unknown"):
+        v = vet.vet(it["full_name"])
+        if v.get("unknown"):
+            return False  # unreachable right now: skip this run, try again next time (not cached, not marked seen)
+        _vet_cache[it["full_name"]] = v
+        json.dump(_vet_cache, open(vet.CACHE, "w", encoding="utf-8"), indent=0)
+    if not v["ok"]:
+        print(f"vet: dropped {it['full_name']}: {'; '.join(v['hard'] or v['soft'])}", file=sys.stderr)
+    return bool(v["ok"])
+
+
+_vet_cache = None
+
+
 def pick(items: list[dict], seen: dict, n: int, major: str = "", hard: bool = False) -> list[dict]:
     """hard=True: the challenge pick — intermediate/advanced only, hardest first, regardless of phase."""
     out = []
@@ -704,7 +765,12 @@ def pick(items: list[dict], seen: dict, n: int, major: str = "", hard: bool = Fa
     for it in pool:
         if it["full_name"] in seen or not english(f'{it["full_name"]} {it.get("description") or ""}') or not (it.get("description") or "").strip():
             continue
+        if not legit(it, items):
+            continue
         if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
+            continue
+        if not deep_ok(it):
+            seen[it["full_name"]] = date.today().isoformat()  # never look at it again
             continue
         seen[it["full_name"]] = date.today().isoformat()
         out.append(it)
@@ -987,24 +1053,32 @@ def self_check() -> None:
     # a hostile repo description cannot smuggle a masked link, bold or a mention into Discord
     assert to_markdown('<a href="https://ok">[x](https://evil) @everyone</a> **bold** [y](https://evil)') \
         == "[\\[x\\]\\(https://evil\\) @​everyone](<https://ok>) \\*\\*bold\\*\\* \\[y\\]\\(https://evil\\)"
-    assert pick([{"full_name": "x/y", "description": "seen"}, {"full_name": "a/b", "description": "fresh"},
-                 {"full_name": "c/d", "description": "extra"}], {"x/y": "2099-01-01"}, 1) == [{"full_name": "a/b", "description": "fresh"}]
-    assert pick([{"full_name": "a/b", "description": ""}], {}, 1) == []  # English-only also means: must have a description
+    fx = lambda n, d: {"full_name": n, "description": d, "language": "Python", "size": 500, "stargazers_count": 5}  # noqa: E731
+    assert pick([fx("x/y", "seen"), fx("a/b", "fresh"), fx("c/d", "extra")], {"x/y": "2099-01-01"}, 1) == [fx("a/b", "fresh")]
+    assert pick([fx("a/b", "")], {}, 1) == []  # English-only also means: must have a description
     assert not english("") and english("Agent-native backtesting") and not english("面向基本面因子研究的智能体-AI agent")
     r = {"full_name": "<b>", "html_url": "u", "stargazers_count": 1, "description": ""}
     assert "&lt;b&gt;" in render_repo(r, "build") and "good-first-issues" in render_repo(r, "oss")
     assert "good-first-issues:>0" in LANES["oss"][3]("t", "trading")
     assert LANES["research"][3]("t", "trading").startswith('"quantitative finance" trading arxiv')
-    assert pick([{"full_name": "x/gpt-agent", "description": "an LLM agent"}, {"full_name": "y/scanner", "description": "port scanner"}], {}, 5, "cyber") \
-        == [{"full_name": "y/scanner", "description": "port scanner"}]
+    assert pick([fx("x/gpt-agent", "an LLM agent"), fx("y/scanner", "port scanner")], {}, 5, "cyber") == [fx("y/scanner", "port scanner")]
     assert difficulty({"size": 100, "stargazers_count": 10}) == "🟢 starter" and difficulty({"size": 99999, "stargazers_count": 10}) == "🔴 advanced"
     hard, easy = {"full_name": "h", "size": 99999, "stargazers_count": 9}, {"full_name": "e", "size": 10, "stargazers_count": 1}
     assert [r["full_name"] for r in ordered([hard, easy])] == ["e", "h"]
     assert phase(date(2026, 9, 15))[0] == 0 and phase(date(2026, 12, 1))[0] == 1 and phase(date(2027, 3, 1))[0] == 2
-    hard2 = {"full_name": "m", "size": 20000, "stargazers_count": 900, "description": "mid"}
-    hard["description"], easy["description"] = "hard", "easy"
-    assert [r["full_name"] for r in pick([easy, hard2, hard], {}, 5, "swe", hard=True)] == ["h", "m"]  # hardest first, no starters
+    hard2 = {"full_name": "m/m", "size": 20000, "stargazers_count": 900, "description": "mid", "language": "Go"}
+    hard.update(description="hard", language="C", full_name="h/h"), easy.update(description="easy", language="Python", full_name="e/e", size=200)
+    assert [r["full_name"] for r in pick([easy, hard2, hard], {}, 5, "swe", hard=True)] == ["h/h", "m/m"]  # hardest first, no starters
     assert "Challenge track" in render_path("swe", {})
+    ok = {"full_name": "pandas-dev/pandas", "description": "Flexible data analysis", "language": "Python", "size": 400000, "stargazers_count": 49000}
+    assert legit(ok)
+    assert not legit({"full_name": "ElementTrail/Multichain-Drainer", "description": "A bot designed to steal assets from wallets", "language": None, "size": 581, "stargazers_count": 11})
+    assert not legit({"full_name": "WildOctopusCrack/Ghostfolio-Privacy-First", "description": "wealth tracker", "language": None, "size": 12, "stargazers_count": 28})
+    assert not legit({"full_name": "lightningfast66/forex-mt5-viper-strategy", "description": "trend-following strategy", "language": "MQL5", "size": 300, "stargazers_count": 10})
+    assert not legit({"full_name": "sitimas9/cdcrafthh", "description": "account farm — OAuth + API key harvest", "language": "Python", "size": 6, "stargazers_count": 332})
+    clones = [{"full_name": f"{o}/Ghostfolio-Dashboard", "description": "d", "language": "TypeScript", "size": 500, "stargazers_count": 28} for o in ("aa", "bb", "cc")]
+    assert not legit(clones[0], clones)
+    assert legit({"full_name": "trufflesecurity/trufflehog", "description": "Find, verify, and analyze leaked credentials", "language": "Go", "size": 52242, "stargazers_count": 27939})
     print("self-check ok")
 
 

@@ -70,7 +70,7 @@ export const COURSES = {
     mth9876: ["MTH 9876 Credit Risk Models", '"credit default swap" OR "default probability" OR "merton model" OR "credit risk"'],
     mth9879: ["MTH 9879 Market Microstructure Models", '"market microstructure" OR "limit order book" OR "order flow" OR "high frequency"'],
     mth9882: ["MTH 9882 Fixed Income Risk Management", '"fixed income" OR duration OR convexity OR "bond portfolio"'],
-    mth9887: ["MTH 9887 Blockchain Technologies in Finance", 'blockchain OR "smart contract" OR DeFi OR "on-chain"'],
+    mth9887: ["MTH 9887 Blockchain Technologies in Finance", 'solidity OR ethereum OR "smart contract" tutorial OR web3 tutorial'],
     mth9893: ["MTH 9893 / 9867 Time Series & Algorithmic Trading", '"time series" OR ARIMA OR cointegration OR "pairs trading"'],
     mth9894: ["MTH 9894 / 9897 Algorithmic & Systematic Trading", '"systematic trading" OR "trading strategy" OR backtesting OR "momentum strategy"'],
     mth9896: ["MTH 9896 Behavioral Finance", '"behavioral finance" OR "investor sentiment" OR "sentiment analysis" stocks'],
@@ -270,7 +270,7 @@ export async function orgSearch(env, text) {
   const results = [];
   for (const { orgs } of Object.values(ORGS))  // sequential, see lookup()
     results.push(await search(env, `${text} ${Object.keys(orgs).map((o) => "org:" + o).join(" ")} good-first-issues:>0 archived:false pushed:>=${ago(90)}`.trim(), "updated"));
-  return results.flat().filter(english).sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
+  return clean(results.flat()).sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
 }
 
 export function renderOrgs(head, items, md = false) {
@@ -412,7 +412,7 @@ export async function lookup(env, lane, major, extraRaw) {
     const out = [];
     for (const t of [`${a} beginner`, `${a} tutorial`, MAJORS[major].terms])  // two beginner searches + one general (challenge picks)
       out.push(...await search(env, `${t} in:name,description,readme stars:>=200 pushed:>=${ago(365)} archived:false`, "stars"));
-    return levelFilter(ordered(dedupe(out).filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
+    return levelFilter(ordered(clean(dedupe(out)), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
   }
   if (lane === "build") {  // major-specific build searches: SWE languages, Data tools, cyber domains
     const first = (extra || "").split(/\s+/)[0].toLowerCase(), rest = (extra || "").split(/\s+/).slice(1).join(" ");
@@ -433,13 +433,13 @@ export async function lookup(env, lane, major, extraRaw) {
         lists.push(await search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars"));
       const out = [];  // interleave so /swe shows Python, SQL, frontend, Python, SQL, …
       for (let i = 0; out.length < MAX + 3 && lists.some((l) => l[i]); i++) for (const l of lists) if (l[i]) out.push(l[i]);
-      return levelFilter(ordered(out.filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
+      return levelFilter(ordered(clean(out), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
     }
   }
   const a = await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
   const b = lane === "build" && extra ? await gitlab(extra) : [];
   const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
-  return levelFilter(ordered(spamFree.concat(b).filter(english), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
+  return levelFilter(ordered(clean(spamFree.concat(b)), ceilingFor(extraRaw)), extraRaw).slice(0, MAX + 3);
 }
 const ceilingFor = (extra) => (/\b(advanced|hard|challenge|intermediate|medium|any|all)\b/i.test(extra || "") ? null : phase()[0]);
 // Level words in the keywords pick a band: beginner/easy = starter only; intermediate/medium; advanced/hard/challenge = hardest first.
@@ -451,6 +451,23 @@ export function levelFilter(items, extra) {
   return items;
 }
 const stripLevel = (extra) => (extra || "").replace(/\b(beginner|easy|starter|intermediate|medium|advanced|hard|challenge|any|all)\b/gi, "").trim();
+// Legitimacy filter (mirrors legit() in ../project_scout.py): no README-only shells, no scam/forex/download-trap words,
+// no bought stars on tiny repos, no throwaway "word+digits" owners, no clone farms. Curated tables never pass through it.
+const SCAM_WORDS = /\b(drainer|stealer|steal(s|ing)?|drain(s|ing)?|crack(s|ed|ing)?|keygen|nulled|cheat(s)?|aimbot|spoofer|harvest(er|ing)?|account farm|free download|password|mediafire|mega\.nz|anonfiles|gofile|warez|torrent|captcha|turnstile|non-repainting|mt4|mt5|metatrader|forex|profit sniper|signals? engine|viral|growth (framework|hack)|affiliate|backlink|funnel|premium (free|unlocked)|unlocked version|activation|license key|casino|betting|adult|nsfw)\b/i;
+const NON_EN = /\b(für|und|der|die|das|mit|auf|nicht|eine?|para|con|una|los|las|des|les|une|avec|pour)\b/i;
+const SOCK_OWNER = /^[a-z]+\d{2,4}$/i;
+export function legit(it, siblings = null) {
+  const name = it.full_name || "", desc = it.description || "";
+  const [owner = "", repo = ""] = name.split("/");
+  const size = it.size || 0, stars = it.stargazers_count || 0;
+  if (it.language == null || size < 30) return false;
+  if (SCAM_WORDS.test(`${name} ${desc}`) || NON_EN.test(desc)) return false;
+  if (stars > 100 && size < 60) return false;
+  if (SOCK_OWNER.test(owner) && stars < 200) return false;
+  if (siblings && siblings.filter((s) => (s.full_name || "").split("/")[1]?.toLowerCase() === repo.toLowerCase()).length >= 3) return false;
+  return true;
+}
+const clean = (items) => items.filter((it) => english(it) && legit(it, items));
 // English-only: drop repos whose name+description is mostly non-ASCII (CJK, Cyrillic, ...) or has no description.
 export function english(it) {
   const s = `${it.full_name} ${it.description || ""}`;
