@@ -480,7 +480,7 @@ def hackathons_nyc() -> list[dict]:
             va = ev.get("venueAddress") or {}
             where = ev.get("location") or f"{va.get('city', '')}, {va.get('state', '')}"
             if ev.get("formatType") in ("physical", "hybrid") and NYC_RE.search(where):
-                out.append({"title": ev["name"], "url": ev.get("websiteUrl") or "https://mlh.io" + ev.get("url", ""),
+                out.append({"title": ev["name"], "url": "https://mlh.io" + (ev.get("url") or "/seasons/2027/events"),
                             "when": ev.get("dateRange", ""), "where": where, "org": "MLH", "src": "MLH", "prize": ""})
     except Exception as e:
         print(f"mlh: {e}", file=sys.stderr)
@@ -907,13 +907,27 @@ def send(text: str) -> None:
             print(f"telegram {e.code} for chat {chat}: {e.read()[:200].decode(errors='replace')}", file=sys.stderr)  # other targets still get it
 
 
-def to_markdown(text: str) -> str:
-    """Telegram HTML -> Discord markdown (<url> suppresses embeds)."""
+def md_esc(s: str) -> str:
+    """Discord markdown escape for third-party text: neutralises masked links, bold, code, quotes and @mentions."""
     import re
-    md = re.sub(r'<a href="([^"]+)">([^<]*)</a>', r"[\2](<\1>)", text)
-    md = re.sub(r"</?b>", "**", md)
-    md = re.sub(r"</?i>", "*", md)
-    return md.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+    return re.sub(r"([\\*_~`|<>\[\]()])", r"\\\1", s).replace("@", "@​")
+
+
+def to_markdown(text: str) -> str:
+    """Telegram HTML -> Discord markdown (<url> suppresses embeds). Our own tags become markdown; everything else —
+    repo names, descriptions, hackathon titles — is markdown-escaped so it can't smuggle a link or a mention."""
+    import re
+    keep = []
+
+    def stash(s: str) -> str:
+        keep.append(s)
+        return f"\x00{len(keep) - 1}\x00"
+    unesc = lambda s: s.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")  # noqa: E731
+    text = re.sub(r'<a href="([^"]+)">([^<]*)</a>', lambda m: stash(f"[{md_esc(unesc(m.group(2)))}](<{m.group(1)}>)"), text)
+    text = re.sub(r"</?b>", lambda m: stash("**"), text)
+    text = re.sub(r"</?i>", lambda m: stash("*"), text)
+    text = md_esc(unesc(text))  # entities decoded only after our own tags are stashed, so "&lt;i&gt;" can't become a tag
+    return re.sub(r"\x00(\d+)\x00", lambda m: keep[int(m.group(1))], text)
 
 
 def discord(key: str, text: str) -> None:
@@ -969,7 +983,10 @@ def messages(chunks: list[str], limit: int = 3900) -> list[str]:
 def self_check() -> None:
     assert messages(["a" * 3000, "b" * 3000, "c"]) == ["a" * 3000, "b" * 3000 + "\nc"]
     assert messages([]) == []
-    assert to_markdown('<b>x</b> <a href="https://u">t</a> &lt;i&gt;') == "**x** [t](<https://u>) <i>"
+    assert to_markdown('<b>x</b> <a href="https://u">t</a> &lt;i&gt;') == "**x** [t](<https://u>) \\<i\\>"
+    # a hostile repo description cannot smuggle a masked link, bold or a mention into Discord
+    assert to_markdown('<a href="https://ok">[x](https://evil) @everyone</a> **bold** [y](https://evil)') \
+        == "[\\[x\\]\\(https://evil\\) @​everyone](<https://ok>) \\*\\*bold\\*\\* \\[y\\]\\(https://evil\\)"
     assert pick([{"full_name": "x/y", "description": "seen"}, {"full_name": "a/b", "description": "fresh"},
                  {"full_name": "c/d", "description": "extra"}], {"x/y": "2099-01-01"}, 1) == [{"full_name": "a/b", "description": "fresh"}]
     assert pick([{"full_name": "a/b", "description": ""}], {}, 1) == []  # English-only also means: must have a description

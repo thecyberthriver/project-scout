@@ -116,8 +116,8 @@ export async function pathFor(major) {
   return p ? { stages: idx.static.stages, path: p } : null;
 }
 export function renderPath(major, data, md = false) {
-  const e = md ? (s) => String(s) : esc;
-  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
+  const e = md ? mdEsc : esc;
+  const link = (t, u) => (md ? `[${mdEsc(t)}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
   const b = (s) => (md ? `**${s}**` : `<b>${s}</b>`);
   const cur = Math.min(phase()[0], 3);
   const out = [b(`🗺 ${MAJORS[major].label} — your year, in order`),
@@ -144,8 +144,8 @@ export async function caseItems(major) {
   return list.length ? list : null;
 }
 export function renderCases(head, items, md = false) {
-  const e = md ? (s) => String(s) : esc;
-  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
+  const e = md ? mdEsc : esc;
+  const link = (t, u) => (md ? `[${mdEsc(t)}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
   const rows = items.map(({ target, blurb, repo }) => repo
     ? `• ${link(repo.full_name, repo.html_url)} ⭐${repo.stargazers_count} · ${repo.open_issues_count || 0} open issues · ${difficulty(repo)}\n  ${e(blurb)} · ${link("good first issues", repo.html_url + GFI)}`
     : `• ${link(target.replace("https://", "").replace(/\/$/, ""), target)}\n  ${e(blurb)}`);
@@ -217,15 +217,15 @@ export async function hackathonsNyc() {
       let ev; try { ev = JSON.parse(m[0]); } catch { continue; }
       const va = ev.venueAddress || {}, where = ev.location || `${va.city || ""}, ${va.state || ""}`;
       if (["physical", "hybrid"].includes(ev.formatType) && NYC_RE.test(where))
-        out.push({ title: ev.name, url: ev.websiteUrl || "https://mlh.io" + (ev.url || ""), when: ev.dateRange || "", where, org: "MLH", src: "MLH", prize: "" });
+        out.push({ title: ev.name, url: "https://mlh.io" + (ev.url || "/seasons/2027/events"), when: ev.dateRange || "", where, org: "MLH", src: "MLH", prize: "" });
     }
   } catch (e) { console.log("mlh", e.message); }
   const seen = new Set();
   return out.filter((h) => !seen.has(h.url) && seen.add(h.url));
 }
 export function renderHacks(head, items, md = false) {
-  const e = md ? (s) => String(s) : esc;
-  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
+  const e = md ? mdEsc : esc;
+  const link = (t, u) => (md ? `[${mdEsc(t)}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
   const more = HACK_LINKS.map(([n, u]) => link(n, u)).join(" · ");
   if (!items.length) return `${head}\nNothing listed right now. Check: ${more}`;
   const rows = items.slice(0, 10).map((h) =>
@@ -275,8 +275,8 @@ export async function orgSearch(env, text) {
 
 export function renderOrgs(head, items, md = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
-  const e = md ? (s) => String(s) : esc;
-  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
+  const e = md ? mdEsc : esc;
+  const link = (t, u) => (md ? `[${mdEsc(t)}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
   const rows = items.map((it) => {
     const [org, repo] = it.full_name.split("/");
     const s = ORG_SECTOR[org.toLowerCase()] || { label: "🏢", name: org };
@@ -290,6 +290,8 @@ const MAX = 6;
 const GFI = "/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22";
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// Discord markdown escape for third-party / user text: neutralises masked links [x](url), bold, code, quotes, mentions.
+export const mdEsc = (s) => String(s).replace(/[\\*_~`|<>\[\]()]/g, (c) => "\\" + c).replace(/@/g, "@​");
 
 const HELP =
   "<b>Project Scout</b> — GitHub project ideas by major.\n\n" +
@@ -484,8 +486,8 @@ export function difficulty(it) {
 export function render(head, lane, items, md = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;
   head += md ? `\n*${phase()[1]} · easiest first*` : `\n<i>📶 ${phase()[1]} · easiest first</i>`;
-  const e = md ? (s) => String(s) : esc;
-  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
+  const e = md ? mdEsc : esc;
+  const link = (t, u) => (md ? `[${mdEsc(t)}](<${u}>)` : `<a href="${u}">${esc(t)}</a>`);
   const rows = items.map((it) => {
     let d = (it.description || "").trim();
     if (d.length > 140) d = d.slice(0, 140) + "…";

@@ -11,7 +11,7 @@
  *   DISCORD_APP_ID       General Information → Application ID
  *   optional GITHUB_TOKEN
  */
-import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs, startItems, hackathonsNyc, renderHacks, caseItems, renderCases, pathFor, renderPath } from "./worker.js";
+import { MAJORS, LANES, lookup, render, terms, orgSearch, renderOrgs, startItems, hackathonsNyc, renderHacks, caseItems, renderCases, pathFor, renderPath, mdEsc } from "./worker.js";
 
 const HELP =
   "**Project Scout** — GitHub project ideas by major.\n" +
@@ -75,7 +75,7 @@ async function answer(env, interaction, lane, major, extra) {
       : "Case-study index isn't built yet — try again after the next feed run.";
   } else {
     const laneLabel = { orgs: "🤝 Mission-driven orgs", start: "📚 Start here — ideas & basics" }[lane] || LANES[lane].label;
-    const head = `**${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}**${extra ? ` · *${extra}*` : ""}`;
+    const head = `**${laneLabel} · ${major ? MAJORS[major].label : "🔎 All majors"}**${extra ? ` · *${mdEsc(extra)}*` : ""}`;
     try {
       content = lane === "orgs"
         ? renderOrgs(head, await orgSearch(env, terms(lane, major, extra)), true)
