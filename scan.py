@@ -25,6 +25,7 @@ safety issue). Timeouts, parse-engine errors, clone failures or an unsupported p
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -47,6 +48,9 @@ SEMGREP_LANGS = {"Python", "JavaScript", "TypeScript", "Java", "Go", "Ruby", "PH
                  "Swift", "Shell", "Dockerfile", "HCL", "Solidity", "Elixir", "Lua", "OCaml", "Dart", "Clojure", "Julia", "R",
                  "JSON", "YAML", "HTML", "Vue", "Jupyter Notebook", "Jsonnet", "Apex", "Cairo", "Lisp", "Scheme", "XML"}
 DOC_LANGS = {"Markdown", "TeX", "CSS", "SCSS", "Less", "Makefile", "Batchfile", "Roff", "AsciiDoc", "reStructuredText"}
+NON_CODE_SCANNABLE = {"JSON", "YAML", "HTML", "XML", "Vue"}   # structured/markup: 0 Semgrep code findings is normal
+CODE_LANGS = SEMGREP_LANGS - NON_CODE_SCANNABLE - DOC_LANGS   # a repo in one of these MUST have >=1 file Semgrep parsed
+REQUIRED_ENGINES = ("semgrep", "yara", "clamav", "osv")       # all four must run for an authoritative pass (fail closed)
 
 
 def now_iso() -> str:
@@ -101,21 +105,32 @@ def pin_sha(full_name: str, env: dict) -> str | None:
     return sha if r.returncode == 0 and len(sha) == 40 else None
 
 
-def clone(full_name: str, tmp: str, env: dict) -> str | None:
+HARDEN = ["-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "-c", "filter.lfs.clean=",
+          "-c", "core.symlinks=false", "-c", "core.longpaths=true", "-c", "protocol.allow=never", "-c", "protocol.https.allow=always",
+          "-c", "submodule.recurse=false", "-c", "core.fsmonitor=false"]
+
+
+def clone(full_name: str, tmp: str, env: dict, sha: str) -> str | None:
+    """Fetch and check out the EXACT pinned commit, not whatever the default branch points at now. init + fetch <sha>
+    + detach, so a branch that moves after pin_sha() cannot change what we scan."""
     hooks = os.path.join(tmp, "_nohooks"); os.makedirs(hooks, exist_ok=True)
     dest = os.path.join(tmp, "repo")
-    args = ["git", "-c", f"core.hooksPath={hooks}", "-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "-c", "filter.lfs.clean=",
-            "-c", "core.symlinks=false", "-c", "core.longpaths=true", "-c", "protocol.allow=never", "-c", "protocol.https.allow=always",
-            "-c", "submodule.recurse=false", "-c", "core.fsmonitor=false",
-            "clone", "--depth", "1", "--no-tags", "--single-branch", "--no-recurse-submodules", f"--filter=blob:limit={BLOB_LIMIT}", "--quiet",
-            f"https://github.com/{full_name}.git", dest]
+    os.makedirs(dest, exist_ok=True)
+    base = ["git", "-c", f"core.hooksPath={hooks}"] + HARDEN
+    url = f"https://github.com/{full_name}.git"
     try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=CLONE_TIMEOUT, env=env)
-    except subprocess.TimeoutExpired:
-        return None
-    except OSError:
-        return None
-    if r.returncode != 0:
+        if subprocess.run(base + ["init", "-q", dest], capture_output=True, text=True, timeout=30, env=env).returncode != 0:
+            return None
+        cfg = ["git", "-C", dest, "-c", f"core.hooksPath={hooks}"] + HARDEN
+        subprocess.run(cfg + ["remote", "add", "origin", url], capture_output=True, text=True, timeout=30, env=env)
+        f = subprocess.run(cfg + ["fetch", "--depth", "1", "--no-tags", "--no-recurse-submodules",
+                                  f"--filter=blob:limit={BLOB_LIMIT}", "--quiet", "origin", sha],
+                           capture_output=True, text=True, timeout=CLONE_TIMEOUT, env=env)
+        if f.returncode != 0:
+            return None  # server refused fetch-by-sha (unreachable commit) or network failure -> incomplete, not a fallback
+        if subprocess.run(cfg + ["checkout", "-q", "--detach", "FETCH_HEAD"], capture_output=True, text=True, timeout=60, env=env).returncode != 0:
+            return None
+    except (subprocess.TimeoutExpired, OSError):
         return None
     return dest
 
@@ -130,23 +145,67 @@ def head_sha(dest: str, env: dict) -> str | None:
 
 
 def prepare_tree(dest: str) -> dict:
-    """Remove .git and .semgrepignore, extract notebook code cells, measure size. Pure file operations."""
+    """Remove .git and .semgrepignore, extract notebook code cells, measure size, and gather cheap difficulty SIGNALS
+    (tests, Dockerfile, compose, k8s, terraform, dependency count, README size, top-level entries) for levels.py.
+    Pure file operations; every read is size-capped."""
     shutil.rmtree(os.path.join(dest, ".git"), ignore_errors=True)
     total, files, notebooks, ignored = 0, 0, 0, 0
+    sig = {"has_tests": False, "has_dockerfile": False, "compose_services": 0, "has_k8s": False,
+           "has_terraform": False, "dep_count": 0, "readme_bytes": 0, "top_level_entries": 0}
+    try:
+        sig["top_level_entries"] = len(os.listdir(dest))
+    except OSError:
+        pass
+
+    def _read(p, cap=200_000):
+        try:
+            with open(p, encoding="utf-8", errors="replace") as f:
+                return f.read(cap)
+        except OSError:
+            return ""
+
     for root, dirs, names in os.walk(dest):
+        rel = os.path.relpath(root, dest).lower()
+        if re.search(r"(^|[\\/])(tests?|spec|__tests__)([\\/]|$)", rel):
+            sig["has_tests"] = True
         for n in names:
             p = os.path.join(root, n)
+            low = n.lower()
             try:
                 sz = os.path.getsize(p)
             except OSError:
                 continue
             total += sz; files += 1
+            if low in ("dockerfile",) or low.startswith("dockerfile"):
+                sig["has_dockerfile"] = True
+            if low.endswith(".tf"):
+                sig["has_terraform"] = True
+            if low.startswith("test_") or low.endswith(("_test.py", ".test.js", ".spec.js", ".spec.ts", "_test.go")):
+                sig["has_tests"] = True
+            if low in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"):
+                body = _read(p, 40_000)
+                sig["compose_services"] = max(sig["compose_services"], body.count("image:") + body.count("build:"))
+            if low.endswith((".yaml", ".yml")) and sz < 60_000:
+                if re.search(r"(?m)^kind:\s*(Deployment|StatefulSet|DaemonSet|Service|Ingress)\b", _read(p, 40_000)):
+                    sig["has_k8s"] = True
+            if root == dest and low.startswith("readme"):
+                sig["readme_bytes"] = max(sig["readme_bytes"], sz)
+            if root == dest and low == "requirements.txt":
+                sig["dep_count"] += sum(1 for ln in _read(p).splitlines() if ln.strip() and not ln.strip().startswith("#"))
+            if root == dest and low == "package.json":
+                try:
+                    pkg = json.loads(_read(p) or "{}")
+                    sig["dep_count"] += len(pkg.get("dependencies") or {}) + len(pkg.get("devDependencies") or {})
+                except ValueError:
+                    pass
+            if root == dest and low == "go.mod":
+                sig["dep_count"] += _read(p).count("\n\t")
             if n == ".semgrepignore":
                 try:
                     os.remove(p); ignored += 1
                 except OSError:
                     pass
-            elif n.lower().endswith(".ipynb") and sz <= 1_000_000:
+            elif low.endswith(".ipynb") and sz <= 1_000_000:
                 try:
                     nb = json.load(open(p, encoding="utf-8"))
                     cells = [c for c in nb.get("cells", []) if c.get("cell_type") == "code"]
@@ -157,7 +216,7 @@ def prepare_tree(dest: str) -> dict:
                         notebooks += 1
                 except (ValueError, OSError, TypeError, UnicodeDecodeError):
                     pass
-    return {"bytes": total, "files": files, "notebooks_extracted": notebooks, "semgrepignore_removed": ignored}
+    return {"bytes": total, "files": files, "notebooks_extracted": notebooks, "semgrepignore_removed": ignored, "signals": sig}
 
 
 def run_semgrep(dest: str, env: dict) -> tuple[dict | None, str | None]:
@@ -201,12 +260,12 @@ def yara_available() -> bool:
     return yara_compiled() is not None
 
 
-def run_yara(dest: str) -> list[str] | None:
-    """['rule@relpath', ...] of byte-signature matches, or None if yara-python is unavailable."""
+def run_yara(dest: str) -> tuple[str, list[str]]:
+    """(status, hits). status: 'ran' | 'unavailable' | 'error'. A required engine: 'unavailable'/'error' fails closed."""
     rules = yara_compiled()
     if rules is None:
-        return None
-    hits = []
+        return "unavailable", []
+    hits, errors = [], 0
     for root, dirs, names in os.walk(dest):
         dirs[:] = [d for d in dirs if d != ".git"]
         for n in names:
@@ -217,24 +276,30 @@ def run_yara(dest: str) -> list[str] | None:
                 for m in rules.match(filepath=p, timeout=60):
                     hits.append(f"{m.rule}@{os.path.relpath(p, dest)}")
             except Exception:
-                continue  # unreadable file / match error: skip, don't fail the whole scan
+                errors += 1  # unreadable/oversized/match error on one file: tolerate a few, not a wholesale failure
+                if errors > 25:
+                    return "error", sorted(set(hits))
+                continue
             if len(hits) >= 50:
-                return sorted(set(hits))
-    return sorted(set(hits))
+                return "ran", sorted(set(hits))
+    return "ran", sorted(set(hits))
 
 
-def run_clamav(dest: str, env: dict) -> list[str] | None:
-    """['Signature@relpath', ...] from clamscan, or None if clamav is unavailable or its database is missing."""
+def run_clamav(dest: str, env: dict) -> tuple[str, list[str]]:
+    """(status, hits). clamscan exit codes: 0 = clean, 1 = virus FOUND, 2 = error (e.g. no signature DB). Missing
+    binary / timeout / exit 2 / unexpected code all fail closed as 'unavailable'/'error'/'timeout'."""
     if not shutil.which("clamscan"):
-        return None
+        return "unavailable", []
     try:
         r = subprocess.run(["clamscan", "-r", "-i", "--no-summary", "--stdout", "--max-filesize=25M",
                             "--max-scansize=200M", dest], capture_output=True, text=True, timeout=ENGINE_TIMEOUT, env=env)
-    except (subprocess.TimeoutExpired, OSError):
-        return None
-    if r.returncode == 2:  # 2 = error (e.g. no signature database loaded); treat as "did not run"
-        return None
-    return parse_clamav(r.stdout or "", dest)
+    except subprocess.TimeoutExpired:
+        return "timeout", []
+    except OSError:
+        return "error", []
+    if r.returncode not in (0, 1):  # 2 = scan/DB error; anything else = execution failure
+        return "error", []
+    return "ran", parse_clamav(r.stdout or "", dest)
 
 
 def parse_clamav(stdout: str, dest: str) -> list[str]:
@@ -252,21 +317,28 @@ def parse_clamav(stdout: str, dest: str) -> list[str]:
     return sorted(set(hits))
 
 
-def run_osv(dest: str, env: dict) -> tuple[list[str], int] | None:
-    """(malicious_package_ids, vulnerable_count) from osv-scanner, or None if unavailable. Malicious advisories block;
-    ordinary vulnerabilities are advisory (vulnerable code is a learning topic, not a student-safety issue)."""
+def run_osv(dest: str, env: dict) -> tuple[str, tuple[list[str], int]]:
+    """(status, (malicious_ids, vulnerable_count)). osv-scanner exit codes: 0 = no findings, 1 = findings (still a
+    successful run). Other codes, missing binary, timeout or unparseable/invalid JSON all fail closed. Malicious
+    advisories block; ordinary vulnerabilities stay advisory (unchanged policy)."""
     if not shutil.which("osv-scanner"):
-        return None
+        return "unavailable", ([], 0)
     try:
         r = subprocess.run(["osv-scanner", "--format", "json", "--recursive", dest],
                            capture_output=True, text=True, timeout=ENGINE_TIMEOUT, env=env)
-    except (subprocess.TimeoutExpired, OSError):
-        return None
+    except subprocess.TimeoutExpired:
+        return "timeout", ([], 0)
+    except OSError:
+        return "error", ([], 0)
+    if r.returncode not in (0, 1):
+        return "error", ([], 0)
     try:
         data = json.loads(r.stdout or "{}")
     except ValueError:
-        return None
-    return parse_osv(data)
+        return "error", ([], 0)
+    if not isinstance(data, dict) or "results" not in data:  # validate output structure
+        return "error", ([], 0)
+    return "ran", parse_osv(data)
 
 
 def parse_osv(data: dict) -> tuple[list[str], int]:
@@ -287,8 +359,10 @@ def parse_osv(data: dict) -> tuple[list[str], int]:
     return sorted(set(malicious)), vulns
 
 
-def scan_repo(full_name: str, size_kb: int | None = None, language: str | None = None) -> dict:
-    """Return the code-screening part of a record. result: "pass" | "withheld" | "incomplete". Never raises."""
+def scan_repo(full_name: str, size_kb: int | None = None, language: str | None = None, sha: str | None = None) -> dict:
+    """Screen a repo at a pinned commit. result: "pass" | "withheld" | "incomplete". Never raises.
+    Pass `sha` to scan that exact commit; otherwise the current default-branch HEAD is pinned. A "pass" requires the
+    scanned commit to match the pinned SHA and ALL required engines (semgrep, yara, clamav, osv) to have run."""
     out = {"sha": None, "scanned_at": now_iso(), "semgrep_version": semgrep_version(), "ruleset_sha256": ruleset_sha256(),
            "configs": [os.path.basename(RULES)] + CONFIGS, "coverage": {"primary_language": language, "supported": False, "note": ""},
            "semgrep": {"blocking": [], "advisory": {}, "errors": []}, "result": "incomplete", "reasons": []}
@@ -307,16 +381,20 @@ def scan_repo(full_name: str, size_kb: int | None = None, language: str | None =
     env = _iso_env(os.path.join(tmp, "home"))
     os.makedirs(env["HOME"], exist_ok=True)
     try:
-        sha = pin_sha(full_name, env)
-        if not sha:
+        pinned = sha or pin_sha(full_name, env)
+        if not pinned or len(pinned) != 40:
             out["reasons"] = ["could not pin commit (ls-remote failed)"]
             return out
-        dest = clone(full_name, tmp, env)
+        out["requested_sha"] = pinned
+        dest = clone(full_name, tmp, env, pinned)
         if not dest:
-            out["reasons"] = ["clone failed or timed out"]
+            out["reasons"] = [f"clone of commit {pinned[:12]} failed or timed out"]
             return out
         got = head_sha(dest, env)
-        out["sha"] = got or sha
+        if not got or got != pinned:  # scanned a different commit than we pinned -> do not trust the result
+            out["reasons"] = [f"scanned commit mismatch (wanted {pinned[:12]}, got {(got or 'none')[:12]})"]
+            return out
+        out["sha"] = pinned
         tree = prepare_tree(dest)
         out["coverage"].update(tree)
         if tree["bytes"] > MAX_CLONE_BYTES:
@@ -347,32 +425,37 @@ def scan_repo(full_name: str, size_kb: int | None = None, language: str | None =
         out["semgrep"]["sample"] = [f"{os.path.relpath(x['path'], dest)}:{x['start']['line']} {x['check_id'].split('.')[-1]}"
                                     for x in results if MALWARE_PREFIX in x.get("check_id", "")][:5]
 
-        # ---- defence-in-depth engines (each blocks on a hit; absence recorded, never a silent pass) ----
-        yara_hits = run_yara(dest)
-        clam_hits = run_clamav(dest, env)
-        osv = run_osv(dest, env)
-        osv_mal, osv_vulns = osv if osv is not None else ([], 0)
-        out["yara"] = {"ran": yara_hits is not None, "hits": yara_hits or []}
-        out["clamav"] = {"ran": clam_hits is not None, "hits": clam_hits or []}
-        out["osv"] = {"ran": osv is not None, "malicious": osv_mal, "vulnerable": osv_vulns}
-        out["engines"] = {"semgrep": bool(semgrep_version()), "yara": yara_hits is not None,
-                          "clamav": clam_hits is not None, "osv": osv is not None}
+        # ---- required detection engines: ALL must run for a pass; a hit blocks; a failure is incomplete ----
+        y_status, yara_hits = run_yara(dest)
+        c_status, clam_hits = run_clamav(dest, env)
+        o_status, (osv_mal, osv_vulns) = run_osv(dest, env)
+        files_scanned = out["semgrep"].get("files_scanned", 0)
+        sg_status = "no-coverage" if (language in CODE_LANGS and files_scanned == 0) else "ran"
+        out["engines"] = {"semgrep": sg_status, "yara": y_status, "clamav": c_status, "osv": o_status}
+        out["yara"] = {"status": y_status, "hits": yara_hits}
+        out["clamav"] = {"status": c_status, "hits": clam_hits}
+        out["osv"] = {"status": o_status, "malicious": osv_mal, "vulnerable": osv_vulns}
         out["semgrep"]["advisory"]["osv_vulnerabilities"] = osv_vulns
 
-        reasons = []
+        blocking_reasons = []
         if blocking:
-            reasons.append(f"code scan: {', '.join(sorted(set(blocking)))}")
+            blocking_reasons.append(f"code scan: {', '.join(sorted(set(blocking)))}")
         if yara_hits:
-            reasons.append(f"yara: {', '.join(sorted({h.split('@')[0] for h in yara_hits}))}")
+            blocking_reasons.append(f"yara: {', '.join(sorted({h.split('@')[0] for h in yara_hits}))}")
         if clam_hits:
-            reasons.append(f"clamav: {', '.join(sorted({h.split('@')[0] for h in clam_hits}))}")
+            blocking_reasons.append(f"clamav: {', '.join(sorted({h.split('@')[0] for h in clam_hits}))}")
         if osv_mal:
-            reasons.append(f"malicious dependency: {', '.join(osv_mal)}")
+            blocking_reasons.append(f"malicious dependency: {', '.join(osv_mal)}")
 
-        if fatal:
+        not_ran = [f"{k}={v}" for k, v in out["engines"].items() if v != "ran"]
+        out["coverage"]["engines_not_ran"] = not_ran
+
+        if blocking_reasons:                 # a real detection blocks even if another engine also failed
+            out.update(result="withheld", reasons=blocking_reasons)
+        elif fatal:
             out.update(result="incomplete", reasons=[f"scan incomplete: {', '.join(fatal)}"])
-        elif reasons:
-            out.update(result="withheld", reasons=reasons)
+        elif not_ran:                        # a required engine did not run / no coverage -> fail closed, never pass
+            out.update(result="incomplete", reasons=[f"required scanner not run: {', '.join(not_ran)}"])
         else:
             out["result"] = "pass"
         return out

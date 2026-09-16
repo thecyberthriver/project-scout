@@ -15,6 +15,7 @@ export const PAUSE_MSG = "Recommendations are paused: automated screening hasn't
 export const DEFAULT_LABEL = "Automated checks completed; not a safety guarantee.";
 export const EVERGREEN_HEAD = "Evergreen reference (not a fresh repo)";
 const STALE_MS = 36 * 3600e3;
+const EXPECTED_POLICY = 2;   // published.json must be produced under this screening policy version, or it is rejected
 const MAX = 6;
 const DISCORD_LIMIT = 2000, TELEGRAM_LIMIT = 4096;
 
@@ -106,7 +107,10 @@ export async function loadPublished() {
 }
 export function operational(pub, now = Date.now()) {
   const m = pub?.meta;
-  if (!m || m.status !== "operational") return false;
+  if (!m || typeof m !== "object") return false;
+  if (m.policy_version !== EXPECTED_POLICY) return false;   // incompatible snapshot: pause rather than mis-render
+  if (m.status !== "operational") return false;
+  if (!Array.isArray(pub?.feed) && (typeof pub?.feed !== "object" || pub?.feed === null)) return false;  // malformed
   const t = Date.parse(m.last_screening_at || "");
   return Number.isFinite(t) && now - t <= STALE_MS;
 }
@@ -145,10 +149,31 @@ export function fromPublished(pub, lane, major, extra, now = Date.now()) {
   if (tokens.length) rows = rows.filter((r) => matches(r, tokens));
   return rows.filter((r) => eligible(r, pub.meta, now));
 }
+// Undergraduate level selection. BEGINNER is the default; a student opts into intermediate/challenge. We never
+// substitute a HARDER level than asked (only a simpler one), so "no beginner repos" shows nothing harder, not a
+// challenge project. Levels come from levels.py (multi-signal), carried on each row as `level`.
+export const LEVEL_LABEL = { beginner: "🟢 Beginner", intermediate: "🟡 Intermediate", challenge: "🟠 Undergraduate Challenge" };
+export function wantedLevel(extraRaw) {
+  const x = (extraRaw || "").toLowerCase();
+  if (/\b(advanced|hard|challenge)\b/.test(x)) return "challenge";
+  if (/\b(intermediate|medium)\b/.test(x)) return "intermediate";
+  return "beginner";  // default
+}
+export function byLevel(rows, extraRaw) {
+  const want = wantedLevel(extraRaw);
+  const lvOf = (it) => it.level || "beginner";   // a row without a level is treated as the default (beginner)
+  const order = { beginner: ["beginner"], intermediate: ["intermediate", "beginner"], challenge: ["challenge", "intermediate", "beginner"] }[want];
+  for (const lv of order) {                 // take the requested level; fall back only to SIMPLER levels, never harder
+    const r = rows.filter((it) => lvOf(it) === lv);
+    if (r.length) return { level: lv, rows: r };
+  }
+  return { level: want, rows: [] };
+}
 export function lookup(pub, lane, major, extraRaw, now = Date.now()) {
   const rows = fromPublished(pub, lane, major, stripLevel(extraRaw), now);
-  const sorted = lane === "orgs" ? rows.sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)) : ordered(rows, ceilingFor(extraRaw, now));
-  return levelFilter(sorted, extraRaw).slice(0, MAX + 3);
+  if (lane === "orgs") return rows.sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX + 3);
+  const picked = byLevel(rows, extraRaw).rows;          // beginner default; explicit choice for harder
+  return ordered(picked, ceilingFor(extraRaw, now)).slice(0, MAX + 3);
 }
 export function startItems(pub, major, now = Date.now()) {
   const st = pub?.evergreen?.starters || {};
@@ -223,7 +248,11 @@ export function renderRepo(it, lane, isMd) {
   if (d.length > 140) d = d.slice(0, 140) + "…";
   const lang = it.language ? ` · ${e(it.language)}` : "";
   const tail = lane === "oss" ? `\n  👉 ${link("open good-first-issues", it.html_url + GFI, isMd)}` : "";
-  return `• ${link(it.full_name, it.html_url, isMd)} ⭐${Number(it.stargazers_count) || 0}${lang} · ${difficulty(it)}\n  ${e(d) || "(no description)"}${tail}`;
+  const repoLink = it.commit_url || it.html_url;  // reviewed commit when screened, else the repo default branch
+  const lvl = LEVEL_LABEL[it.level];
+  const lm = it.level_meta || {};
+  const lvlLine = lvl ? `\n  🎓 ${lvl} · ${e(lm.effort || "")}\n  Prereqs: ${e(lm.prereqs || "")}\n  Task: ${e(lm.task || "")}\n  Done when: ${e(lm.success || "")}` : "";
+  return `• ${link(it.full_name, repoLink, isMd)} ⭐${Number(it.stargazers_count) || 0}${lang} · ${lvl || difficulty(it)}\n  ${e(d) || "(no description)"}${lvlLine}${tail}`;
 }
 export function render(head, lane, items, pub, isMd = false, evergreen = false) {
   if (!items.length) return `${head}\nNothing matched. Try fewer keywords.`;

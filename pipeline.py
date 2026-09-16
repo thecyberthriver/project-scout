@@ -19,6 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 import gate
+import levels
 import links
 import project_scout as ps
 
@@ -116,14 +117,17 @@ def _screen_all(idx: dict) -> dict:
     rescreened = reused = 0
     for full_name, (r, curated) in sorted(repos.items()):
         p = prior["records"].get(full_name)
-        if gate.record_is_current(p, None):
-            store["records"][full_name] = p
-            reused += 1
-            continue
-        rec = gate.screen_one(r, quarantine, name_counts=counts, curated=curated)
-        if rec is None:                      # transiently unreachable: keep the prior record if any, else skip
-            if p:
+        head = None
+        if gate.record_is_current(p, None):          # cheap pre-check (policy + expiry) before spending a network call
+            head = gate.head_sha(full_name)          # HIGH-2: confirm the current default-branch SHA before reuse
+            if head and gate.record_is_current(p, head):
                 store["records"][full_name] = p
+                reused += 1
+                continue
+            # head is None (unreachable) or the commit changed -> must re-screen; never reuse eligibility on an
+            # unconfirmed SHA. A prior record is NOT carried forward here.
+        rec = gate.screen_one(r, quarantine, name_counts=counts, curated=curated, sha=head)
+        if rec is None:                              # transiently unreachable this run: retry next run (no record)
             continue
         store["records"][full_name] = rec
         rescreened += 1
@@ -141,6 +145,12 @@ def _eligible_rows(rows: list[dict], store: dict, quarantine: dict, meta: dict, 
         rec = store["records"].get(r["full_name"])
         if rec:
             r2["screened"] = gate.screened_block(rec)
+            if rec.get("sha"):  # HIGH-2: link students to the exact reviewed commit, not the mutable default branch
+                r2["commit_url"] = f"https://github.com/{r['full_name']}/tree/{rec['sha']}"
+        if kind == "fresh":
+            lv = levels.classify(r2, rec)   # multi-signal difficulty, not stars/size alone
+            r2["level"] = lv["level"]
+            r2["level_meta"] = {k: lv[k] for k in ("confidence", "prereqs", "task", "effort", "success")}
         ok, _why = gate.eligible(r2, store, quarantine, meta)
         if ok:
             out.append(r2)
@@ -151,6 +161,9 @@ def _build_published(idx: dict, store: dict, meta: dict, quarantine: dict) -> di
     feed = {}
     for key, rows in idx["keys"].items():
         kept = _eligible_rows(rows, store, quarantine, meta, "fresh")
+        if not key.startswith("orgs|"):
+            # keep only undergraduate levels; drop 'exclude' (too advanced) and 'unknown' (not reliably classifiable)
+            kept = [r for r in kept if r.get("level") in levels.FEED_LEVELS]
         if kept:
             feed[key] = kept
     st = idx.get("static", {})
@@ -201,8 +214,61 @@ def _hack_ok(h: dict) -> bool:
     return not (c and c[0] == "block")
 
 
+def _all_repo_rows(pub: dict):
+    """Yield (section, row) for EVERY repository-bearing row in a published snapshot — fresh feed, orgs, starters,
+    cyber-domain repos, case repos and learning-path repos. The independent validator checks every one."""
+    for key, rows in (pub.get("feed") or {}).items():
+        for r in rows:
+            yield f"feed:{key}", r
+    ev = pub.get("evergreen") or {}
+    for major, rows in (ev.get("starters") or {}).items():
+        for r in rows:
+            yield f"starters:{major}", r
+    for d, dv in (ev.get("cyber_domains") or {}).items():
+        for r in (dv.get("repos") or []):
+            yield f"cyber_domains:{d}", r
+    for major, items in (ev.get("cases") or {}).items():
+        for it in items:
+            if it.get("repo"):
+                yield f"cases:{major}", it["repo"]
+    for major, stages in (ev.get("paths") or {}).items():
+        for stage in stages:
+            for it in stage:
+                if it.get("repo"):
+                    yield f"paths:{major}", it["repo"]
+
+
+def validate_published(pub: dict, store: dict, quarantine: dict, meta: dict) -> tuple[bool, list[str]]:
+    """Independently re-validate every repository-bearing row against the AUTHORITATIVE screening records and the
+    quarantine — malformed records, missing engines, incomplete coverage, expired scans, missing/mismatched SHAs and
+    quarantined repos are all rejected. Returns (ok, problems). Does not trust screened fields in the rows beyond the
+    SHA cross-check that eligible() performs against the record."""
+    problems = []
+    for section, row in _all_repo_rows(pub):
+        if not isinstance(row, dict) or not isinstance(row.get("full_name"), str):
+            problems.append(f"{section}: malformed row")
+            continue
+        ok, why = gate.eligible(row, store, quarantine, meta)
+        if not ok:
+            problems.append(f"{section} {row.get('full_name')}: {why[0] if why else 'ineligible'}")
+        if len(problems) >= 50:
+            break
+    return (not problems), problems
+
+
+def _meta_from_store(store: dict) -> dict:
+    """Build snapshot meta from the authoritative screening store (not from any artifact-supplied meta)."""
+    m = _meta("operational")
+    passing = sum(1 for r in store.get("records", {}).values() if r.get("result") == "pass")
+    m["last_screening_at"] = store.get("generated_at") or m["generated_at"]
+    m["status"] = "operational" if passing >= MIN_PASSING else "degraded"
+    return m
+
+
 def _drop_sections(published: dict, seen: dict) -> list[dict]:
-    """New, eligible, fresh repos not yet sent — grouped for the push, mirroring the old digest sections."""
+    """New, eligible, fresh repos not yet sent — grouped for the push. BEGINNER is the default here; a major with no
+    new beginner repo gets a self-contained synthetic BEGINNER project instead of a harder repo. Intermediate and
+    challenge repos are offered on demand via /scout level:, not pushed."""
     out = []
     order = list(ps.MAJORS)
     for major in order:
@@ -213,14 +279,15 @@ def _drop_sections(published: dict, seen: dict) -> list[dict]:
             rows = []
             for key, krows in published["feed"].items():
                 if key.startswith(f"{major}|{lane}|"):
-                    rows += [r for r in krows if r["full_name"] not in seen]
-            rows = ps.ordered(rows, ps.phase()[0])[:2]
+                    rows += [r for r in krows if r["full_name"] not in seen and r.get("level") == "beginner"]
+            rows = ps.ordered(rows, 0)[:2]
             if rows:
                 for r in rows:
                     seen[r["full_name"]] = ps.date.today().isoformat()
                 parts.append({"lane": lane, "header": tag, "rows": rows})
-        if parts:
-            out.append({"key": major, "label": label, "sections": parts})
+        note = None if parts else SYNTHETIC[major]  # no beginner repo cleared this slot -> synthetic beginner, never harder
+        if parts or note:
+            out.append({"key": major, "label": label, "sections": parts, "note": note})
     # orgs
     org_rows = []
     for key, krows in published["feed"].items():
@@ -285,9 +352,12 @@ def _render_section(sec: dict) -> str:
     if "hacks" in sec:
         return "\n<b>🏁 NYC in-person hackathons — new listings</b>\n<i>Spring requirement: attend one.</i>\n" + \
             "\n".join(ps.render_hack(h) for h in sec["hacks"]) + ps.hack_footer()
-    parts = [f"\n<b>{sec['label']}</b>"]
-    for part in sec["sections"]:
+    parts = [f"\n<b>{sec['label']}</b> <i>· 🟢 Beginner by default — /scout level:intermediate or level:challenge for more</i>"]
+    for part in sec.get("sections", []):
         parts.append(f"<i>{part['header']}</i>\n" + "\n".join(ps.render_repo(r, part["lane"]) for r in part["rows"]))
+    if sec.get("note"):
+        parts.append("<i>🟢 Beginner build-it-yourself idea (no beginner repo cleared screening this slot)</i>\n• "
+                     + ps.esc(sec["note"]))
     return "\n".join(parts)
 
 
@@ -296,18 +366,29 @@ LABEL_LINE = f"\n<i>ℹ️ {gate.LABEL}</i>"
 
 def publish(in_dir: str, index_only: bool = False) -> int:
     idx = json.load(open(os.path.join(in_dir, "index.json"), encoding="utf-8"))
-    store = gate.load_screening(os.path.join(in_dir, "screening.json"))
-    published = json.load(open(os.path.join(in_dir, "published.json"), encoding="utf-8"))
+    store = gate.load_screening(os.path.join(in_dir, "screening.json"))  # authoritative screening records
     drop = json.load(open(os.path.join(in_dir, "drop.json"), encoding="utf-8")).get("drop", [])
-    meta, quarantine = published["meta"], gate.load_quarantine()
+    quarantine = gate.load_quarantine()
 
-    # copy the snapshot the Workers read to the repo root (index.json kept for the human report / debugging)
+    # HIGH-4: RECONSTRUCT the snapshot from index + authoritative screening records (never trust the artifact's own
+    # published.json rows), then INDEPENDENTLY VALIDATE every repository-bearing section before writing anything.
+    meta = _meta_from_store(store)
+    published = _build_published(idx, store, meta, quarantine)
+    ok, problems = validate_published(published, store, quarantine, meta)
+    if not ok:
+        for p in problems[:10]:
+            print(f"  reject: {p}", file=sys.stderr)
+        print(f"publish: snapshot VALIDATION FAILED ({len(problems)} problem(s)); previous published.json preserved, "
+              f"nothing sent", file=sys.stderr)
+        return 1  # non-zero → the workflow's failure alert fires; root published.json is left untouched
+
+    # validation passed: write the reconstructed snapshot the Workers read (and the debugging index/screening)
     json.dump(published, open("published.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
     json.dump(idx, open("index.json", "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
     gate.save_screening(store, "screening.json")
 
     if index_only:
-        print(f"publish-index: wrote published.json ({sum(len(v) for v in published['feed'].values())} rows), status={meta['status']}")
+        print(f"publish-index: validated + wrote published.json ({sum(len(v) for v in published['feed'].values())} rows), status={meta['status']}")
         return 0
 
     seen = ps.load_seen()
@@ -319,7 +400,7 @@ def publish(in_dir: str, index_only: bool = False) -> int:
             for part in sec["sections"]:
                 part["rows"] = [r for r in part["rows"] if r["full_name"] not in seen and gate.eligible(r, store, quarantine, meta)[0]]
             sec["sections"] = [p for p in sec["sections"] if p["rows"]]
-            if not sec["sections"]:
+            if not sec["sections"] and not sec.get("note"):  # keep a section that carries a synthetic beginner idea
                 continue
         elif "orgs" in sec:
             sec["orgs"] = [r for r in sec["orgs"] if r["full_name"] not in seen and gate.eligible(r, store, quarantine, meta)[0]]

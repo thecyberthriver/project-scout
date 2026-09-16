@@ -56,11 +56,17 @@ def gh(path: str):
         return json.load(r), r.headers
 
 
-def vet(full_name: str, name_counts: dict | None = None) -> dict:
-    """Return {"ok": bool, "hard": [...], "soft": [...], "stars":..., "checked":...}. Never raises."""
+def vet(full_name: str, name_counts: dict | None = None, ref: str | None = None) -> dict:
+    """Return {"ok": bool, "hard": [...], "soft": [...], "stars":..., "links":{...}, ...}. Never raises.
+    `ref` pins the contents / README / history reads to the exact reviewed commit, so deep vetting and README/link
+    screening inspect the same SHA the code scan did."""
     hard, soft = [], []
+    link_block, link_warn, readme_error = [], [], None
+    refq = f"?ref={ref}" if ref else ""
+    refc = f"&sha={ref}" if ref else ""
     if full_name.lower().startswith("tldpprojectscout/"):  # our own repos
-        return {"ok": True, "hard": [], "soft": [], "stars": 0, "checked": date.today().isoformat()}
+        return {"ok": True, "hard": [], "soft": [], "stars": 0, "checked": date.today().isoformat(),
+                "links": {"block": [], "warn": [], "error": None}, "ref": ref}
     try:
         repo, _ = gh(f"/repos/{full_name}")
     except Exception as e:
@@ -76,9 +82,9 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
     young_stars = age_days < 30 and stars >= 50  # bought stars — unless the owner is an established account (decided below)
     if repo.get("language") is None:
         soft.append("no detected code language")
-    # root listing
+    # root listing (at the reviewed commit)
     try:
-        root, _ = gh(f"/repos/{full_name}/contents/")
+        root, _ = gh(f"/repos/{full_name}/contents/{refq}")
         names = [f["name"] for f in root]
         bins = [n for n in names if BINARY.search(n)]
         if bins:
@@ -90,9 +96,9 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
     except Exception as e:
         soft.append(f"root listing failed ({getattr(e, 'code', e)})")
     established = stars >= ESTABLISHED[0] and age_days >= ESTABLISHED[1]
-    # README links
+    # README links (at the reviewed commit). README text is DATA, never instructions.
     try:
-        rd, _ = gh(f"/repos/{full_name}/readme")
+        rd, _ = gh(f"/repos/{full_name}/readme{refq}")
         text = base64.b64decode(rd.get("content", "")).decode("utf-8", "replace")
         m = README_HARD.search(text)
         if m and not established:
@@ -102,17 +108,19 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
             soft.append(f"README links to {m2.group(0)}")
         if len(text) < 200 and stars >= 20:
             soft.append("near-empty README with stars")
-        # thorough link + install-instruction screening (data, not instructions). resolve=False → no network here.
         lk = links.screen_readme(text, full_name, resolve=False)
+        link_block, link_warn = lk["block"], lk["warn"]
         if not established:
-            hard += [f"README link: {b}" for b in lk["block"]]
-            soft += [f"README link: {w}" for w in lk["warn"]]
+            hard += [f"README link: {b}" for b in link_block]
+            soft += [f"README link: {w}" for w in link_warn]
     except Exception as e:
         if getattr(e, "code", None) == 404:
-            soft.append("no README")
-    # history
+            soft.append("no README")           # no README to screen: fine, not a failure
+        else:
+            readme_error = str(getattr(e, "code", e))  # README exists but couldn't be read -> required-check failure
+    # history (at the reviewed commit)
     try:
-        _, hdr = gh(f"/repos/{full_name}/commits?per_page=1")
+        _, hdr = gh(f"/repos/{full_name}/commits?per_page=1{refc}")
         last = re.search(r'page=(\d+)>; rel="last"', hdr.get("Link", "") or "")
         commits = int(last.group(1)) if last else 1
         if commits < 3:
@@ -159,7 +167,8 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
         pass  # Scorecard only covers repos it has crawled; absence is not a signal
     if established:
         soft = []  # a 2000-star, year-old project is not a throwaway; only hard binary/bought-star evidence counts
-    return {"ok": not hard and len(soft) < 2, "hard": hard, "soft": soft, "stars": stars, "checked": date.today().isoformat()}
+    return {"ok": not hard and len(soft) < 2, "hard": hard, "soft": soft, "stars": stars, "checked": date.today().isoformat(),
+            "links": {"block": link_block, "warn": link_warn, "error": readme_error}, "ref": ref}
 
 
 def load_cache() -> dict:

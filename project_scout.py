@@ -829,8 +829,13 @@ def render_repo(it: dict, lane: str) -> str:
     desc = desc[:140] + "…" if len(desc) > 140 else desc
     lang = f" · {it['language']}" if it.get("language") else ""
     tail = f'\n  👉 <a href="{it["html_url"]}{GFI}">open good-first-issues</a>' if lane == "oss" else ""
-    return (f'• <a href="{it["html_url"]}">{esc(it["full_name"])}</a> ⭐{it["stargazers_count"]}{lang} · {difficulty(it)}\n'
-            f"  {esc(desc) or '(no description)'}{tail}")
+    link = it.get("commit_url") or it["html_url"]  # reviewed commit when screened, else the repo
+    LVL = {"beginner": "🟢 Beginner", "intermediate": "🟡 Intermediate", "challenge": "🟠 Undergraduate Challenge"}
+    lvl_label = LVL.get(it.get("level"))
+    lm = it.get("level_meta") or {}
+    level_line = f'\n  🎓 {lvl_label} · {esc(lm.get("effort", ""))} · task: {esc(lm.get("task", ""))}' if lvl_label else ""
+    return (f'• <a href="{link}">{esc(it["full_name"])}</a> ⭐{it["stargazers_count"]}{lang} · {lvl_label or difficulty(it)}\n'
+            f"  {esc(desc) or '(no description)'}{level_line}{tail}")
 
 
 def render_org(it: dict, sector_label: str) -> str:

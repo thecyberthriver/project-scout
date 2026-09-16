@@ -13,7 +13,10 @@ OLD = (NOW - timedelta(days=90)).date().isoformat()
 def rec(full, result="pass", sha="a" * 40, expires_days=10):
     return {"full_name": full, "result": result, "sha": sha, "policy_version": gate.POLICY_VERSION,
             "at": NOW.isoformat(), "expires": (NOW + timedelta(days=expires_days)).isoformat(),
-            "coverage": {"code_scan_result": "pass"}, "reasons": []}
+            "coverage": {"code_scan_result": "pass",
+                         "engines": {"semgrep": "ran", "yara": "ran", "clamav": "ran", "osv": "ran"},
+                         "signals": {"readme_bytes": 500, "has_tests": False, "dep_count": 2, "top_level_entries": 8}},
+            "reasons": []}  # signals -> classifies as beginner, so the row survives the level filter
 
 
 def frow(full, pushed=FRESH):
@@ -76,8 +79,8 @@ class Drop(unittest.TestCase):
     def test_drop_excludes_already_seen(self):
         meta = pipeline._meta("operational")
         published = {"feed": {"swe|build|": [
-            {**frow("new/a"), "kind": "fresh", "screened": {"sha": "a" * 40}},
-            {**frow("old/b"), "kind": "fresh", "screened": {"sha": "a" * 40}}]},
+            {**frow("new/a"), "kind": "fresh", "screened": {"sha": "a" * 40}, "level": "beginner"},
+            {**frow("old/b"), "kind": "fresh", "screened": {"sha": "a" * 40}, "level": "beginner"}]},
             "hackathons": {"items": []}, "evergreen": {}}
         seen = {"old/b": "2026-01-01"}
         drop = pipeline._drop_sections(published, seen)

@@ -22,11 +22,14 @@ def row(full="ok/repo", pushed=None, created=None, kind="fresh", sha="a" * 40):
             "created_at": (created or (NOW - DAY).date().isoformat()), "kind": kind, "screened": {"sha": sha}}
 
 
+RAN = {"semgrep": "ran", "yara": "ran", "clamav": "ran", "osv": "ran"}
+
+
 def store_with(full="ok/repo", result="pass", sha="a" * 40, expires=None, policy=gate.POLICY_VERSION, coverage=None):
     return {"policy_version": gate.POLICY_VERSION, "records": {full: {
         "full_name": full, "result": result, "sha": sha, "at": iso(NOW - DAY),
         "expires": expires or iso(NOW + 10 * DAY), "policy_version": policy,
-        "coverage": coverage or {"code_scan_result": "pass"}, "reasons": []}}}
+        "coverage": coverage or {"code_scan_result": "pass", "engines": dict(RAN)}, "reasons": []}}}
 
 
 META = {"status": "operational", "fresh_field": "pushed_at", "fresh_days": 30, "last_screening_at": iso(NOW)}
@@ -56,7 +59,17 @@ class Eligibility(unittest.TestCase):
         r = row(sha="b" * 40)  # row's screened sha differs from the record's sha
         ok, why = gate.eligible(r, store_with(sha="a" * 40), QUAR, META, NOW)
         self.assertFalse(ok)
-        self.assertTrue(any("commit changed" in w for w in why))
+        self.assertTrue(any("commit" in w for w in why))
+
+    def test_missing_engine_withheld(self):
+        cov = {"code_scan_result": "pass", "engines": {"semgrep": "ran", "yara": "ran", "clamav": "unavailable", "osv": "ran"}}
+        ok, why = gate.eligible(row(), store_with(coverage=cov), QUAR, META, NOW)
+        self.assertFalse(ok)
+        self.assertTrue(any("engine" in w for w in why))
+
+    def test_missing_sha_in_record_withheld(self):
+        ok, why = gate.eligible(row(sha=""), store_with(sha=""), QUAR, META, NOW)
+        self.assertFalse(ok)
 
     def test_old_policy_version_withheld(self):
         ok, _ = gate.eligible(row(), store_with(policy=1), QUAR, META, NOW)

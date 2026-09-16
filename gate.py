@@ -121,7 +121,10 @@ def head_sha(full_name: str) -> str | None:
     return None
 
 
-TRANSIENT = ("clone failed", "timed out", "timeout", "ls-remote", "unreadable", "unavailable", "could not pin")
+# scan/vet outcomes that mean "try again next run" (network / a moving branch), never a permanent verdict.
+TRANSIENT = ("clone failed", "clone of commit", "timed out", "timeout", "ls-remote", "unreadable", "unavailable",
+             "could not pin", "mismatch")
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 def _transient(reasons: list[str]) -> bool:
@@ -130,57 +133,76 @@ def _transient(reasons: list[str]) -> bool:
 
 def screen_one(row: dict, quarantine: dict, *, name_counts: dict | None = None, curated: bool = False,
                sha: str | None = None, vet_mod=None, scan_mod=None) -> dict | None:
-    """Produce a screening record for one repo. None = transiently unreachable (retry next run, do not record).
-    Records identity, reviewed SHA, time, scanner/rule versions, coverage, result and reasons. The code-scan verdict,
-    coverage and reviewed SHA come from scan.py (the one place that touches the untrusted repo)."""
+    """Produce a screening record for one repo. None = try again next run (do not record). The reviewed commit is
+    pinned FIRST, then the deep vet, README/link screen and code scan all inspect that same SHA. A passing record
+    requires a valid reviewed SHA, no blocking finding, and every required engine to have run."""
     import importlib
     vet = vet_mod or importlib.import_module("vet")
     scan = scan_mod or importlib.import_module("scan")
     full = row["full_name"]
     now = _now()
-    base = {"full_name": full, "sha": sha, "at": _iso(now), "language": row.get("language"),
+
+    q = is_quarantined(full, quarantine)
+    if q:
+        return {"full_name": full, "sha": None, "at": _iso(now), "result": "fail", "reasons": [f"quarantine: {q}"],
+                "coverage": {"note": "not scanned — quarantined", "supported": False}, "policy_version": POLICY_VERSION,
+                "curated": curated, "expires": _iso(now + timedelta(days=365))}
+
+    # pin the exact commit before any inspection. An unreachable SHA check must not reuse or fabricate eligibility.
+    pinned = sha or head_sha(full)
+    if not pinned or not SHA_RE.match(pinned):
+        return None  # cannot confirm the current commit right now: retry, do not record
+
+    base = {"full_name": full, "sha": pinned, "at": _iso(now), "language": row.get("language"),
             "size": row.get("size", 0), "pushed_at": (row.get("pushed_at") or "")[:10],
             "created_at": (row.get("created_at") or "")[:10], "stars": row.get("stargazers_count", 0),
             "curated": curated, "scanner": {"semgrep": scan.semgrep_version(), "ruleset_sha256": scan.ruleset_sha256()},
             "policy_version": POLICY_VERSION}
 
-    q = is_quarantined(full, quarantine)
-    if q:
-        return {**base, "result": "fail", "reasons": [f"quarantine: {q}"],
-                "coverage": {"note": "not scanned — quarantined", "supported": False},
-                "expires": _iso(now + timedelta(days=365))}
+    findings = content_policy(row, curated)
 
-    reasons = content_policy(row, curated)
-
-    v = vet.vet(full, name_counts)
+    v = vet.vet(full, name_counts, ref=pinned)
     if v.get("unknown"):
-        return None  # network blip: retry, do not record a verdict
+        return None
+    links_err = (v.get("links") or {}).get("error")
     if not v["ok"]:
-        reasons += list(v.get("hard", [])) + [f"soft: {s}" for s in v.get("soft", [])]
+        findings += list(v.get("hard", [])) + [f"soft: {s}" for s in v.get("soft", [])]
 
-    scan_res = scan.scan_repo(full, row.get("size"), row.get("language"))
+    scan_res = scan.scan_repo(full, row.get("size"), row.get("language"), sha=pinned)
     if scan_res.get("sha"):
-        base["sha"] = scan_res["sha"]  # authoritative: the exact commit that was scanned
+        base["sha"] = scan_res["sha"]
+    scan_result = scan_res.get("result")
     scan_reasons = list(scan_res.get("reasons", []))
-    if scan_res.get("result") != "pass":
-        # Transient scan problems (clone/timeout/ls-remote/scanner missing) with nothing else against the repo:
-        # do not record a verdict, retry next run. A real "withheld" verdict (unsupported language, too big, a
-        # code-scan hit) is recorded as a fail.
-        if scan_res.get("result") == "incomplete" and _transient(scan_reasons) and not reasons:
-            return None
-        reasons += scan_reasons
+    if scan_result == "withheld":
+        findings += scan_reasons  # a real detection (code/yara/clamav/malicious dep, unsupported language, too big)
 
-    result = "pass" if not reasons else "fail"
-    expires = now + timedelta(days=(EVERGREEN_EXPIRE_DAYS if curated else EXPIRE_DAYS) if result == "pass" else 2)
-    return {**base, "result": result, "reasons": sorted(set(reasons)),
-            "coverage": {**scan_res.get("coverage", {}), "code_scan_result": scan_res.get("result"),
+    # required-check failures (a scanner did not run, README unreadable, commit could not be pinned/cloned)
+    incomplete_reasons = []
+    if scan_result == "incomplete":
+        incomplete_reasons += scan_reasons
+    if links_err:
+        incomplete_reasons.append(f"README could not be read at the reviewed commit ({links_err})")
+
+    if not findings and incomplete_reasons and _transient(incomplete_reasons):
+        return None  # purely transient (network / moving branch): retry, don't record
+
+    if findings:
+        result, reasons = "fail", sorted(set(findings + incomplete_reasons))
+    elif incomplete_reasons:
+        result, reasons = "incomplete", sorted(set(incomplete_reasons))  # fail closed: a required check did not complete
+    else:
+        result, reasons = "pass", []
+
+    days = 1 if result == "incomplete" else (EVERGREEN_EXPIRE_DAYS if curated else EXPIRE_DAYS) if result == "pass" else 2
+    return {**base, "result": result, "reasons": reasons,
+            "coverage": {**scan_res.get("coverage", {}), "code_scan_result": scan_result,
                          "blocking": scan_res.get("semgrep", {}).get("blocking", []),
                          "advisory": scan_res.get("semgrep", {}).get("advisory", {}),
-                         "engines": scan_res.get("engines", {"semgrep": True}),
+                         "engines": scan_res.get("engines", {}),
                          "yara": scan_res.get("yara", {}), "clamav": scan_res.get("clamav", {}),
-                         "osv": scan_res.get("osv", {}),
+                         "osv": scan_res.get("osv", {}), "links": v.get("links", {}),
                          "vet_hard": v.get("hard", []), "vet_soft": v.get("soft", [])},
-            "expires": _iso(expires)}
+            "expires": _iso(now + timedelta(days=days))}
 
 
 # ---- screening store ------------------------------------------------------------------------------------------------
@@ -228,8 +250,37 @@ def fresh_enough(row: dict, meta: dict, now: datetime | None = None) -> bool:
     return (now.date() - dt.date()).days <= days  # whole calendar days: exactly `days` old still passes
 
 
+REQUIRED_ENGINES = ("semgrep", "yara", "clamav", "osv")
+
+
+def record_valid(rec: dict | None, now: datetime | None = None) -> tuple[bool, list[str]]:
+    """Independently validate an authoritative screening record: current policy, a valid reviewed SHA, a genuine
+    'pass', not expired, and every required engine actually run. Used by eligible() and the snapshot validator."""
+    now = now or _now()
+    if not isinstance(rec, dict):
+        return False, ["no screening record"]
+    if rec.get("policy_version") != POLICY_VERSION:
+        return False, ["screened under an old/unknown policy version"]
+    if rec.get("result") != "pass":
+        return False, ["screening result not pass"] + list(rec.get("reasons", []))[:4]
+    if not SHA_RE.match(str(rec.get("sha") or "")):
+        return False, ["record has no valid reviewed commit SHA"]
+    exp = _parse(rec.get("expires", ""))
+    if not exp or exp <= now:
+        return False, ["screening expired — re-screen required"]
+    engines = (rec.get("coverage") or {}).get("engines") or {}
+    missing = [e for e in REQUIRED_ENGINES if engines.get(e) != "ran"]
+    if missing:
+        return False, [f"required engine(s) did not run: {', '.join(missing)}"]
+    if (rec.get("coverage") or {}).get("code_scan_result") != "pass":
+        return False, ["code scan did not pass"]
+    return True, []
+
+
 def eligible(row: dict, screening: dict, quarantine: dict, meta: dict, now: datetime | None = None) -> tuple[bool, list[str]]:
-    """The one function every publish path calls. Returns (publishable, reasons_withheld). No network, no downgrade."""
+    """The one function every publish path calls. Returns (publishable, reasons_withheld). No network, no downgrade.
+    The authoritative record (screening.json) is the source of truth; the row's own `screened` fields are never
+    trusted — they must match the record's reviewed SHA."""
     now = now or _now()
     full = row.get("full_name", "")
     kind = row.get("kind", "fresh")
@@ -239,19 +290,13 @@ def eligible(row: dict, screening: dict, quarantine: dict, meta: dict, now: date
         return False, [f"quarantined: {q}"]
 
     rec = screening.get("records", {}).get(full)
-    if not rec:
-        return False, ["no screening record"]
-    if rec.get("policy_version") != POLICY_VERSION:
-        return False, ["screened under an old policy version — re-screen required"]
-    if rec.get("result") != "pass":
-        return False, ["screening result not pass"] + list(rec.get("reasons", []))[:4]
-    exp = _parse(rec.get("expires", ""))
-    if not exp or exp <= now:
-        return False, ["screening expired — re-screen required"]
-    # the SHA the row carries must match the SHA that was screened (a changed commit is not covered)
-    row_sha = (row.get("screened") or {}).get("sha") or rec.get("sha")
-    if rec.get("sha") and row_sha and rec["sha"] != row_sha:
-        return False, ["commit changed since screening — re-screen required"]
+    ok, why = record_valid(rec, now)
+    if not ok:
+        return False, why
+    # the row must carry the SAME reviewed SHA as the authoritative record (a changed commit is not covered)
+    row_sha = (row.get("screened") or {}).get("sha")
+    if not row_sha or row_sha != rec["sha"]:
+        return False, ["published row's commit does not match the screened commit — re-screen required"]
     if kind == "fresh" and not fresh_enough(row, meta, now):
         return False, [f"older than {meta.get('fresh_days', FRESH_DAYS)} days by {meta.get('fresh_field', FRESH_FIELD)}"]
     return True, []

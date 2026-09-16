@@ -32,9 +32,31 @@ project idea** with synthetic data and no external links instead of an unchecked
 ## What a screening record contains
 
 `screening.json` holds one record per repository: repository identity, the reviewed commit SHA, scan time, the Semgrep
-version and rule-file SHA-256, coverage (which languages were parsed, how many files), the result (pass / withheld /
-incomplete) and the reasons. A **changed commit** or an **expired record** forces a fresh screen before the repo can be
-published again.
+version and rule-file SHA-256, coverage (which languages were parsed, how many files, which engines ran), the result
+(pass / withheld / incomplete) and the reasons. A **changed commit** or an **expired record** forces a fresh screen
+before the repo can be published again.
+
+## Fail-closed guarantees (the four things the gate will not do)
+
+1. **Required scanners must run.** Semgrep, YARA, ClamAV and osv-scanner are all required for a passing record. A
+   missing tool, a missing signature database, a timeout, an engine error, malformed output, or a code repo where
+   Semgrep parsed zero files all produce **incomplete**, never pass. Exit codes are read per tool (ClamAV 0 = clean,
+   1 = found, 2 = error; osv-scanner 0/1 = ran). A detection blocks even if another engine also failed.
+2. **The reviewed commit is pinned.** The scanner fetches and checks out the exact pinned SHA (not whatever the branch
+   later points at); the deep vet and README/link screen read that same commit (`?ref=<sha>`). Before a cached record
+   is reused, the current default-branch SHA is re-checked; an unreachable SHA is never treated as "still valid".
+   Every passing record and every published row carries a valid reviewed SHA, and student links point at that commit.
+3. **README link screening is in the gate.** `screen_one()` reads the README at the reviewed commit and runs
+   `links.py`; a blocking link or install instruction (download hosts, executable downloads, "disable your antivirus",
+   archive passwords, curl-pipe-shell) fails the repo, and a README that exists but cannot be read is incomplete.
+4. **The published snapshot is independently validated.** Before `published.json` is written, the publisher
+   **reconstructs** it from the authoritative screening records (never trusting screened fields carried in the
+   artifact's rows) and re-validates **every** repository-bearing section — fresh feed, orgs, starters, cyber-domain
+   repos, case repos and learning-path repos — against the records and the quarantine. If any row fails (malformed
+   record, a missing engine, incomplete coverage, an expired scan, a missing or mismatched SHA, or a quarantined repo)
+   the whole snapshot is rejected, the **previous** `published.json` is preserved, and the run fails (staff alerted).
+   The Cloudflare Workers additionally reject a snapshot whose policy version is incompatible, and have no live-search
+   fallback.
 
 ## What the checks are, in order
 
@@ -99,6 +121,21 @@ The roster lives only in `roster_local.json` (gitignored) and is never printed, 
 **Stronger options, not built (they need your go-ahead and an integration):** school SSO/OAuth binding to a
 `@baruch.cuny.edu` identity, or per-student signed single-use tokens redeemed at `/verify` (needs Cloudflare KV for
 replay state). Both are documented; neither is enabled.
+
+## Undergraduate difficulty levels
+
+Screened repos are sorted by `levels.py` into **Beginner** (guided exercises, basic Python/SQL/JavaScript, small
+apps), **Intermediate** (a manageable API, dashboard, database, tests, a small integration) or **Undergraduate
+Challenge** (a bounded project combining familiar skills). Classification uses multiple signals — description wording
+plus code signals captured during the scan (tests, Dockerfile, compose/k8s/terraform, dependency count, README size,
+top-level entries) — **not** stars or size alone. Projects needing distributed infrastructure, graduate math,
+specialized/expensive hardware or professional expertise are **excluded** from the feed; a repo that can't be
+classified reliably is withheld rather than mislabelled. Each row is labelled with prerequisites, a suggested task, an
+approximate effort (marked an estimate) and what a successful submission looks like. **Beginner is the default**; a
+student opts into harder levels with `/scout level:intermediate` or `level:challenge`, and the feed never substitutes a
+harder project than asked — when no Beginner repo qualifies for a slot it offers a self-contained synthetic Beginner
+project instead. Evergreen learning references stay labelled separately and out of the 30-day fresh feed. The security
+gate applies at every level.
 
 ## Low-maintenance operation
 

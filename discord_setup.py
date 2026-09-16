@@ -51,6 +51,10 @@ LAYOUT = {
         ("announcements", "TLDP staff announcements + weekly hackathon list. Read-only.", TEXT, "announcements"),
         ("introductions", "Name · major · what you want to build this semester.", TEXT, None),
     ]),
+    "🧰 SET UP YOUR SANDBOX (do this first)": (True, [
+        ("🛠️│build-your-sandbox", "START HERE after you're verified: build your own reusable sandbox (Google Colab or a Codespaces dev container) so nothing you run can touch your laptop. Step-by-step inside; post when you've built it.", FORUM, None),
+        ("🧰│safe-sandboxes", "Which free sandbox to use and the safety rules. Read the pinned post. Colab is completely free and the best default.", FORUM, None),
+    ]),
     "🧪 PROJECT SCOUT FEED": (True, [
         ("📊│data-analytics", "Fresh data analytics repos, good-first-issues and paper code. One post per drop — react 🙋 to claim.", FORUM, "data"),
         ("💻│swe", "Fresh software projects, good-first-issues and paper code. React 🙋 to claim.", FORUM, "swe"),
@@ -77,8 +81,6 @@ LAYOUT = {
         ("🧑‍💻│code-review-practice", "All tech majors: post code, a repo link or a short video walkthrough and get an interview-style code review from peers and staff. Read the pinned rubric first.", FORUM, None),
         ("🛡️│cyber-review-practice", "Cybersecurity: post lab write-ups, detection rules, scripts or video walkthroughs and get reviewed the way a security interview panel would. Read the pinned rubric first.", FORUM, None),
         ("🐙│github-academy", "Beginner GitHub videos and tutorials, in order. Start with 'Week 0'. Ask questions inside any post.", FORUM, None),
-        ("🧰│safe-sandboxes", "Run other people's code WITHOUT risking your laptop. Which free sandbox to use and the safety rules. Read the pinned post first.", FORUM, None),
-        ("🛠️│build-your-sandbox", "DO IT here: build your own reusable sandbox (Google Colab or a Codespaces dev container), then post that you built it. Step-by-step inside.", FORUM, None),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }
@@ -108,6 +110,77 @@ Look at, in this order: does it run and do what it says · naming and readabilit
 ❓ "What happens if the API returns 200 with an empty body?" — try it and tell us.
 
 That's it. Specific, kind, and the poster knows exactly what to do next."""),
+        ("Practice 1 (Beginner) — read this function and explain it", """**Teaching example.** Read it, then in your own words say what it does before scrolling.
+
+```python
+def dedupe(items):
+    seen = set()
+    out = []
+    for x in items:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+```
+
+**What it does, line by line:** `seen` remembers what we've already met; `out` is the result. We walk `items` in order; the first time we see a value we record it and keep it, and skip any later copies. So it removes duplicates **while preserving the original order** (unlike `list(set(items))`, which loses order).
+
+**Complexity (intro level):** **O(n) time** — one pass, and `x in seen` on a set is roughly constant. **O(n) space** — `seen` and `out` can each hold every item.
+
+**One edge case it mishandles:** unhashable items. `dedupe([[1],[1]])` raises `TypeError: unhashable type: 'list'`, because sets need hashable elements. How would you handle that gracefully? Post your answer."""),
+        ("Practice 2 (Intermediate) — find the bug and the security weakness (hints)", """**Teaching example — this code is intentionally flawed. Do NOT copy it into a real project.**
+
+```python
+import sqlite3
+
+def top_customers(db, region, limit=10):
+    con = sqlite3.connect(db)
+    q = "SELECT name FROM customers WHERE region='" + region + "'"
+    rows = con.execute(q).fetchall()
+    names = []
+    for i in range(1, limit):
+        names.append(rows[i][0])
+    return names
+```
+
+**Two flaws are hidden here — one bug, one security weakness.**
+
+**Hints**
+1. Loop bounds: how many names come back when you ask for `limit=10`? Print `len(names)` and compare. Count from where?
+2. What happens if `region` is `"' OR '1'='1"`? Build the query string on paper.
+3. Untrusted input should never be glued into SQL by hand.
+
+**Your task:** name both flaws, propose the fix (a parameterized query with `?` placeholders, and correct loop bounds), and **write one small test** that fails on the current code and passes after your fix — include the empty-result case."""),
+        ("Practice 3 (Undergraduate Challenge) — bounded task", """A real, finishable project that combines familiar skills. **Not** research, not a large system.
+
+**Build:** a small command-line tool that reads a CSV of transactions (`date,amount,category`) and prints total spend per month.
+
+**Requirements**
+• Input validation: reject rows with a bad date or non-numeric amount, and report which row.
+• Error handling: a missing file prints a clear message and exits, not a stack trace.
+• 3 unit tests (`unittest` or `pytest`), including an **empty-file** edge case and a **malformed-row** case.
+• A 5-line README: what it does, how to run it, example input.
+
+**Prerequisites:** basic Python, file I/O, dictionaries. No external services.
+
+**Effort:** roughly **2–4 hours** — an estimate; take longer if it's your first CLI.
+
+**A successful submission:** runs from a clean clone with the README steps, all tests pass, handles empty and malformed input without crashing, and **no secrets or real personal data** are committed. Post the repo link here for a 3-2-1 review."""),
+        ("Rubric & a sample constructive review", """**Review checklist** (use it when you review Practice 3 or any post):
+☐ Readability — can you follow it without the author explaining?
+☐ Naming — do names say what things are?
+☐ Input validation — is untrusted input checked at the edge?
+☐ Error handling — do failures give a clear message, not a stack trace?
+☐ Secret handling — no passwords/keys/`.env` in the code or history?
+☐ Tests & edge cases — empty, malformed, boundary inputs covered?
+☐ Complexity — can the author explain the cost in one sentence?
+
+**Sample review of a Practice 3 submission (3-2-1):**
+✅ Runs from a clean clone; the empty-file test is there and passes; the month totals are correct on the sample.
+🔧 A row like `2026-13-40,10,food` is accepted — validate the date with `datetime.strptime` and skip with a message, because one bad row shouldn't corrupt every total. · `amount` is summed as a string in one place, so `"10"+"5"` becomes `"105"` — convert to `float` once at parse time so the bug can't spread.
+❓ "If the file were 10 GB, what would you change?" — a chance to mention streaming line by line instead of loading all rows.
+
+Be specific and kind. Reviewing well is a skill interviewers watch for. Never post or ask for copied interview answers."""),
     ],
     "🛡️│cyber-review-practice": [
         ("📌 How security review practice works (read first)", """**Why:** security interviews ask you to walk through an investigation, defend a finding, or explain a detection. This forum is where you rehearse that with an audience.
@@ -131,6 +204,43 @@ Check, in order: is the methodology clear and repeatable · is every claim backe
 ❓ "How would you tell whether the attachment actually ran?" — name the log source you'd check (Sysmon event 1 / EDR process tree) and add it.
 
 Specific, evidence-first, and it reads like a report a SOC lead would accept."""),
+        ("Practice (Beginner→Intermediate) — spot the security weaknesses", """**Teaching example — intentionally insecure. Never ship code like this.**
+
+```python
+import os
+
+API_KEY = "sk_live_9f3a2b7c1d8e"          # (1)
+
+def backup(host):
+    os.system("ping -c1 " + host)          # (2)
+    os.system(f"scp data.db admin@{host}:/backups/")  # (3)
+```
+
+**Three flaws are hidden here. Find them.**
+
+**Hints**
+1. Line (1): where do secrets belong, and where do they *not*?
+2. Lines (2)/(3): `host` comes from a user. What does `host = "x; rm -rf ~"` do when glued into a shell string?
+3. Is `host` ever checked before use?
+
+**Your task:** explain the risk of each (hardcoded secret in source and git history; OS command injection via unvalidated input), then propose the fix:
+• Load the secret from an environment variable (`os.environ`), never commit it.
+• Validate `host` against an allowlist / strict pattern before use.
+• Replace `os.system(str)` with `subprocess.run([...], shell=False)` passing arguments as a list, so input can't become new commands.
+
+Post your rewrite for review. Synthetic data only — no real hosts or keys."""),
+        ("Reviewing security work — rubric", """Use this when you review a write-up, detection rule, or script:
+☐ **Evidence** — is every claim backed by a log line, hash, screenshot, or CVE?
+☐ **Risk rating** — is it justified as likelihood × impact, not a vibe?
+☐ **Remediation** — specific and prioritized, with the first containment step named?
+☐ **Reproducibility** — could someone repeat the steps from what's written?
+☐ **Secrets & data** — no real credentials, tokens, or customer/personal data anywhere; secrets loaded from env, not code?
+☐ **Scope** — only authorized targets (labs, CTFs, your own machines)?
+☐ **Audience** — can a non-technical manager follow the summary?
+
+Give feedback in the 3-2-1 format: 3 solid things, 2 to change with the reason, 1 question an interviewer would ask.
+
+*These are practice exercises. Use synthetic data only, and treat every intentionally vulnerable example here as a learning artifact, never safe production code.*"""),
     ],
     "🛠️│build-your-sandbox": [
         ("📌 Build your sandbox — do this first", """You will build **one** reusable sandbox and use it all year. A sandbox is a throwaway computer for running code you did not write, so a bad project can't touch your real laptop. It **minimizes** risk — it does not remove it, and a passed check is not proof code is safe.
@@ -271,7 +381,10 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 
 **Step 1 — unlock the server:** you joined with a personal, single-use invite from TLDP staff, so you're on the list. Post in #introductions with your name and major; a staff member gives you the **TLDP Student** role and your major role. (Typing a name proves nothing, so the bot never grants access by name.)
 
+**Step 2 — build your sandbox BEFORE you run any project.** This is the most important habit: a repo passing our automated checks is *not* proof it is safe to run. So run other people's code in a free, disposable sandbox, never on your real laptop. Go to **🛠️ build-your-sandbox** and follow the "do this first" post. **Google Colab** is completely free and the best place to start. Do this once and reuse it all year.
+
 **What's here once you're in**
+• **🛠️ build-your-sandbox / 🧰 safe-sandboxes** — set up a free sandbox first (Colab, Binder or Codespaces) so nothing you run can touch your machine. Do this before browsing the feed.
 • **Feed forums** (📊 data-analytics · 💻 swe · 🔐 cybersecurity · 📈 quant · 💳 finance-fintech · 📋 project-management · 📣 digital-marketing) — every 6 hours the Project Scout bot opens a post with fresh GitHub repos for that major: things to build, open-source repos with *good first issues*, and new paper code. Each row shows 🟢 starter / 🟡 intermediate / 🔴 advanced.
 • **React 🙋 on a post to claim it.** Every Friday the bot lists who claimed what in #find-a-team so you can team up.
 • **🤝 open-source-orgs** — non-profit, public-sector and company repos that welcome contributors, with a LinkedIn link and a ready-to-paste resume line.
@@ -280,15 +393,13 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 • **#announcements** — staff posts.
 • **🧑‍💻 code-review-practice / 🛡️ cyber-review-practice** — post code, write-ups or a short video and get an interview-style review (3-2-1 format, rubric pinned). Reviewing others counts too.
 • **🐙 github-academy** — new to GitHub? Four short weekly lessons, videos and tutorials, in order. Start at Week 0.
-• **🧰 safe-sandboxes** — which free sandbox to use and the safety rules.
-• **🛠️ build-your-sandbox** — build your own reusable sandbox (Colab or a Codespaces dev container) before you run anyone's code. Start with Colab.
 
 **Spring requirements (both graded)**
 • **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
 • **🎓 capstone** — your capstone project, judged in spring. Post your idea, your repo, and weekly progress there.
 • **📁 case-studies** — contribute to real case collections (Tidy Tuesday, Atomic Red Team, Sigma, OWASP, Open Case Studies…) and write one case of your own in the TLDP case library on GitHub. Merged cases are announced here with your name.
 
-**Start now:** introduce yourself in #introductions, then pick one repo this week and open one good-first-issue PR.
+**Start now:** introduce yourself in #introductions, **build your sandbox in 🛠️ build-your-sandbox**, then pick one repo this week and open one good-first-issue PR.
 
 **A note on safety:** every repo the feed shows has completed automated checks, but *automated checks are not a safety guarantee.* Use public or synthetic data only — never put passwords, API keys, `.env` files or personal data in a repo or message. Report suspicious links to staff instead of clicking. **Read code before you run it, and run anything unfamiliar in a free browser sandbox — see 🧰 safe-sandboxes (start with Google Colab, completely free).**
 """
@@ -395,10 +506,10 @@ def main() -> int:
             api("DELETE", f"/channels/{existing.pop(old)['id']}")
             print("replaced old channel:", old)
     webhooks = {}
-    for cat, (gated, chans) in LAYOUT.items():
-        parent = existing.get(cat) or api("POST", f"/guilds/{GUILD}/channels", {"name": cat, "type": CATEGORY})
+    for idx, (cat, (gated, chans)) in enumerate(LAYOUT.items()):
+        parent = existing.get(cat) or api("POST", f"/guilds/{GUILD}/channels", {"name": cat, "type": CATEGORY, "position": idx})
         existing[cat] = parent
-        api("PATCH", f"/channels/{parent['id']}", {"permission_overwrites": gate if gated else []})
+        api("PATCH", f"/channels/{parent['id']}", {"permission_overwrites": gate if gated else [], "position": idx})
         for name, topic, ctype, key in chans:
             ch = existing.get(name)
             body = {"name": name, "type": ctype, "parent_id": parent["id"]}

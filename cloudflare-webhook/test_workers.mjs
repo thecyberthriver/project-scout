@@ -191,3 +191,36 @@ test("telegram worker: missing secret fails closed; owner lock; text capped", as
   assert.equal(r.status, 401);
   assert.deepEqual(w.parse("/oss cyber " + "k".repeat(500)), { lane: "oss", major: "cyber", extra: "k".repeat(60) });
 });
+
+test("levels: beginner is the default; harder is an explicit choice, simpler-only fallback", () => {
+  const rows = [
+    { full_name: "x/beg", level: "beginner" },
+    { full_name: "x/int", level: "intermediate" },
+    { full_name: "x/chal", level: "challenge" },
+  ];
+  assert.equal(w.wantedLevel(""), "beginner");
+  assert.equal(w.wantedLevel("intermediate"), "intermediate");
+  assert.equal(w.wantedLevel("advanced"), "challenge");
+  // default returns only beginner
+  assert.deepEqual(w.byLevel(rows, "").rows.map((r) => r.full_name), ["x/beg"]);
+  // intermediate returns intermediate
+  assert.deepEqual(w.byLevel(rows, "intermediate").rows.map((r) => r.full_name), ["x/int"]);
+  // a row with no level is treated as beginner
+  assert.deepEqual(w.byLevel([{ full_name: "x/none" }], "").rows.map((r) => r.full_name), ["x/none"]);
+});
+
+test("levels: no harder substitution — beginner request with none available shows nothing harder", () => {
+  const onlyHard = [{ full_name: "x/int", level: "intermediate" }, { full_name: "x/chal", level: "challenge" }];
+  assert.deepEqual(w.byLevel(onlyHard, "").rows, []);                       // beginner asked, none -> empty, not harder
+  assert.deepEqual(w.byLevel(onlyHard, "intermediate").rows.map((r) => r.full_name), ["x/int"]);  // exact match
+  // challenge asked, only intermediate present -> steps DOWN to intermediate (simpler), never up
+  assert.deepEqual(w.byLevel([{ full_name: "x/int", level: "intermediate" }], "challenge").rows.map((r) => r.full_name), ["x/int"]);
+});
+
+test("levels: lookup defaults to beginner rows from the published feed", () => {
+  const p = pub([row("x/beg", { level: "beginner" }), row("x/chal", { level: "challenge" })]);
+  const names = w.lookup(p, "build", "cyber", "", NOW).map((r) => r.full_name);
+  assert.deepEqual(names, ["x/beg"]);
+  const hard = w.lookup(p, "build", "cyber", "challenge", NOW).map((r) => r.full_name);
+  assert.deepEqual(hard, ["x/chal"]);
+});

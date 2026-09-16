@@ -22,7 +22,8 @@ class Yara(unittest.TestCase):
         self.write("grabber.py", b'requests.post("https://discord.com/api/webhooks/123456789012345678/'
                                   + b"A" * 60 + b'", json={})')
         self.write("wallet.txt", b"target ext nkbihfbeogaeaoehlefnkodbefgpgknn")
-        hits = scan.run_yara(self.dir)
+        status, hits = scan.run_yara(self.dir)
+        self.assertEqual(status, "ran")
         rules = {h.split("@")[0] for h in hits}
         self.assertIn("TLDP_Discord_Token_Grabber", rules)
         self.assertIn("TLDP_Crypto_Wallet_Theft", rules)
@@ -30,13 +31,14 @@ class Yara(unittest.TestCase):
     def test_benign_files_clean(self):
         self.write("app.py", b'import requests\nrequests.get("https://api.example.com/price")')
         self.write("README.md", b"# Project\nRun pip install pandas. It uses Chrome for a demo.")
-        self.assertEqual(scan.run_yara(self.dir), [])
+        self.assertEqual(scan.run_yara(self.dir), ("ran", []))
 
     def test_embedded_executable_flagged(self):
         # a fake PE marker committed in a repo
         self.write("setup.dat", b"MZ\x90\x00" + b"PE\x00\x00" + b"This program cannot be run in DOS mode")
-        rules = {h.split("@")[0] for h in scan.run_yara(self.dir)}
-        self.assertIn("TLDP_Embedded_Windows_Executable", rules)
+        status, hits = scan.run_yara(self.dir)
+        self.assertEqual(status, "ran")
+        self.assertIn("TLDP_Embedded_Windows_Executable", {h.split("@")[0] for h in hits})
 
 
 class OsvParser(unittest.TestCase):
