@@ -72,7 +72,7 @@ export const COURSES = {
     mth9893: ["MTH 9893 / 9867 Time Series & Algorithmic Trading", '"time series" OR ARIMA OR cointegration OR "pairs trading"'],
     mth9894: ["MTH 9894 / 9897 Algorithmic & Systematic Trading", '"systematic trading" OR "trading strategy" OR backtesting OR "momentum strategy"'],
     mth9896: ["MTH 9896 Behavioral Finance", '"behavioral finance" OR "investor sentiment" OR "sentiment analysis" stocks'],
-    mth9899: ["MTH 9898 / 9899 Data Science & ML in Finance", '"machine learning" finance OR "stock prediction" OR "factor model" OR "financial data"'],
+    mth9899: ["MTH 9898 / 9899 Data Science & Machine Learning in Finance", '"machine learning" finance OR "stock prediction" OR "factor model" OR "financial data"'],
   },
   fintech: {
     fin3000: ["FIN 3000 Principles of Finance", '"time value of money" OR "capital budgeting" OR NPV OR IRR OR "financial calculator"'],
@@ -153,6 +153,8 @@ async function cachedText(url, accept) {
   return r.text();
 }
 export async function hackathonsNyc() {
+  const idx = await loadIndex().catch(() => null);
+  if (idx?.hackathons?.items?.length && Date.now() - Date.parse(idx.hackathons.at) < 12 * 3600e3) return idx.hackathons.items;
   const out = [];
   try {
     for (let page = 1; page <= 4; page++) {
@@ -188,6 +190,11 @@ export function renderHacks(head, items, md = false) {
 }
 
 export async function startItems(env, major) {
+  const idx = await loadIndex().catch(() => null);
+  const st = idx?.static?.starters;
+  if (st && (major ? st[major]?.length : Object.keys(st).length)) {
+    return ordered(major ? st[major] : dedupe(Object.values(st).flat()).slice(0, 14));
+  }
   const majors = major ? [major] : Object.keys(STARTERS);
   const names = [...new Set(majors.flatMap((m) => STARTERS[m]))].slice(0, major ? 11 : 14);
   const items = await Promise.all(names.map((n) => ghJson(env, `https://api.github.com/repos/${n}`).catch(() => null)));
@@ -211,9 +218,14 @@ const linkedin = (name) => "https://www.linkedin.com/search/results/companies/?k
 
 // One query per sector (3 calls, each cached 15 min), merged and sorted by recent activity.
 export async function orgSearch(env, text) {
-  const qs = Object.values(ORGS).map(({ orgs }) =>
-    `${text} ${Object.keys(orgs).map((o) => "org:" + o).join(" ")} good-first-issues:>0 archived:false pushed:>=${ago(90)}`.trim());
-  const results = await Promise.all(qs.map((q) => search(env, q, "updated")));
+  const idx = await loadIndex().catch(() => null);
+  if (idx?.keys && !text) {  // plain /orgs comes straight from the snapshot
+    const rows = dedupe(Object.keys(idx.keys).filter((k) => k.startsWith("orgs|")).flatMap((k) => idx.keys[k]));
+    if (rows.length) return rows.sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
+  }
+  const results = [];
+  for (const { orgs } of Object.values(ORGS))  // sequential, see lookup()
+    results.push(await search(env, `${text} ${Object.keys(orgs).map((o) => "org:" + o).join(" ")} good-first-issues:>0 archived:false pushed:>=${ago(90)}`.trim(), "updated"));
   return results.flat().filter(english).sort((a, b) => (a.pushed_at < b.pushed_at ? 1 : -1)).slice(0, MAX);
 }
 
@@ -302,8 +314,45 @@ async function gitlab(kw) {
   } catch { return []; }
 }
 
-// Items for a non-orgs lane: GitHub (cached), plus GitLab when the student typed keywords.
+// ---- index.json first: the feed's snapshot, served from GitHub's CDN (no API calls, no rate limits) --------------
+const INDEX_URL = "https://raw.githubusercontent.com/thecyberthriver/project-scout/main/index.json";
+export async function loadIndex() {
+  const cache = caches.default, key = new Request(INDEX_URL, { method: "GET" });
+  let r = await cache.match(key);
+  if (!r) {
+    r = await fetch(INDEX_URL, { headers: { "user-agent": "project-scout-bot" } });
+    if (!r.ok) return null;
+    r = new Response(await r.text(), { headers: { "content-type": "application/json", "cache-control": "s-maxage=1800" } });
+    await cache.put(key, r.clone());
+  }
+  return r.json();
+}
+// What a first keyword selects inside the index (by the sub-label the feed stored the rows under).
+const SWE_LABEL = { python: "Python backend", backend: "Python backend", sql: "SQL", frontend: "Frontend", go: "Other languages" };
+const DATA_LABEL = { powerbi: "Power BI", power: "Power BI", tableau: "Tableau" };
+const dedupe = (rows) => { const s = new Set(); return rows.filter((r) => !s.has(r.full_name) && s.add(r.full_name)); };
+function fromIndex(idx, lane, major, extra) {
+  if (!idx?.keys) return null;
+  const tokens = (extra || "").toLowerCase().split(/\s+/).filter((t) => t && !/^(advanced|any|all)$/.test(t));
+  let keys = Object.keys(idx.keys).filter((k) => (!major || k.startsWith(`${major}|`)) && k.includes(`|${lane}|`));
+  const first = tokens[0];
+  const label = first && ((major === "swe" && SWE_LABEL[first]) || (major === "data" && DATA_LABEL[first]) ||
+    (major === "cyber" && CYBER_DOMAINS[first]?.[0]) || COURSES[major]?.[first]?.[0]);
+  if (label) {
+    const kk = keys.filter((k) => k.toLowerCase().includes(label.toLowerCase()));
+    if (!kk.length) return null;          // that course/domain hasn't been indexed yet → live search
+    keys = kk; tokens.shift();
+  }
+  let rows = dedupe(keys.flatMap((k) => idx.keys[k]));
+  if (tokens.length) rows = rows.filter((r) => tokens.every((t) => `${r.full_name} ${r.description || ""}`.toLowerCase().includes(t)));
+  return rows.length >= (tokens.length ? 3 : 1) ? rows : null;
+}
+
+// Items for a non-orgs lane: index first; GitHub (cached, sequential) only when the index has nothing for the request.
 export async function lookup(env, lane, major, extra) {
+  const idx = await loadIndex().catch(() => null);
+  const hit = fromIndex(idx, lane, major, extra);
+  if (hit) return ordered(hit, ceilingFor(extra)).slice(0, MAX + 3);
   if (lane === "build") {  // major-specific build searches: SWE languages, Data tools, cyber domains
     const first = (extra || "").split(/\s+/)[0].toLowerCase(), rest = (extra || "").split(/\s+/).slice(1).join(" ");
     let queries = null;
@@ -318,16 +367,16 @@ export async function lookup(env, lane, major, extra) {
       queries = [[COURSES[major][first.replace(/\s+/g, "")][1], rest]];
     }
     if (queries) {
-      const lists = await Promise.all(queries.map(([q, kw]) =>
-        search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars")));
+      const lists = [];  // sequential on purpose: GitHub's secondary limit dislikes concurrent requests from one source
+      for (const [q, kw] of queries)
+        lists.push(await search(env, LANES.build.q(kw ? `${kw} in:name,description,readme ${q.match(/language:\S+/)?.[0] || ""}` : q), "stars"));
       const out = [];  // interleave so /swe shows Python, SQL, frontend, Python, SQL, …
       for (let i = 0; out.length < MAX + 3 && lists.some((l) => l[i]); i++) for (const l of lists) if (l[i]) out.push(l[i]);
       return ordered(out.filter(english), ceilingFor(extra)).slice(0, MAX + 3);
     }
   }
-  const gh = search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
-  const gl = lane === "build" && extra ? gitlab(extra) : Promise.resolve([]);
-  const [a, b] = await Promise.all([gh, gl]);
+  const a = await search(env, LANES[lane].q(terms(lane, major, extra)), LANES[lane].sort);
+  const b = lane === "build" && extra ? await gitlab(extra) : [];
   const spamFree = AI_OK.has(major) || extra ? a : a.filter((it) => !AI_SPAM.test(`${it.full_name} ${it.description || ""}`));
   return ordered(spamFree.concat(b).filter(english), ceilingFor(extra)).slice(0, MAX + 3);
 }

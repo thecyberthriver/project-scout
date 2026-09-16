@@ -395,6 +395,61 @@ def rate_limit_status() -> str:
         return f"rate_limit check failed: {e}"
 
 
+# ---- index.json: everything the feed found, served to the Workers from GitHub's CDN (raw.githubusercontent) -----
+# Students' searches read this snapshot instead of the API, so their traffic never counts against GitHub limits.
+INDEX = "index.json"
+INDEX_TTL_DAYS, INDEX_ROWS_PER_KEY, STATIC_REFRESH_DAYS = 45, 30, 7
+_index: dict = {}
+
+
+def row(it: dict) -> dict:
+    return {"full_name": it["full_name"], "html_url": it["html_url"], "stargazers_count": it.get("stargazers_count") or 0,
+            "language": it.get("language"), "description": (it.get("description") or "")[:200], "size": it.get("size") or 0,
+            "pushed_at": (it.get("pushed_at") or "")[:10], "seen_at": date.today().isoformat()}
+
+
+def load_index() -> dict:
+    global _index
+    try:
+        _index = json.load(open(INDEX, encoding="utf-8"))
+    except (OSError, ValueError):
+        _index = {}
+    _index.setdefault("keys", {})
+    _index.setdefault("static", {})
+    return _index
+
+
+def index_add(key: str, items: list[dict]) -> None:
+    """Merge search results under key "major|lane|sublabel"; newest first, de-duped, capped, 45-day TTL."""
+    rows = _index["keys"].setdefault(key, [])
+    cutoff = ago(INDEX_TTL_DAYS)
+    fresh = [row(it) for it in items if english(f'{it["full_name"]} {it.get("description") or ""}') and (it.get("description") or "").strip()]
+    names = {r["full_name"] for r in fresh}
+    _index["keys"][key] = (fresh + [r for r in rows if r["full_name"] not in names and r.get("seen_at", "") >= cutoff])[:INDEX_ROWS_PER_KEY]
+
+
+def refresh_static() -> None:
+    """Weekly: curated sets (Start here, CISSP domains) via the core API (5000/h, not the search limit)."""
+    import time
+    st = _index["static"]
+    if st.get("refreshed_at", "") >= ago(STATIC_REFRESH_DAYS):
+        return
+    starters, domains = {}, {}
+    for key, names in STARTERS.items():
+        starters[key] = [row(r) for r in (gh_repo(n) for n in names) if r]
+        time.sleep(0.3)
+    for k, (label, _t, names, ref) in CYBER_DOMAINS.items():
+        domains[k] = {"label": label, "ref": list(ref), "repos": [row(r) for r in (gh_repo(n) for n in names) if r]}
+        time.sleep(0.3)
+    st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains})
+
+
+def save_index() -> None:
+    _index["generated"] = datetime.now().isoformat(timespec="minutes")
+    _index["phase"] = list(phase())
+    json.dump(_index, open(INDEX, "w", encoding="utf-8"), separators=(",", ":"), ensure_ascii=False)
+
+
 def load_seen() -> dict:
     try:
         seen = json.load(open(SEEN))
@@ -498,7 +553,9 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
                 subs = [(s[0], s[1], 1) for s in subs] + course_rotation(key)
             for sub_label, sub_terms, sub_n in subs:
                 try:
-                    picks = pick(gh_search(q(sub_terms, anchor), sort), seen, sub_n, key)
+                    found = gh_search(q(sub_terms, anchor), sort)
+                    index_add(f"{key}|{lane}|{sub_label or ''}", found)
+                    picks = pick(found, seen, sub_n, key)
                 except BudgetExceeded as e:
                     print(f"stopping early: {e}", file=sys.stderr)
                     return finish(chunks, seen)
@@ -513,12 +570,39 @@ def build_digest(seen: dict) -> list[tuple[str, str]]:
     return finish(chunks, seen)
 
 
+def full_index() -> None:
+    """Every search the feed can make, once, into index.json (~85 searches ≈ 4 min at SEARCH_SPACING). Weekly job."""
+    for key, (label, terms, anchor, evergreen) in MAJORS.items():
+        subs = [(None, terms, 0)] if key not in BUILD_QUERIES and key != "cyber" else []
+        subs += BUILD_QUERIES.get(key, [])
+        if key == "cyber":
+            subs += [("🔐 General", terms, 0)] + [(f"🔐 {d[0]}", d[1], 0) for d in CYBER_DOMAINS.values()]
+        subs += [(f"🎓 {c[0]}", c[1], 0) for c in COURSES.get(key, [])]
+        for lane, (lane_label, n, sort, q) in LANES.items():
+            for sub_label, sub_terms, _n in (subs if lane == "build" else [(None, terms, 0)]):
+                try:
+                    index_add(f"{key}|{lane}|{sub_label or ''}", gh_search(q(sub_terms, anchor), sort))
+                except BudgetExceeded as e:
+                    print(f"full_index stopped: {e}", file=sys.stderr)
+                    return
+                except Exception as e:
+                    print(f"{key}/{lane}/{sub_label}: {e}", file=sys.stderr)
+    for sector, (sector_label, orgs) in ORGS.items():
+        try:
+            index_add(f"orgs|{sector}|{sector_label}", gh_search(org_query(orgs), "updated"))
+        except Exception as e:
+            print(f"orgs/{sector}: {e}", file=sys.stderr)
+    _index["hackathons"] = {"at": datetime.now().isoformat(timespec="minutes"), "items": hackathons_nyc()}
+
+
 def finish(chunks: list, seen: dict) -> list[tuple[str, str]]:
     """Sections that don't depend on the per-major loop: hackathons (no GitHub) and mission-driven orgs (3 searches)."""
     parts = []
     for sector, (sector_label, orgs) in ORGS.items():
         try:
-            picks = pick(gh_search(org_query(orgs), "updated"), seen, 2)
+            found = gh_search(org_query(orgs), "updated")
+            index_add(f"orgs|{sector}|{sector_label}", found)
+            picks = pick(found, seen, 2)
         except BudgetExceeded:
             break
         except Exception as e:
@@ -526,7 +610,9 @@ def finish(chunks: list, seen: dict) -> list[tuple[str, str]]:
             continue
         parts += [render_org(p, sector_label) for p in picks]
     new_hacks = []
-    for h in hackathons_nyc():
+    all_hacks = hackathons_nyc()
+    _index["hackathons"] = {"at": datetime.now().isoformat(timespec="minutes"), "items": all_hacks}
+    for h in all_hacks:
         if "hack:" + h["url"] not in seen:
             seen["hack:" + h["url"]] = date.today().isoformat()
             new_hacks.append(h)
@@ -692,7 +778,19 @@ def main() -> int:
         print(f"posted {len(chunks)} start-here sections")
         return 0
     seen = load_seen()
+    load_index()
+    if "--index-only" in sys.argv:  # full rebuild of index.json (every lane, language, course, domain); sends nothing
+        full_index()
+        refresh_static()
+        save_index()
+        print(f"index: {sum(len(v) for v in _index['keys'].values())} rows in {len(_index['keys'])} keys · {_calls['n']} searches")
+        return 0
     chunks = build_digest(seen)
+    try:
+        refresh_static()
+    except Exception as e:
+        print(f"static refresh: {e}", file=sys.stderr)
+    save_index()
     msgs = messages([HEADER] + [t for _, t in chunks] + [FOOTER]) if chunks else []
     if "--preview" in sys.argv:
         print("\n\n=====\n\n".join(msgs) or "(nothing new)")
