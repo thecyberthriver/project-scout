@@ -84,7 +84,7 @@ Text channels start with <b>#</b>. Voice channels have a speaker icon: click to 
 <tr><td>#general-chat</td><td>Everything else.</td></tr>
 <tr><td rowspan="3">SPRING REQUIREMENTS</td><td>🏁 nyc-hackathons</td><td><b>You must attend one in-person hackathon by spring.</b> New NYC-area listings (city-wide, university, company and public-sector events) post here automatically from Devpost and MLH. Reply in a post to find teammates; register early.</td></tr>
 <tr><td>🎓 capstone</td><td><b>Your capstone project is judged in spring.</b> Post your idea, your repo link, weekly progress, and questions for staff.</td></tr>
-<tr><td>📁 case-studies</td><td><b>Every student writes one case by spring</b> in the TLDP case library (github.com/thecyberthriver/tldp-case-studies, template and checklist inside). Also contribute to real collections: Tidy Tuesday, Open Case Studies, Makeover Monday, Atomic Red Team, Sigma, OWASP, the System Design Primer. Monday: case of the week. Merged cases are announced here with your name.</td></tr>
+<tr><td>📁 case-studies</td><td><b>Every student writes one case by spring</b> in the TLDP case library (github.com/tldpprojectscout/tldp-case-studies, template and checklist inside). Also contribute to real collections: Tidy Tuesday, Open Case Studies, Makeover Monday, Atomic Red Team, Sigma, OWASP, the System Design Primer. Monday: case of the week. Merged cases are announced here with your name.</td></tr>
 <tr><td>STUDY ROOMS</td><td>Study Room 1 / 2</td><td>Voice rooms for co-working. Mute when you are not talking.</td></tr>
 </table>
 

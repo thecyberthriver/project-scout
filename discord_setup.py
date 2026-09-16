@@ -71,7 +71,7 @@ LAYOUT = {
     "🎯 SPRING REQUIREMENTS": (True, [
         ("🏁│nyc-hackathons", "In-person hackathons in the NYC area, city-wide + private + public sector, updated every 6 h from Devpost and MLH. Attend one by spring. Reply in a post to find teammates.", FORUM, "hackathons"),
         ("🎓│capstone", "Your capstone project, judged in spring. Post your idea, repo link, weekly progress, and questions for staff.", TEXT, None),
-        ("📁│case-studies", "Contribute to real case-study collections, and add your own case to github.com/thecyberthriver/tldp-case-studies. Every merged case is announced here with your name. Monday: case of the week.", TEXT, "cases"),
+        ("📁│case-studies", "Contribute to real case-study collections, and add your own case to github.com/tldpprojectscout/tldp-case-studies. Every merged case is announced here with your name. Monday: case of the week.", TEXT, "cases"),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }

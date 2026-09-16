@@ -139,7 +139,7 @@ def case_of_the_week() -> dict[str, str]:
         if lines:
             out[key] = f"📁 **Case of the week — {label}**\n" + "\n".join(lines) + "\nClaim one by commenting on the issue, then post your PR in #show-your-work."
     out["cases"] = ("📁 **Case of the week** — new cases posted in each major's forum. Reminder: every student adds one case of their own to "
-                    "<https://github.com/thecyberthriver/tldp-case-studies> by spring (template in the repo).")
+                    "<https://github.com/tldpprojectscout/tldp-case-studies> by spring (template in the repo).")
     return out
 
 

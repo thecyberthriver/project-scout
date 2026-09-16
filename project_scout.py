@@ -170,7 +170,7 @@ def course_rotation(major: str) -> list[tuple[str, str, int]]:
 
 # Case studies students can CONTRIBUTE to: community collections on GitHub (live open-issue counts) + legit
 # non-GitHub challenges (links). Verified 2026-09-15; archived repos left out. "all" applies to every major.
-CASES_REPO = "thecyberthriver/tldp-case-studies"
+CASES_REPO = "tldpprojectscout/tldp-case-studies"
 CASES = {
     "all": [(CASES_REPO, "TLDP's own case library — every student contributes one case by spring (template inside)")],
     "data": [("rfordatascience/tidytuesday", "a new real dataset every Tuesday; submit your analysis by pull request"),
@@ -647,8 +647,31 @@ def full_index() -> None:
     _index["hackathons"] = {"at": datetime.now().isoformat(timespec="minutes"), "items": hackathons_nyc()}
 
 
+def merged_cases(seen: dict) -> list[dict]:
+    """Newly merged pull requests in the TLDP case library (1 core-API call; read-only public data)."""
+    try:
+        with urllib.request.urlopen(urllib.request.Request(
+                f"https://api.github.com/repos/{CASES_REPO}/pulls?state=closed&sort=updated&direction=desc&per_page=20",
+                headers={"Accept": "application/vnd.github+json", "User-Agent": "project-scout",
+                         **({"Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}"} if os.environ.get("GITHUB_TOKEN") else {})}), timeout=30) as r:
+            prs = json.load(r)
+    except Exception as e:
+        print(f"cases repo: {e}", file=sys.stderr)
+        return []
+    out = []
+    for pr in prs:
+        if pr.get("merged_at") and f"case:{pr['number']}" not in seen:
+            seen[f"case:{pr['number']}"] = date.today().isoformat()
+            out.append(pr)
+    return out
+
+
 def finish(chunks: list, seen: dict) -> list[tuple[str, str]]:
-    """Sections that don't depend on the per-major loop: hackathons (no GitHub) and mission-driven orgs (3 searches)."""
+    """Sections that don't depend on the per-major loop: merged cases, hackathons (no GitHub) and mission-driven orgs."""
+    for pr in merged_cases(seen):
+        chunks.append(("cases", f"\n<b>📁 New case merged in the TLDP library</b>\n"
+                                f'• <a href="{pr["html_url"]}">{esc(pr["title"])}</a> by {esc(pr["user"]["login"])}\n'
+                                f'  <a href="https://github.com/{CASES_REPO}">browse all cases</a> · add yours: fork, copy the template, open a pull request'))
     parts = []
     for sector, (sector_label, orgs) in ORGS.items():
         try:
