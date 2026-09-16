@@ -57,6 +57,8 @@ def gh(path: str):
 def vet(full_name: str, name_counts: dict | None = None) -> dict:
     """Return {"ok": bool, "hard": [...], "soft": [...], "stars":..., "checked":...}. Never raises."""
     hard, soft = [], []
+    if full_name.lower().startswith("tldpprojectscout/"):  # our own repos
+        return {"ok": True, "hard": [], "soft": [], "stars": 0, "checked": date.today().isoformat()}
     try:
         repo, _ = gh(f"/repos/{full_name}")
     except Exception as e:
@@ -69,8 +71,7 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
     stars = repo.get("stargazers_count") or 0
     created = datetime.fromisoformat(repo["created_at"].replace("Z", "+00:00"))
     age_days = (datetime.now(timezone.utc) - created).days
-    if age_days < 30 and stars >= 50:
-        hard.append(f"{stars} stars on a {age_days}-day-old repo (bought stars)")
+    young_stars = age_days < 30 and stars >= 50  # bought stars — unless the owner is an established account (decided below)
     if repo.get("language") is None:
         soft.append("no detected code language")
     # root listing
@@ -82,8 +83,8 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
             hard.append("binary/archive in root: " + ", ".join(bins[:4]))
         dirs = [f for f in root if f["type"] == "dir"]
         code = [n for n in names if CODE.search(n)]
-        if not code and not dirs:
-            hard.append("no code files or folders in root (README-only shell)")
+        if not code and not dirs and not (stars >= ESTABLISHED[0] and age_days >= ESTABLISHED[1]):
+            hard.append("no code files or folders in root (README-only shell)")  # awesome-lists that are established are fine
     except Exception as e:
         soft.append(f"root listing failed ({getattr(e, 'code', e)})")
     established = stars >= ESTABLISHED[0] and age_days >= ESTABLISHED[1]
@@ -118,23 +119,33 @@ def vet(full_name: str, name_counts: dict | None = None) -> dict:
         o_age = (datetime.now(timezone.utc) - datetime.fromisoformat(o["created_at"].replace("Z", "+00:00"))).days
         if o_age < 90 and stars < 500:
             soft.append(f"owner account is {o_age} days old")
+        known = o_age >= 365 and (o.get("followers") or 0) >= 100  # established account with a following
+        if young_stars:  # such an account can go viral honestly; a fresh one with no followers cannot
+            (soft if known else hard).append(f"{stars} stars on a {age_days}-day-old repo (bought stars)")
+            young_stars = False
+        if known:  # a one-commit repo from a known author is a fresh share, not a throwaway
+            soft = [x for x in soft if not x.startswith("only ")]
         if SOCK_OWNER.match(owner) and stars < 200:
             soft.append("throwaway-style owner name")
     except Exception:
         pass
+    if young_stars:  # owner lookup failed: keep the strict reading
+        hard.append(f"{stars} stars on a {age_days}-day-old repo (bought stars)")
     if name_counts and name_counts.get(full_name.split("/")[-1].lower(), 0) >= 3:
         hard.append("same repo name under 3+ owners in the index (clone farm)")
-    # OpenSSF Scorecard (public, free, scores any public repo): binary artifacts and dangerous workflows are hard fails
+    # OpenSSF Scorecard (public, free, scores any public repo). Soft signals only: Dangerous-Workflow is a risk to the
+    # repo's own CI, not to a student cloning it, and Binary-Artifacts anywhere in the tree is common in legit test suites
+    # (binaries in the ROOT are already a hard fail above). A score of -1 means "inconclusive" and is ignored.
     try:
         time.sleep(0.25)
         with urllib.request.urlopen(urllib.request.Request(f"https://api.securityscorecards.dev/projects/github.com/{full_name}",
                                                           headers={"User-Agent": H["User-Agent"]}), timeout=20) as r:
             sc = json.load(r)
         for chk in sc.get("checks", []):
-            if chk.get("name") == "Binary-Artifacts" and isinstance(chk.get("score"), int) and chk["score"] < 5:
-                hard.append(f"Scorecard Binary-Artifacts {chk['score']}/10")
-            if chk.get("name") == "Dangerous-Workflow" and isinstance(chk.get("score"), int) and chk["score"] < 5:
-                hard.append(f"Scorecard Dangerous-Workflow {chk['score']}/10")
+            if chk.get("name") == "Binary-Artifacts" and isinstance(chk.get("score"), int) and 0 <= chk["score"] < 5:
+                soft.append(f"Scorecard Binary-Artifacts {chk['score']}/10")
+            if chk.get("name") == "Dangerous-Workflow" and isinstance(chk.get("score"), int) and 0 <= chk["score"] < 5:
+                soft.append(f"Scorecard Dangerous-Workflow {chk['score']}/10")
             if chk.get("name") == "Maintained" and isinstance(chk.get("score"), int) and chk["score"] == 0:
                 soft.append("Scorecard: unmaintained")
     except Exception:

@@ -73,7 +73,93 @@ LAYOUT = {
         ("🎓│capstone", "Your capstone project, judged in spring. Post your idea, repo link, weekly progress, and questions for staff.", TEXT, None),
         ("📁│case-studies", "Contribute to real case-study collections, and add your own case to github.com/tldpprojectscout/tldp-case-studies. Every merged case is announced here with your name. Monday: case of the week.", TEXT, "cases"),
     ]),
+    "🧑‍💻 PRACTICE & REVIEW": (True, [
+        ("🧑‍💻│code-review-practice", "All tech majors: post code, a repo link or a short video walkthrough and get an interview-style code review from peers and staff. Read the pinned rubric first.", FORUM, None),
+        ("🛡️│cyber-review-practice", "Cybersecurity: post lab write-ups, detection rules, scripts or video walkthroughs and get reviewed the way a security interview panel would. Read the pinned rubric first.", FORUM, None),
+        ("🐙│github-academy", "Beginner GitHub videos and tutorials, in order. Start with 'Week 0'. Ask questions inside any post.", FORUM, None),
+    ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
+}
+
+# Seed posts for the practice forums: created once (skipped when the forum already has a post with the same title).
+SEED = {
+    "🧑‍💻│code-review-practice": [
+        ("📌 How code review practice works (read first)", """**Why:** most tech interviews include a code review or a live walkthrough of something you built. Practising it here, in front of peers, is how you stop freezing in the real one.
+
+**How to post**
+1. Title: `[language] what it does — what you want feedback on` (e.g. `[Python] CSV budget tracker — is my structure sane?`)
+2. Body: link to the repo or file (GitHub, not a zip), OR a video walkthrough of 5 minutes or less (screen recording; explain the problem, your approach, one thing you're unsure about).
+3. Tag your major role so the right people see it.
+
+**How to review (anyone can review — reviewing teaches more than posting)**
+Use the 3-2-1 format: **3** things that work, **2** things to change (say *why*), **1** question you'd ask in an interview.
+Look at, in this order: does it run and do what it says · naming and readability · structure (functions, duplication) · error handling and edge cases · tests · anything a user could break or leak (inputs, secrets in code).
+
+**Rules:** review the work, never the person. Reply within a week if you post. Staff sample threads for feedback quality; strong reviewers get called out on Fridays in #show-your-work."""),
+        ("Example thread: what a good review looks like", """A worked example so nobody has to guess.
+
+**Post:** `[Python] Weather CLI — first project, is my error handling ok?` + repo link + 3-min video.
+
+**Review (3-2-1):**
+✅ Runs from a clean clone with the README steps · clear function names (`fetch_forecast`, `render_table`) · you handled a missing API key with a real message instead of a stack trace.
+🔧 `main()` is 80 lines; pull the argument parsing and the printing into their own functions so each does one thing. · The API key is read from a file committed to the repo — move it to an environment variable and add the file to `.gitignore` (interviewers will always ask about this).
+❓ "What happens if the API returns 200 with an empty body?" — try it and tell us.
+
+That's it. Specific, kind, and the poster knows exactly what to do next."""),
+    ],
+    "🛡️│cyber-review-practice": [
+        ("📌 How security review practice works (read first)", """**Why:** security interviews ask you to walk through an investigation, defend a finding, or explain a detection. This forum is where you rehearse that with an audience.
+
+**What to post (pick one)**
+• A lab or CTF write-up (TryHackMe, HTB, Blue Team Labs, an Atomic Red Team test you ran, a Splunk/Sigma hunt).
+• A detection rule, script or playbook (Sigma, YARA, Splunk SPL, KQL, a Python or PowerShell tool).
+• A 5-minute-or-less video walkthrough of any of the above.
+Title format: `[domain] what it is — what you want feedback on` using the CISSP domain names (e.g. `[D7 SecOps] Sigma rule for LSASS access — too noisy?`).
+
+**How to review (3-2-1, same as code review)**
+**3** things that are solid, **2** things to change with the reason, **1** question an interviewer would ask.
+Check, in order: is the methodology clear and repeatable · is every claim backed by evidence (log line, screenshot, hash, CVE) · is the risk rated and justified (likelihood × impact, not vibes) · is the remediation specific and prioritized · could a non-technical manager follow the summary.
+
+**Rules:** only targets you're authorized to test (labs, CTFs, your own machines). No live credentials, no real customer or personal data, ever. Review the work, never the person."""),
+        ("Example thread: what a good security review looks like", """**Post:** `[D7 SecOps] Investigating a phishing alert in the Splunk lab — is my write-up interview-ready?` + PDF write-up + 4-min video.
+
+**Review (3-2-1):**
+✅ Timeline is exact (UTC timestamps, host, user) · you show the SPL query and the raw event, not just a conclusion · the executive summary is three sentences a manager can read.
+🔧 The risk is called "High" without saying why — add one line: what the attacker could reach from that host, and how likely. · The remediation says "reset password"; add the containment step you'd do first (disable the account, block the sender domain) and the order.
+❓ "How would you tell whether the attachment actually ran?" — name the log source you'd check (Sysmon event 1 / EDR process tree) and add it.
+
+Specific, evidence-first, and it reads like a report a SOC lead would accept."""),
+    ],
+    "🐙│github-academy": [
+        ("Week 0 — GitHub in one hour (start here)", """No installs needed for this one. Everything runs in the browser.
+
+1. **Watch:** Git and GitHub for Beginners – Crash Course (freeCodeCamp, 1 h) — https://www.youtube.com/watch?v=RGOj5yH7evk
+2. **Do:** GitHub's own interactive course, *Introduction to GitHub* (about 30 min, runs in your account) — https://github.com/skills/introduction-to-github
+3. **Read:** the Hello World guide (repo → branch → commit → pull request → merge) — https://docs.github.com/en/get-started/start-your-journey/hello-world
+
+**Done when:** you have a repo of your own with a README, one branch, one merged pull request. Post the link in this thread."""),
+        ("Week 1 — Git on your laptop", """1. **Install:** GitHub Desktop (easiest) — https://desktop.github.com/ — or Git itself — https://git-scm.com/downloads
+2. **Learn the moves visually:** Learn Git Branching (interactive, do the first two sections) — https://learngitbranching.js.org/
+3. **Read:** Pro Git book, chapters 1–3 (free) — https://git-scm.com/book/en/v2
+4. **Keep handy:** the official Git cheat sheet — https://education.github.com/git-cheat-sheet-education.pdf
+5. **Write good commits:** How to Write a Git Commit Message — https://cbea.ms/git-commit/
+
+**Done when:** you can clone, make a branch, commit, push and see it on GitHub — from your own laptop."""),
+        ("Week 2 — Your first pull request to someone else's repo", """1. **Practice the whole flow safely:** First Contributions (a repo built for this; takes 15 min) — https://github.com/firstcontributions/first-contributions
+2. **Learn to READ pull requests:** GitHub Skills *Review pull requests* — https://github.com/skills/review-pull-requests
+3. **Fix the scary thing on purpose:** GitHub Skills *Resolve merge conflicts* — https://github.com/skills/resolve-merge-conflicts
+4. **Find a real one:** the feed forums post repos with *good first issues* every 6 hours, or search /scout lane:Contribute in #scout-search.
+
+**Etiquette:** comment on the issue before you start · one issue per PR · describe what and why · be patient with maintainers.
+**Done when:** you have opened one pull request on a repo you don't own. Post the link here and in #show-your-work."""),
+        ("Week 3 — Make your GitHub look employable", """1. **Profile README** (the page recruiters see): GitHub Skills *Communicate using Markdown* — https://github.com/skills/communicate-using-markdown — then create a repo named exactly like your username and put a README in it.
+2. **A project page** for your best repo: GitHub Skills *GitHub Pages* — https://github.com/skills/github-pages
+3. **Free tools as a student:** GitHub Student Developer Pack (Copilot, cloud credits, domains) — https://education.github.com/pack
+4. **Every repo you show:** README with what it does + how to run it, a `.gitignore`, no secrets in the code, a license.
+5. **More courses when you want them:** https://skills.github.com/
+
+**Done when:** your profile has a README, at least three pinned repos with real READMEs, and your LinkedIn links to it."""),
+    ],
 }
 OLD_FEED_NAMES = {"data-analytics", "swe", "cybersecurity", "quant", "finance-fintech", "project-management",
                   "digital-marketing", "open-source-orgs"}  # pre-forum text channels; replaced
@@ -91,6 +177,8 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 • **#scout-search** — search on demand: `/scout major:Cybersecurity`, `/scout lane:Contribute major:Data Analytics`, `/scout lane:Orgs keywords:python`.
 • **#show-your-work** — post merged PRs and demos. Friday leaderboard lives here.
 • **#announcements** — staff posts.
+• **🧑‍💻 code-review-practice / 🛡️ cyber-review-practice** — post code, write-ups or a short video and get an interview-style review (3-2-1 format, rubric pinned). Reviewing others counts too.
+• **🐙 github-academy** — new to GitHub? Four short weekly lessons, videos and tutorials, in order. Start at Week 0.
 
 **Spring requirements (both graded)**
 • **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
@@ -225,6 +313,17 @@ def main() -> int:
                     api("POST", f"/channels/{ch['id']}/webhooks", {"name": "Project Scout"})
                 webhooks[key] = f"https://discord.com/api/webhooks/{hook['id']}/{hook['token']}"
 
+    # 4b. seed posts in the practice forums (once)
+    for name, posts in SEED.items():
+        ch = existing[name]
+        have = {t["name"] for t in api("GET", f"/channels/{ch['id']}/threads/archived/public").get("threads", [])} | \
+               {t["name"] for t in api("GET", f"/guilds/{GUILD}/threads/active").get("threads", []) if t.get("parent_id") == ch["id"]}
+        for title, body in posts:
+            if title in have:
+                continue
+            api("POST", f"/channels/{ch['id']}/threads", {"name": title[:100], "message": {"content": body}, "auto_archive_duration": 10080})
+            print("seed post:", title)
+
     # 5. invite + welcome (reused on rerun)
     welcome = existing["welcome"]
     inv = next((i for i in api("GET", f"/guilds/{GUILD}/invites") if i.get("max_uses") == MAX_STUDENTS), None) or \
@@ -233,7 +332,16 @@ def main() -> int:
     for m in old_msgs:  # refresh the welcome text on rerun
         if m.get("author", {}).get("id") == APP_ID:
             api("DELETE", f"/channels/{welcome['id']}/messages/{m['id']}")
-    msg = api("POST", f"/channels/{welcome['id']}/messages", {"content": WELCOME})
+    parts, cur = [], ""  # Discord caps a message at 2000 chars: split on paragraphs, pin the first
+    for para in WELCOME.split("\n\n"):
+        if len(cur) + len(para) + 2 > 1900:
+            parts.append(cur); cur = para
+        else:
+            cur = f"{cur}\n\n{para}" if cur else para
+    parts.append(cur)
+    msg = api("POST", f"/channels/{welcome['id']}/messages", {"content": parts[0]})
+    for part in parts[1:]:
+        api("POST", f"/channels/{welcome['id']}/messages", {"content": part})
     try:
         api("PUT", f"/channels/{welcome['id']}/messages/pins/{msg['id']}")
     except SystemExit as e:

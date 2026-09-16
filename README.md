@@ -58,6 +58,27 @@ block an account or IP that keeps hammering after a 403. The feed is built to ne
   token that has no permissions, set as `GITHUB_TOKEN` on each Worker and as a repo secret used by
   the workflows. If anything is ever limited, it's that account, not yours.
 
+## Safety vetting (three layers, nothing posts until all pass)
+
+Scam and malware repos do show up in GitHub search. Every repo goes through three gates before a student sees it:
+
+1. **Cheap filter** (`legit()` in `project_scout.py`, mirrored in the Workers): no detected language, tiny size, scam
+   vocabulary (drainer, stealer, cracked, keygen, account farm…), non-English descriptions, sock-puppet owner names,
+   bought stars on tiny repos, the same repo name under three-plus owners.
+2. **Deep vet** (`vet.py`, ~4 core API calls per repo, cached 30 days in `vet_cache.json`): binaries or archives in the
+   root, README-only shells, README links to download hosts or archive passwords, very young repos with many stars,
+   brand-new owners, commit history, OpenSSF Scorecard. `python vet.py` re-vets the whole index and writes
+   `docs/vetting-report.md`; `python vet.py owner/repo` explains one verdict.
+3. **Code scan** (`scan.py`): shallow-clone (size-capped) and run Semgrep with `semgrep-rules/malware.yml` plus the
+   public `p/security-audit` rules. The custom rules match what malware *does*: decode-then-exec, download-and-run,
+   browser/wallet/Discord credential stores, hardcoded webhook or Telegram exfiltration, reverse shells, startup
+   persistence, antivirus tampering, miners, keyloggers. One hit fails the repo. Runs at post time in the digest
+   workflow (`semgrep_ok()`), weekly across the index (`python scan.py --index`), and cached in `scan_cache.json`.
+   `python scan.py owner/repo` scans one repo by hand.
+
+A failure at any layer marks the repo seen so it is never re-considered; `purge_posts.py` edits already-posted
+Discord messages if something slipped through before a rule existed.
+
 ## Tuning
 
 `MAJORS` (search terms + anchor word per major), `LANES` (window, star floor, picks)

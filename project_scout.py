@@ -18,6 +18,7 @@ search rate limit from 10 to 30 req/min; Actions passes its built-in token).
 stdlib only.
 """
 import json
+import shutil
 import os
 import sys
 import urllib.parse
@@ -730,7 +731,7 @@ def ordered(items: list[dict], ceiling: int | None = None) -> list[dict]:
     return easy + [it for it in ranked if RANK[difficulty(it)] > ceiling]
 
 
-def deep_ok(it: dict) -> bool:
+def deep_ok(it: dict) -> bool | None:
     """Gate at post time: the deep vetter (contents, README links, history, owner) must pass before anything is
     shown to students. Verdicts are cached in vet_cache.json (committed by the workflow), so each repo costs ~4 core
     API calls once a month. Curated tables are exempt; this only runs on live search results."""
@@ -747,12 +748,45 @@ def deep_ok(it: dict) -> bool:
     if v is None or v.get("unknown"):
         v = vet.vet(it["full_name"])
         if v.get("unknown"):
-            return False  # unreachable right now: skip this run, try again next time (not cached, not marked seen)
+            return None  # unreachable right now: skip this run, try again next time (not cached, not marked seen)
         _vet_cache[it["full_name"]] = v
         json.dump(_vet_cache, open(vet.CACHE, "w", encoding="utf-8"), indent=0)
     if not v["ok"]:
         print(f"vet: dropped {it['full_name']}: {'; '.join(v['hard'] or v['soft'])}", file=sys.stderr)
-    return bool(v["ok"])
+        return False
+    return semgrep_ok(it)
+
+
+_scan_cache = None
+
+
+def semgrep_ok(it: dict) -> bool | None:
+    """Layer 2 of the gate: shallow-clone and run the malware-behavior Semgrep ruleset (scan.py). Only runs where
+    semgrep is installed (the Actions runners); a laptop preview without it just skips this layer. Verdicts are cached
+    in scan_cache.json. Returns None when the clone/scan could not complete (try again next run, not marked seen)."""
+    global _scan_cache
+    if not shutil.which("semgrep") or not shutil.which("git"):
+        return True
+    import scan
+    if _scan_cache is None:
+        _scan_cache = {k: v for k, v in scan.load(scan.CACHE).items()
+                       if v.get("checked", "") >= (date.today() - timedelta(days=30)).isoformat()}
+    v = _scan_cache.get(it["full_name"])
+    if v is None:
+        v = scan.scan_repo(it["full_name"], it.get("size"))
+        if v.get("ok") is None and not v.get("checked"):
+            print(f"semgrep: {it['full_name']} {v.get('note')} (retry next run)", file=sys.stderr)
+            return None
+        _scan_cache[it["full_name"]] = v
+        json.dump(_scan_cache, open(scan.CACHE, "w", encoding="utf-8"), indent=0)
+        if v["ok"] is False:  # record in the vet cache too, so the weekly prune and the report see it
+            _vet_cache[it["full_name"]] = {"ok": False, "hard": ["semgrep: " + ", ".join(v["hits"])], "soft": [],
+                                           "stars": it.get("stargazers_count", 0), "checked": date.today().isoformat()}
+            json.dump(_vet_cache, open("vet_cache.json", "w", encoding="utf-8"), indent=0)
+    if v["ok"] is False:
+        print(f"semgrep: dropped {it['full_name']}: {', '.join(v['hits'])}", file=sys.stderr)
+        return False
+    return True
 
 
 _vet_cache = None
@@ -769,7 +803,10 @@ def pick(items: list[dict], seen: dict, n: int, major: str = "", hard: bool = Fa
             continue
         if major not in AI_OK and AI_SPAM.search(f"{it['full_name']} {it.get('description') or ''}"):
             continue
-        if not deep_ok(it):
+        ok = deep_ok(it)
+        if ok is None:
+            continue  # scanner could not reach it this run: leave it unseen, try again next time
+        if not ok:
             seen[it["full_name"]] = date.today().isoformat()  # never look at it again
             continue
         seen[it["full_name"]] = date.today().isoformat()

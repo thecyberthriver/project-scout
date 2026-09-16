@@ -1,0 +1,3481 @@
+{
+"AGGIB/Stroq": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"AI4Finance-Foundation/FinGPT": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21253,
+"checked": "2026-09-16"
+},
+"AI4Finance-Foundation/FinRobot": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8007,
+"checked": "2026-09-16"
+},
+"Akxan/google-seo-mcp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 36,
+"checked": "2026-09-16"
+},
+"Archive228/warden": {
+"ok": true,
+"hard": [],
+"soft": [
+"throwaway-style owner name"
+],
+"stars": 18,
+"checked": "2026-09-16"
+},
+"Armur-Ai/Pentest-Swarm-AI": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2509,
+"checked": "2026-09-16"
+},
+"BaichengDanny/awesome-ai-for-cybersecurity-papers": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 22,
+"checked": "2026-09-16"
+},
+"CliMA/Oceananigans.jl": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1412,
+"checked": "2026-09-16"
+},
+"CodeByPinar/riskops": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29,
+"checked": "2026-09-16"
+},
+"Cortex-Arbitrage-Lab/cortex-ai-trading-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 1 days old"
+],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"Dev-next-gen/excalibur": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 2 commit(s)"
+],
+"stars": 18,
+"checked": "2026-09-16"
+},
+"DietrichGebert/ponytail": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 139579,
+"checked": "2026-09-16"
+},
+"DigitalPlatDev/FreeDomain": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 199581,
+"checked": "2026-09-16"
+},
+"EFForg/rayhunter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5831,
+"checked": "2026-09-16"
+},
+"EVerest/EVerest": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 263,
+"checked": "2026-09-16"
+},
+"Eventual-Inc/Daft": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5768,
+"checked": "2026-09-16"
+},
+"Felix-Theodore-Zeng/eight-market-quant-ai": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"GCWing/OpenBitFun": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2183,
+"checked": "2026-09-16"
+},
+"GSA/MasteringAgenticAISystems_supplementals": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 40,
+"checked": "2026-09-16"
+},
+"GeminiLight/SocialCoach": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"Gipppp121/canary": {
+"ok": true,
+"hard": [],
+"soft": [
+"throwaway-style owner name"
+],
+"stars": 32,
+"checked": "2026-09-16"
+},
+"Gitlawb/openlaunch": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21,
+"checked": "2026-09-16"
+},
+"HasData/yellowpages-mcp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15,
+"checked": "2026-09-16"
+},
+"Infisical/infisical": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29279,
+"checked": "2026-09-16"
+},
+"Infrasity-Labs/developer-marketing-jobs": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 52,
+"checked": "2026-09-16"
+},
+"Joel12Sucre432/hyperliquid-momentum-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"Joel12Sucre432/hyperliquid-order-flow-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"KimJeju/cpguard": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 22,
+"checked": "2026-09-16"
+},
+"KonghuanSmart/calculate-mcp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"LMMS/lmms": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10367,
+"checked": "2026-09-16"
+},
+"MISP/misp-galaxy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 639,
+"checked": "2026-09-16"
+},
+"MagicCube/hyper-hinge": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"MakazhanAlpamys/soup-wall": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"MunGell/awesome-for-beginners": {
+"ok": true,
+"hard": [],
+"soft": [
+"no detected code language"
+],
+"stars": 89308,
+"checked": "2026-09-16"
+},
+"NYCPlanning/gis-nycplanning": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2,
+"checked": "2026-09-16"
+},
+"NirDiamant/GenAI_Agents": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 24299,
+"checked": "2026-09-16"
+},
+"OISF/suricata": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6642,
+"checked": "2026-09-16"
+},
+"OWASP/ASVS": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3604,
+"checked": "2026-09-16"
+},
+"OWASP/CheatSheetSeries": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 33186,
+"checked": "2026-09-16"
+},
+"OWASP/Nest": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 451,
+"checked": "2026-09-16"
+},
+"OWASP/Nettacker": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5568,
+"checked": "2026-09-16"
+},
+"OWASP/cornucopia": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 146,
+"checked": "2026-09-16"
+},
+"OWASP/cve-lite-cli": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 694,
+"checked": "2026-09-16"
+},
+"OWASP/threat-dragon": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1591,
+"checked": "2026-09-16"
+},
+"OWASP/wstg": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9828,
+"checked": "2026-09-16"
+},
+"OWASP/www-community": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1410,
+"checked": "2026-09-16"
+},
+"OpenBB-finance/OpenBB": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 73053,
+"checked": "2026-09-16"
+},
+"OpenHands/software-agent-sdk": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1119,
+"checked": "2026-09-16"
+},
+"PatrickJS/awesome-cursorrules": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 40793,
+"checked": "2026-09-16"
+},
+"PennyLaneAI/pennylane": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3465,
+"checked": "2026-09-16"
+},
+"Photon94/NotchOTP": {
+"ok": true,
+"hard": [],
+"soft": [
+"throwaway-style owner name"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"PillCrew/claimchain": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 46,
+"checked": "2026-09-16"
+},
+"PostHog/posthog": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 39814,
+"checked": "2026-09-16"
+},
+"PostHog/posthog.com": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1140,
+"checked": "2026-09-16"
+},
+"QiantangCredit/heimdall-pentest": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 4 days old"
+],
+"stars": 49,
+"checked": "2026-09-16"
+},
+"QuantConnect/Lean": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21643,
+"checked": "2026-09-16"
+},
+"RIP-Comm/sossoldi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1394,
+"checked": "2026-09-16"
+},
+"SSC-ICT-Innovatie/nl-kat-coordination": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 181,
+"checked": "2026-09-16"
+},
+"Sakikoo0/codekeel": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"Shubhamsaboo/awesome-llm-apps": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 138373,
+"checked": "2026-09-16"
+},
+"SigmaHQ/sigma": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11047,
+"checked": "2026-09-16"
+},
+"SimplifyJobs/Summer2027-Internships": {
+"ok": true,
+"hard": [],
+"soft": [
+"near-empty README with stars"
+],
+"stars": 47449,
+"checked": "2026-09-16"
+},
+"SkuldNorniern/fluere": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 64,
+"checked": "2026-09-16"
+},
+"Solvr-io/solvr-go": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 7 days old"
+],
+"stars": 25,
+"checked": "2026-09-16"
+},
+"Soulaymane01/Rowbase": {
+"ok": true,
+"hard": [],
+"soft": [
+"throwaway-style owner name"
+],
+"stars": 18,
+"checked": "2026-09-16"
+},
+"SpikeNOIP/MachineLearning-playbook": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"StarRocks/starrocks": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 12110,
+"checked": "2026-09-16"
+},
+"TF2Autobot/tf2autobot": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 268,
+"checked": "2026-09-16"
+},
+"TauricResearch/TradingAgents": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 106782,
+"checked": "2026-09-16"
+},
+"Tencent/AI-Infra-Guard": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6384,
+"checked": "2026-09-16"
+},
+"TheAlgorithms/Python": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 224625,
+"checked": "2026-09-16"
+},
+"Vellar-Wallet/vellar-webmcp": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 60 days old"
+],
+"stars": 22,
+"checked": "2026-09-16"
+},
+"Velocidex/velociraptor": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4246,
+"checked": "2026-09-16"
+},
+"VisActor/VChart": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1837,
+"checked": "2026-09-16"
+},
+"VoltAgent/awesome-design-md": {
+"ok": true,
+"hard": [],
+"soft": [
+"no detected code language"
+],
+"stars": 116047,
+"checked": "2026-09-16"
+},
+"Vsimpro/poetriage": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 43,
+"checked": "2026-09-16"
+},
+"WerWolv/ImHex": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 54812,
+"checked": "2026-09-16"
+},
+"Wyrcan-io/roadmap": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 48 days old"
+],
+"stars": 14,
+"checked": "2026-09-16"
+},
+"YOURLS/YOURLS": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 12230,
+"checked": "2026-09-16"
+},
+"Yorko/mlcourse.ai": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10713,
+"checked": "2026-09-16"
+},
+"actualbudget/actual": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 28915,
+"checked": "2026-09-16"
+},
+"affaan-m/ECC": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 259474,
+"checked": "2026-09-16"
+},
+"agentic-os-org/ANOLISA": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 614,
+"checked": "2026-09-16"
+},
+"airbnb/javascript": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 148236,
+"checked": "2026-09-16"
+},
+"aispace-sh/aispace-client": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 9 days old"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"alirezarezvani/claude-skills": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 25999,
+"checked": "2026-09-16"
+},
+"alor-broker/Astras-Trading-UI": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 89,
+"checked": "2026-09-16"
+},
+"alpacahq/alpaca-trade-api-go": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 429,
+"checked": "2026-09-16"
+},
+"alphagov/govuk-developer-docs": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 143,
+"checked": "2026-09-16"
+},
+"alphagov/tech-docs-gem": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"amrlazw/hermes-fleet-memory": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"anand34577/ferrum": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"andkret/Cookbook": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15422,
+"checked": "2026-09-16"
+},
+"antrea-io/antrea": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1810,
+"checked": "2026-09-16"
+},
+"aosabook/aosabook": {
+"ok": true,
+"hard": [],
+"soft": [
+"near-empty README with stars"
+],
+"stars": 1446,
+"checked": "2026-09-16"
+},
+"apache/datasketches-rust": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 124,
+"checked": "2026-09-16"
+},
+"apache/hudi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6246,
+"checked": "2026-09-16"
+},
+"aquasecurity/trivy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 37934,
+"checked": "2026-09-16"
+},
+"ashishpatel26/500-AI-Agents-Projects": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 37773,
+"checked": "2026-09-16"
+},
+"astrid-runtime/astrid": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10274,
+"checked": "2026-09-16"
+},
+"avhz/RustQuant": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1822,
+"checked": "2026-09-16"
+},
+"awesomedata/awesome-public-datasets": {
+"ok": true,
+"hard": [],
+"soft": [
+"no detected code language"
+],
+"stars": 78972,
+"checked": "2026-09-16"
+},
+"aya-rs/aya": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4809,
+"checked": "2026-09-16"
+},
+"bancsdan/GoKK": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 23,
+"checked": "2026-09-16"
+},
+"beyondtahir/beyondseo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"boxlite-ai/boxlite": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2327,
+"checked": "2026-09-16"
+},
+"bytebase/bytebase": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 14486,
+"checked": "2026-09-16"
+},
+"calesthio/OpenMontage": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 59376,
+"checked": "2026-09-16"
+},
+"calkit/calkit": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 60,
+"checked": "2026-09-16"
+},
+"center-for-threat-informed-defense/adversary_emulation_library": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2166,
+"checked": "2026-09-16"
+},
+"cinar/indicator": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1769,
+"checked": "2026-09-16"
+},
+"cisagov/ScubaGear": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2666,
+"checked": "2026-09-16"
+},
+"cisagov/ScubaGoggles": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 362,
+"checked": "2026-09-16"
+},
+"clidey/whodb": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5028,
+"checked": "2026-09-16"
+},
+"cloudflare/workerd": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8741,
+"checked": "2026-09-16"
+},
+"coollabsio/coolify": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 61833,
+"checked": "2026-09-16"
+},
+"cp2k/cp2k": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1207,
+"checked": "2026-09-16"
+},
+"craftzdog/interactive-demo-tutorial": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 14,
+"checked": "2026-09-16"
+},
+"crewAIInc/crewAI": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 58631,
+"checked": "2026-09-16"
+},
+"data-privacy-stack/presidio": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10879,
+"checked": "2026-09-16"
+},
+"databendlabs/databend": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9442,
+"checked": "2026-09-16"
+},
+"datawhalechina/easy-vibe": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 19420,
+"checked": "2026-09-16"
+},
+"dend/awesome-product-management": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2364,
+"checked": "2026-09-16"
+},
+"dependency-check/DependencyCheck": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7693,
+"checked": "2026-09-16"
+},
+"dextersolab/diplab": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 54 days old"
+],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"dj-stripe/dj-stripe": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1794,
+"checked": "2026-09-16"
+},
+"domokane/FinancePy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3149,
+"checked": "2026-09-16"
+},
+"doomemacs/core": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 22679,
+"checked": "2026-09-16"
+},
+"dwebagents/AgentPipe": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 82 days old"
+],
+"stars": 204,
+"checked": "2026-09-16"
+},
+"earthaccess-dev/earthaccess": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 641,
+"checked": "2026-09-16"
+},
+"elastic/detection-rules": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2700,
+"checked": "2026-09-16"
+},
+"elastic/kibana": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21288,
+"checked": "2026-09-16"
+},
+"ellisonleao/magictools": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17312,
+"checked": "2026-09-16"
+},
+"elmohq/elmo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 332,
+"checked": "2026-09-16"
+},
+"emelia-io/claude-outreach": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15,
+"checked": "2026-09-16"
+},
+"enescingoz/awesome-n8n-templates": {
+"ok": true,
+"hard": [],
+"soft": [
+"no detected code language"
+],
+"stars": 25386,
+"checked": "2026-09-16"
+},
+"engineai-robotics/engineai_navigation": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 2 commit(s)"
+],
+"stars": 25,
+"checked": "2026-09-16"
+},
+"facioquo/stock-indicators-dotnet": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1245,
+"checked": "2026-09-16"
+},
+"fastapi/fastapi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 102356,
+"checked": "2026-09-16"
+},
+"firefly-iii/firefly-iii": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 24637,
+"checked": "2026-09-16"
+},
+"freeCodeCamp/freeCodeCamp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 455534,
+"checked": "2026-09-16"
+},
+"freqtrade/freqtrade": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 54432,
+"checked": "2026-09-16"
+},
+"garrytan/gbrain": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29976,
+"checked": "2026-09-16"
+},
+"garrytan/gstack": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 133265,
+"checked": "2026-09-16"
+},
+"gergelyszabo94/csgo-trader-extension": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 288,
+"checked": "2026-09-16"
+},
+"github/codeql": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10093,
+"checked": "2026-09-16"
+},
+"gitleaks/gitleaks": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29337,
+"checked": "2026-09-16"
+},
+"goauthentik/authentik": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 25571,
+"checked": "2026-09-16"
+},
+"google/filament": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 20499,
+"checked": "2026-09-16"
+},
+"google/go-containerregistry": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4049,
+"checked": "2026-09-16"
+},
+"google/go-tpm-tools": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 309,
+"checked": "2026-09-16"
+},
+"google/gvisor": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 19332,
+"checked": "2026-09-16"
+},
+"google/osv.dev": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2926,
+"checked": "2026-09-16"
+},
+"google/site-kit-wp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1394,
+"checked": "2026-09-16"
+},
+"grafana/clickhouse-datasource": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 221,
+"checked": "2026-09-16"
+},
+"grafana/grafana": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 76767,
+"checked": "2026-09-16"
+},
+"greenpau/caddy-security": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2235,
+"checked": "2026-09-16"
+},
+"hackforla/food-oasis": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 81,
+"checked": "2026-09-16"
+},
+"hackforla/lucky-parking": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 37,
+"checked": "2026-09-16"
+},
+"hackforla/tdm-calculator": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 68,
+"checked": "2026-09-16"
+},
+"hackforla/website": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 363,
+"checked": "2026-09-16"
+},
+"hesreallyhim/awesome-claude-code": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 54130,
+"checked": "2026-09-16"
+},
+"huggingface/transformers": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 166220,
+"checked": "2026-09-16"
+},
+"icesword0760/matou": {
+"ok": true,
+"hard": [],
+"soft": [
+"throwaway-style owner name"
+],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"jakevdp/PythonDataScienceHandbook": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 49889,
+"checked": "2026-09-16"
+},
+"je-suis-tm/quant-trading": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10737,
+"checked": "2026-09-16"
+},
+"jellyfin/jellyfin-web": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3847,
+"checked": "2026-09-16"
+},
+"juan31an432/hyperliquid-arbitrage-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 14,
+"checked": "2026-09-16"
+},
+"juan31an432/hyperliquid-twap-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"juan31an432/hyperliquid-vwap-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"juice-shop/juice-shop": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13874,
+"checked": "2026-09-16"
+},
+"juspay/hyperswitch": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 43612,
+"checked": "2026-09-16"
+},
+"karan/Projects": {
+"ok": true,
+"hard": [],
+"soft": [
+"no detected code language"
+],
+"stars": 47934,
+"checked": "2026-09-16"
+},
+"keenableai/needle": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29,
+"checked": "2026-09-16"
+},
+"kernc/backtesting.py": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8964,
+"checked": "2026-09-16"
+},
+"knadh/listmonk": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 23437,
+"checked": "2026-09-16"
+},
+"konflux-ci/konflux-ci": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 184,
+"checked": "2026-09-16"
+},
+"kriasoft/react-starter-kit": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 23682,
+"checked": "2026-09-16"
+},
+"langchain-ai/langchain": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 146421,
+"checked": "2026-09-16"
+},
+"langfuse/langfuse": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 34668,
+"checked": "2026-09-16"
+},
+"langgenius/dify": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 155892,
+"checked": "2026-09-16"
+},
+"leaperone/MultiPost-Extension": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3467,
+"checked": "2026-09-16"
+},
+"lissy93/web-check": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 34825,
+"checked": "2026-09-16"
+},
+"makeplane/plane": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 59459,
+"checked": "2026-09-16"
+},
+"matomo-org/matomo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21874,
+"checked": "2026-09-16"
+},
+"matrixorigin/matrixone": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1890,
+"checked": "2026-09-16"
+},
+"mattermost-community/focalboard": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 26463,
+"checked": "2026-09-16"
+},
+"mattermost/mattermost": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 39070,
+"checked": "2026-09-16"
+},
+"mattpocock/skills": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 263006,
+"checked": "2026-09-16"
+},
+"mautic/user-documentation": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 22,
+"checked": "2026-09-16"
+},
+"mealie-recipes/mealie": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13233,
+"checked": "2026-09-16"
+},
+"melandlabs/openloomi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1029,
+"checked": "2026-09-16"
+},
+"mermaid-js/mermaid": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 90260,
+"checked": "2026-09-16"
+},
+"metabase/metabase": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 49282,
+"checked": "2026-09-16"
+},
+"microsoft/Data-Science-For-Beginners": {
+"ok": true,
+"hard": [],
+"soft": [
+"root listing failed (<urlopen error [WinError 10054] An existing connection was forcibly closed by the remote host>)"
+],
+"stars": 36980,
+"checked": "2026-09-16"
+},
+"Ambolio/ninfer-4090-windows": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 14,
+"checked": "2026-09-16"
+},
+"AnjanJ/rails_error_dashboard": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 92,
+"checked": "2026-09-16"
+},
+"Asabeneh/30-Days-Of-Python": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 73899,
+"checked": "2026-09-16"
+},
+"Awesome-Embedded-Learning-Studio/Tutorial_AwesomeModernCPP": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 280,
+"checked": "2026-09-16"
+},
+"BellTokenBLL/belltoken": {
+"ok": false,
+"hard": [],
+"soft": [
+"README links to t.me/",
+"owner account is 6 days old"
+],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"Codeprojectingfuture/cms-healthcare-analytics": {
+"ok": false,
+"hard": [],
+"soft": [
+"only 2 commit(s)",
+"owner account is 11 days old"
+],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"ColorlibHQ/gentelella": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21513,
+"checked": "2026-09-16"
+},
+"ComplianceAsCode/content": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2804,
+"checked": "2026-09-16"
+},
+"Deployment-inc/Deployment.inc-Hiring-Problems": {
+"ok": false,
+"hard": [],
+"soft": [
+"only 1 commit(s)",
+"owner account is 33 days old"
+],
+"stars": 45,
+"checked": "2026-09-16"
+},
+"Eppie-io/Eppie-App": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 412,
+"checked": "2026-09-16"
+},
+"HKUDS/Vibe-Trading": {
+"ok": false,
+"hard": [
+"README: 'download now'"
+],
+"soft": [],
+"stars": 33546,
+"checked": "2026-09-16"
+},
+"IBM/mcp-context-forge": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4479,
+"checked": "2026-09-16"
+},
+"JanssenProject/jans": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 647,
+"checked": "2026-09-16"
+},
+"OPENER-next/OpenStop": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 101,
+"checked": "2026-09-16"
+},
+"OffcierCia/DeFi-Developer-Road-Map": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10831,
+"checked": "2026-09-16"
+},
+"OpenCTI-Platform/opencti": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10006,
+"checked": "2026-09-16"
+},
+"ProteoWizard/pwiz": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 321,
+"checked": "2026-09-16"
+},
+"SagarBiswas-MultiHAT/The-BlackHAT-roadmap": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"Snowflake-Labs/pg_lake": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1640,
+"checked": "2026-09-16"
+},
+"Superalgos/Superalgos": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5659,
+"checked": "2026-09-16"
+},
+"VulcanEon/awesome-gpt-image-2.5-prompts": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"XSecurityCN/XProxy": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 2 commit(s)"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"XiantingWu/PQCensus": {
+"ok": false,
+"hard": [],
+"soft": [
+"only 1 commit(s)",
+"owner account is 25 days old"
+],
+"stars": 47,
+"checked": "2026-09-16"
+},
+"Z4nzu/hackingtool": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 79558,
+"checked": "2026-09-16"
+},
+"ZeroDayEvil/ai-security-tool": {
+"ok": true,
+"hard": [],
+"soft": [
+"README links to t.me/"
+],
+"stars": 19,
+"checked": "2026-09-16"
+},
+"academic/awesome-datascience": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29990,
+"checked": "2026-09-16"
+},
+"alfio-event/alf.io": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1611,
+"checked": "2026-09-16"
+},
+"alibaba/compileflow": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1984,
+"checked": "2026-09-16"
+},
+"alibaba/spring-ai-alibaba": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10871,
+"checked": "2026-09-16"
+},
+"apache/datafusion-comet": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1276,
+"checked": "2026-09-16"
+},
+"apache/lucene": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3558,
+"checked": "2026-09-16"
+},
+"authelia/authelia": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 28987,
+"checked": "2026-09-16"
+},
+"avaraline/Avara": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 148,
+"checked": "2026-09-16"
+},
+"birobirobiro/awesome-shadcn-ui": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 20509,
+"checked": "2026-09-16"
+},
+"bregman-arie/devops-exercises": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 84492,
+"checked": "2026-09-16"
+},
+"ccxt/ccxt": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 44008,
+"checked": "2026-09-16"
+},
+"charlax/professional-programming": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 51518,
+"checked": "2026-09-16"
+},
+"cisagov/cool-assessment-terraform": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"cloud-hypervisor/cloud-hypervisor": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6231,
+"checked": "2026-09-16"
+},
+"cloudbreach/AuthStrike": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"dalathegreat/Battery-Emulator": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2915,
+"checked": "2026-09-16"
+},
+"dev3Masud/2fa-app": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"elastic/elastic-agent": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 275,
+"checked": "2026-09-16"
+},
+"elastic/elasticsearch": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 77920,
+"checked": "2026-09-16"
+},
+"elastic/package-spec": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 20,
+"checked": "2026-09-16"
+},
+"firstcontributions/first-contributions": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 55954,
+"checked": "2026-09-16"
+},
+"frappe/frappe": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10775,
+"checked": "2026-09-16"
+},
+"frappe/hrms": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8793,
+"checked": "2026-09-16"
+},
+"ghostfolio/ghostfolio": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9301,
+"checked": "2026-09-16"
+},
+"glotzerlab/signac": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 147,
+"checked": "2026-09-16"
+},
+"glpi-project/glpi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6351,
+"checked": "2026-09-16"
+},
+"goldbergyoni/nodebestpractices": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 105622,
+"checked": "2026-09-16"
+},
+"google/dart-neats": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 508,
+"checked": "2026-09-16"
+},
+"google/go-github": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11309,
+"checked": "2026-09-16"
+},
+"google/xls": {
+"ok": true,
+"hard": [],
+"soft": [
+"README links to bit.ly"
+],
+"stars": 1896,
+"checked": "2026-09-16"
+},
+"google/yggdrasil-decision-forests": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 673,
+"checked": "2026-09-16"
+},
+"hacksider/Deep-Live-Cam": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 96671,
+"checked": "2026-09-16"
+},
+"hashicorp/vault": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 36253,
+"checked": "2026-09-16"
+},
+"hcengineering/platform": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 27692,
+"checked": "2026-09-16"
+},
+"heldoreik/Fortis": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"hirotomasato/autoclawpi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"hirotomasato/paygateme": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 32,
+"checked": "2026-09-16"
+},
+"initial-d/ml-quant-trading": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 86,
+"checked": "2026-09-16"
+},
+"jaywcjlove/awesome-mac": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 113951,
+"checked": "2026-09-16"
+},
+"juliannacorreia/Crypto-Recovery": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 58 days old"
+],
+"stars": 35,
+"checked": "2026-09-16"
+},
+"keycloak/keycloak": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 36803,
+"checked": "2026-09-16"
+},
+"kiurakku/GramFuzz": {
+"ok": true,
+"hard": [],
+"soft": [
+"README links to t.me/"
+],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"kyverno/kyverno": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8150,
+"checked": "2026-09-16"
+},
+"link-society/flowg": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 170,
+"checked": "2026-09-16"
+},
+"livenson/umbrik": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard: unmaintained"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"m0m0x01d/strata": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21,
+"checked": "2026-09-16"
+},
+"mahmoud/awesome-python-applications": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 18041,
+"checked": "2026-09-16"
+},
+"marianabsctba/BSC_DLP_Community": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"marketcalls/openalgo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2671,
+"checked": "2026-09-16"
+},
+"mautic/mautic": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10516,
+"checked": "2026-09-16"
+},
+"mdn/browser-compat-data": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5750,
+"checked": "2026-09-16"
+},
+"microsoft/FLAML": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4396,
+"checked": "2026-09-16"
+},
+"microsoft/ML-For-Beginners": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 90540,
+"checked": "2026-09-16"
+},
+"microsoft/PowerToys": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 138712,
+"checked": "2026-09-16"
+},
+"microsoft/PyRIT": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4482,
+"checked": "2026-09-16"
+},
+"microsoft/Security-101": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6901,
+"checked": "2026-09-16"
+},
+"microsoft/SynapseML": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 5247,
+"checked": "2026-09-16"
+},
+"microsoft/Web-Dev-For-Beginners": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 96685,
+"checked": "2026-09-16"
+},
+"microsoft/aspire": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6309,
+"checked": "2026-09-16"
+},
+"microsoft/generative-ai-for-beginners": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 119858,
+"checked": "2026-09-16"
+},
+"microsoft/hve-core": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1464,
+"checked": "2026-09-16"
+},
+"microsoft/lisa": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 333,
+"checked": "2026-09-16"
+},
+"microsoft/mcp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3679,
+"checked": "2026-09-16"
+},
+"microsoft/powerbi-desktop-samples": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2114,
+"checked": "2026-09-16"
+},
+"microsoft/qlib": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 48605,
+"checked": "2026-09-16"
+},
+"microsoft/retina": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3173,
+"checked": "2026-09-16"
+},
+"microsoft/vscode": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 192567,
+"checked": "2026-09-16"
+},
+"microsoft/vscode-pull-request-github": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2624,
+"checked": "2026-09-16"
+},
+"mitre-attack/attack-navigator": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2460,
+"checked": "2026-09-16"
+},
+"mitre/saf": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 186,
+"checked": "2026-09-16"
+},
+"mkhamat/gopherttype": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 30,
+"checked": "2026-09-16"
+},
+"mohdhd/strat-hunter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"mozilla/neqo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2238,
+"checked": "2026-09-16"
+},
+"mozilla/translations": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 350,
+"checked": "2026-09-16"
+},
+"mozilla/wpt-sync": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"msitarzewski/agency-agents": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 152772,
+"checked": "2026-09-16"
+},
+"musescore/MuseScore": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15112,
+"checked": "2026-09-16"
+},
+"n8n-io/n8n": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 204534,
+"checked": "2026-09-16"
+},
+"nanocoai/nanoclaw": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 30780,
+"checked": "2026-09-16"
+},
+"nasa/PSP": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 82,
+"checked": "2026-09-16"
+},
+"nasa/SC": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 45,
+"checked": "2026-09-16"
+},
+"nasa/api-docs": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 556,
+"checked": "2026-09-16"
+},
+"nasa/cFE": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 520,
+"checked": "2026-09-16"
+},
+"nasa/cFS": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1501,
+"checked": "2026-09-16"
+},
+"nasa/osal": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 670,
+"checked": "2026-09-16"
+},
+"nasa/spacewasm": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1576,
+"checked": "2026-09-16"
+},
+"nateships/rolle": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard: unmaintained"
+],
+"stars": 20,
+"checked": "2026-09-16"
+},
+"navit-gps/navit": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 665,
+"checked": "2026-09-16"
+},
+"nextjs/saas-starter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16128,
+"checked": "2026-09-16"
+},
+"nextlevelbuilder/ui-ux-pro-max-skill": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 128073,
+"checked": "2026-09-16"
+},
+"nexu-io/open-design": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 96496,
+"checked": "2026-09-16"
+},
+"nilbuild/developer-roadmap": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 367388,
+"checked": "2026-09-16"
+},
+"nmamzada/quantis": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 2 commit(s)"
+],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"nmap/nmap": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13597,
+"checked": "2026-09-16"
+},
+"ohmyzsh/ohmyzsh": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 189748,
+"checked": "2026-09-16"
+},
+"open-webui/open-webui": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 152265,
+"checked": "2026-09-16"
+},
+"openSUSE/artwork": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 169,
+"checked": "2026-09-16"
+},
+"openbao/openbao": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7376,
+"checked": "2026-09-16"
+},
+"openfoodfoundation/openfoodnetwork": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1284,
+"checked": "2026-09-16"
+},
+"opensearch-project/k-NN": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 228,
+"checked": "2026-09-16"
+},
+"opf/openproject": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16117,
+"checked": "2026-09-16"
+},
+"ory/kratos": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13879,
+"checked": "2026-09-16"
+},
+"ossu/computer-science": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 209054,
+"checked": "2026-09-16"
+},
+"p4lang/behavioral-model": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 654,
+"checked": "2026-09-16"
+},
+"pandas-dev/pandas": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 49734,
+"checked": "2026-09-16"
+},
+"paradedb/paradedb": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9267,
+"checked": "2026-09-16"
+},
+"pcm469768-droid/llm-api-speedtest": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 11 days old"
+],
+"stars": 32,
+"checked": "2026-09-16"
+},
+"pingcap/tidb": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 40533,
+"checked": "2026-09-16"
+},
+"plaid/pattern": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 542,
+"checked": "2026-09-16"
+},
+"plclub/sf-in-lean": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 84,
+"checked": "2026-09-16"
+},
+"plotly/dash": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 24409,
+"checked": "2026-09-16"
+},
+"pluja/awesome-privacy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 19767,
+"checked": "2026-09-16"
+},
+"practical-tutorials/project-based-learning": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 283509,
+"checked": "2026-09-16"
+},
+"primer/brand": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 141,
+"checked": "2026-09-16"
+},
+"projectdiscovery/nuclei": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 31240,
+"checked": "2026-09-16"
+},
+"putme-in/putmein": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 18 days old"
+],
+"stars": 58,
+"checked": "2026-09-16"
+},
+"pyca/cryptography": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7771,
+"checked": "2026-09-16"
+},
+"pypa/hatch": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7236,
+"checked": "2026-09-16"
+},
+"qaswqas2/hyperliquid-grid-trading-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"qaswqas2/hyperliquid-liquidation-hunter-bot": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 1 commit(s)"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"radareorg/radare2": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 24812,
+"checked": "2026-09-16"
+},
+"ranaroussi/yfinance": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 25258,
+"checked": "2026-09-16"
+},
+"react/react": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 250484,
+"checked": "2026-09-16"
+},
+"reake/tanstack-start-i18n-template": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 23,
+"checked": "2026-09-16"
+},
+"redis/redis": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 76381,
+"checked": "2026-09-16"
+},
+"rfordatascience/tidytuesday": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8395,
+"checked": "2026-09-16"
+},
+"robertmartin8/AmericanPutConvexity": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"rockerBOO/awesome-neovim": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21388,
+"checked": "2026-09-16"
+},
+"rohitg00/ai-engineering-from-scratch": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 54769,
+"checked": "2026-09-16"
+},
+"rustdesk/rustdesk": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 123776,
+"checked": "2026-09-16"
+},
+"ruvnet/RuView": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 94245,
+"checked": "2026-09-16"
+},
+"ruvnet/ruClip": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"ruvnet/ruflo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 72596,
+"checked": "2026-09-16"
+},
+"sahat/hackathon-starter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 35254,
+"checked": "2026-09-16"
+},
+"saltstack/salt": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15657,
+"checked": "2026-09-16"
+},
+"scikit-hep/awkward": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 976,
+"checked": "2026-09-16"
+},
+"semgrep/semgrep": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16663,
+"checked": "2026-09-16"
+},
+"shaheeryasirofficial/SmuggleMyPayload": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 30,
+"checked": "2026-09-16"
+},
+"shikakun/konpeito": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"sickn33/agentic-awesome-skills": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 46487,
+"checked": "2026-09-16"
+},
+"sieblyio/awesome-crypto-examples": {
+"ok": true,
+"hard": [],
+"soft": [
+"README links to t.me/"
+],
+"stars": 99,
+"checked": "2026-09-16"
+},
+"sigstore/cosign": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6306,
+"checked": "2026-09-16"
+},
+"siteboon/claudecodeui": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13705,
+"checked": "2026-09-16"
+},
+"sjkim1127/Reversecore_MCP": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 202,
+"checked": "2026-09-16"
+},
+"soft-track/soft-track": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 12 days old"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"solving-bitcoin/bitcoin-scripts": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 15 days old"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"spcl/dace": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 594,
+"checked": "2026-09-16"
+},
+"spec-kitty/spec-kitty": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1628,
+"checked": "2026-09-16"
+},
+"spectrelabo/fantaofficina": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 43 days old"
+],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"stefan-jansen/machine-learning-for-trading": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 20913,
+"checked": "2026-09-16"
+},
+"stoatchat/stoatchat": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3328,
+"checked": "2026-09-16"
+},
+"stockalgo/stolgo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 351,
+"checked": "2026-09-16"
+},
+"streamlit/streamlit": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 45766,
+"checked": "2026-09-16"
+},
+"stripe-samples/checkout-one-time-payments": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1061,
+"checked": "2026-09-16"
+},
+"superradcompany/microsandbox": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8272,
+"checked": "2026-09-16"
+},
+"swisskyrepo/PayloadsAllTheThings": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 80903,
+"checked": "2026-09-16"
+},
+"tableau/TabPy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1653,
+"checked": "2026-09-16"
+},
+"tableau/hyper-api-samples": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 154,
+"checked": "2026-09-16"
+},
+"tableau/server-client-python": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 715,
+"checked": "2026-09-16"
+},
+"tabler/tabler": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 41704,
+"checked": "2026-09-16"
+},
+"tensorflow/tensorflow": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 200131,
+"checked": "2026-09-16"
+},
+"terrakube-io/terrakube": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 959,
+"checked": "2026-09-16"
+},
+"tigusigalpa/goldsky-go": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"tigusigalpa/socialkit-go": {
+"ok": true,
+"hard": [],
+"soft": [
+"only 2 commit(s)"
+],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"tigusigalpa/socialkit-php": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"tomfunk/fungible": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 111,
+"checked": "2026-09-16"
+},
+"tradingview/lightweight-charts": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17280,
+"checked": "2026-09-16"
+},
+"trekhleb/javascript-algorithms": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 196734,
+"checked": "2026-09-16"
+},
+"trinodb/trino": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13240,
+"checked": "2026-09-16"
+},
+"trufflesecurity/trufflehog": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 27953,
+"checked": "2026-09-16"
+},
+"tshmieldev/sharp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 28,
+"checked": "2026-09-16"
+},
+"tutao/tutanota": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7919,
+"checked": "2026-09-16"
+},
+"ultraworkers/claw-code": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 195254,
+"checked": "2026-09-16"
+},
+"umami-software/umami": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 38859,
+"checked": "2026-09-16"
+},
+"unclecode/crawl4ai": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 83658,
+"checked": "2026-09-16"
+},
+"usekaneo/kaneo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9094,
+"checked": "2026-09-16"
+},
+"usnistgov/OSCAL": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 951,
+"checked": "2026-09-16"
+},
+"usnistgov/oscal-cli": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 71,
+"checked": "2026-09-16"
+},
+"vimalinx/LocalRouter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16,
+"checked": "2026-09-16"
+},
+"vinta/awesome-python": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 320987,
+"checked": "2026-09-16"
+},
+"virattt/ai-hedge-fund": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 63408,
+"checked": "2026-09-16"
+},
+"vortex-data/vortex": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3196,
+"checked": "2026-09-16"
+},
+"vsouza/awesome-ios": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 53364,
+"checked": "2026-09-16"
+},
+"wagtail/wagtail.org": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 81,
+"checked": "2026-09-16"
+},
+"wannabeyourfriend/awesome-harness-evolution": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 23,
+"checked": "2026-09-16"
+},
+"warungerik/API-GOPAY-MERCHANT": {
+"ok": true,
+"hard": [],
+"soft": [
+"README links to t.me/"
+],
+"stars": 10,
+"checked": "2026-09-16"
+},
+"warvantage/social-science-paste": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 36,
+"checked": "2026-09-16"
+},
+"wayphantomme/laby-finance": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 14,
+"checked": "2026-09-16"
+},
+"weidutech/PentestPi": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 17,
+"checked": "2026-09-16"
+},
+"wekan/wekan": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 21085,
+"checked": "2026-09-16"
+},
+"wikimedia/node-cssjanus": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 206,
+"checked": "2026-09-16"
+},
+"wireshark/wireshark": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 9887,
+"checked": "2026-09-16"
+},
+"wrtnlabs/evidence": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 13,
+"checked": "2026-09-16"
+},
+"yonatangross/orchestkit": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 277,
+"checked": "2026-09-16"
+},
+"yt-dlp/yt-dlp": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 191537,
+"checked": "2026-09-16"
+},
+"ytdl-org/youtube-dl": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 141245,
+"checked": "2026-09-16"
+},
+"zachealy1/orchestrator": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11,
+"checked": "2026-09-16"
+},
+"zan8in/afrog": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4415,
+"checked": "2026-09-16"
+},
+"zaproxy/zaproxy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 15775,
+"checked": "2026-09-16"
+},
+"zeek/zeek": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7965,
+"checked": "2026-09-16"
+},
+"zermello/turing-ai-agent": {
+"ok": true,
+"hard": [],
+"soft": [
+"owner account is 82 days old"
+],
+"stars": 12,
+"checked": "2026-09-16"
+},
+"Solido/awesome-flutter": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 61203,
+"checked": "2026-09-16"
+},
+"avelino/awesome-go": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 184344,
+"checked": "2026-09-16"
+},
+"cisagov/cset": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard Binary-Artifacts 0/10"
+],
+"stars": 1898,
+"checked": "2026-09-16"
+},
+"codecrafters-io/build-your-own-x": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 547606,
+"checked": "2026-09-16"
+},
+"donnemartin/system-design-primer": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 370300,
+"checked": "2026-09-16"
+},
+"florinpop17/app-ideas": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 97591,
+"checked": "2026-09-16"
+},
+"josephmisiti/awesome-machine-learning": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 74347,
+"checked": "2026-09-16"
+},
+"lf-edge/eve": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard Dangerous-Workflow 0/10"
+],
+"stars": 549,
+"checked": "2026-09-16"
+},
+"microsoft/PowerBI-Developer-Samples": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard: unmaintained"
+],
+"stars": 1953,
+"checked": "2026-09-16"
+},
+"microsoft/microsoft-ui-xaml": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 8429,
+"checked": "2026-09-16"
+},
+"microsoft/terminal": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 104907,
+"checked": "2026-09-16"
+},
+"mlflow/mlflow": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 27982,
+"checked": "2026-09-16"
+},
+"mozilla/uniffi-rs": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 4968,
+"checked": "2026-09-16"
+},
+"nextcloud/server": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 36813,
+"checked": "2026-09-16"
+},
+"nodejs/node": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 121961,
+"checked": "2026-09-16"
+},
+"oauth2-proxy/oauth2-proxy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 14963,
+"checked": "2026-09-16"
+},
+"odoo/odoo": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 54391,
+"checked": "2026-09-16"
+},
+"public-apis/public-apis": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 480801,
+"checked": "2026-09-16"
+},
+"redcanaryco/atomic-red-team": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 12548,
+"checked": "2026-09-16"
+},
+"ripienaar/free-for-dev": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 137570,
+"checked": "2026-09-16"
+},
+"rust-unofficial/awesome-rust": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 59371,
+"checked": "2026-09-16"
+},
+"sbilly/awesome-security": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 14860,
+"checked": "2026-09-16"
+},
+"snort3/snort3": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3422,
+"checked": "2026-09-16"
+},
+"sudheerj/reactjs-interview-questions": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 44807,
+"checked": "2026-09-16"
+},
+"vercel/next.js": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 142319,
+"checked": "2026-09-16"
+},
+"wazuh/wazuh": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 16897,
+"checked": "2026-09-16"
+},
+"wilsonfreitas/awesome-quant": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 29620,
+"checked": "2026-09-16"
+},
+"ytsaurus/ytsaurus": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2210,
+"checked": "2026-09-16"
+},
+"tldpprojectscout/tldp-case-studies": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 0,
+"checked": "2026-09-16"
+},
+"Checkmarx/2ms": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 156,
+"checked": "2026-09-16"
+},
+"HumanSignal/label-studio": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 28277,
+"checked": "2026-09-16"
+},
+"airbytehq/airbyte": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 22073,
+"checked": "2026-09-16"
+},
+"caddyserver/caddy": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 75774,
+"checked": "2026-09-16"
+},
+"chaoss/grimoirelab-perceval": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 324,
+"checked": "2026-09-16"
+},
+"demisto/content": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 1307,
+"checked": "2026-09-16"
+},
+"elastic/eui": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6364,
+"checked": "2026-09-16"
+},
+"enviodev/hyperindex": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 555,
+"checked": "2026-09-16"
+},
+"equinor/ert": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 161,
+"checked": "2026-09-16"
+},
+"google/edward2": {
+"ok": true,
+"hard": [],
+"soft": [
+"Scorecard: unmaintained"
+],
+"stars": 711,
+"checked": "2026-09-16"
+},
+"google/perfetto": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 6507,
+"checked": "2026-09-16"
+},
+"hiero-ledger/hiero-mirror-node": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 185,
+"checked": "2026-09-16"
+},
+"jason5ng32/MyIP": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 11890,
+"checked": "2026-09-16"
+},
+"l3montree-dev/devguard": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 160,
+"checked": "2026-09-16"
+},
+"lance-format/lance": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7086,
+"checked": "2026-09-16"
+},
+"man-group/ArcticDB": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2512,
+"checked": "2026-09-16"
+},
+"microsoft/fluentui": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 20274,
+"checked": "2026-09-16"
+},
+"microsoft/mssql-django": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 400,
+"checked": "2026-09-16"
+},
+"projectcalico/calico": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 7357,
+"checked": "2026-09-16"
+},
+"spiceai/spiceai": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 3082,
+"checked": "2026-09-16"
+},
+"the-momentum/open-wearables": {
+"ok": true,
+"hard": [],
+"soft": [],
+"stars": 2511,
+"checked": "2026-09-16"
+},
+"alvinunreal/awesome-submitlist": {
+"ok": true,
+"hard": [],
+"soft": [
+"149 stars on a 10-day-old repo (bought stars)"
+],
+"stars": 149,
+"checked": "2026-09-16"
+},
+"eldarshiraliyev/BugScanner": {
+"ok": false,
+"hard": [
+"94 stars on a 11-day-old repo (bought stars)"
+],
+"soft": [],
+"stars": 94,
+"checked": "2026-09-16"
+},
+"mubix/cyber-resume-reviewer-skill": {
+"ok": true,
+"hard": [],
+"soft": [
+"173 stars on a 8-day-old repo (bought stars)"
+],
+"stars": 173,
+"checked": "2026-09-16"
+},
+"GamePhanesStudio/GamePhanes": {
+"ok": false,
+"hard": [
+"473 stars on a 26-day-old repo (bought stars)"
+],
+"soft": [
+"owner account is 18 days old"
+],
+"stars": 473,
+"checked": "2026-09-16"
+},
+"Omni-Scientist/Awesome-AI-Scientist": {
+"ok": false,
+"hard": [
+"99 stars on a 22-day-old repo (bought stars)"
+],
+"soft": [
+"owner account is 74 days old"
+],
+"stars": 99,
+"checked": "2026-09-16"
+},
+"Tyche-MKR/scientific-agent-skills": {
+"ok": false,
+"hard": [
+"104 stars on a 16-day-old repo (bought stars)"
+],
+"soft": [
+"owner account is 25 days old"
+],
+"stars": 104,
+"checked": "2026-09-16"
+}
+}
