@@ -82,7 +82,7 @@ jobs:
   screen-index:
     if: github.event.schedule == '0 12 * * 1' || inputs.day == 'monday'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 350   # first uncached full-index screen is long; cached reuse is fast
     permissions:
       contents: read
     steps:

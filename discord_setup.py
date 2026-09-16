@@ -5,12 +5,17 @@ stdlib only (+ Pillow, optional, for the server icon).
 
   python discord_setup.py               # build / update everything, print secrets to set
   python discord_setup.py --invites 45  # print 45 single-use 7-day invite links (Discord max) (one per student, CSV)
+  python discord_setup.py --enroll      # give "TLDP Student" to every human member who has no role yet (safe: only the
+                                        # 45 invite links can get anyone in). Needs "Server Members Intent" ON in the dev portal.
+  python discord_setup.py --bot-steady  # try to trim the bot role to BOT_STEADY; prints the UI path if Discord refuses
 
 Reads DISCORD_BOT_TOKEN / DISCORD_GUILD_ID from env or ../secrets_local.py. Needs the bot invited with
 Manage Server, Manage Roles, Manage Channels, Manage Webhooks, Create Invite, Send/Manage Messages (805317681).
 
 What it does:
-  1. Server: verification Medium, notifications = mentions only, @everyone loses "Create Invite", TLDP icon.
+  1. Server: verification Medium, explicit-content filter = all members, notifications = mentions only,
+     @everyone loses Create Invite / Attach Files / Mention Everyone / private threads / expressions / events /
+     external apps, TLDP icon.
   2. Roles: "TLDP Staff", "TLDP Student" (gate), one mentionable role per major.
   3. Categories + channels. Feed channels are FORUMS: every drop is its own post/thread, students discuss
      inside it and react 🙋 to claim it. Feed + Collaborate + Study Rooms are hidden until /verify grants
@@ -23,6 +28,7 @@ import io
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 
@@ -37,6 +43,11 @@ API = "https://discord.com/api/v10"
 MAX_STUDENTS = 45
 
 CREATE_INVITE, VIEW, SEND = 0x1, 0x400, 0x800
+# stripped from @everyone: Create Invite, Attach Files, Mention Everyone, Create Private Threads,
+# Create Expressions, Create Events, Use External Apps (students inherit @everyone; roles carry 0)
+EVERYONE_STRIP = CREATE_INVITE | 1 << 15 | 1 << 17 | 1 << 36 | 1 << 43 | 1 << 44 | 1 << 50
+# steady-state bot perms: View, Send, Manage Messages, Read History, Use Commands, Send in Threads (reruns need STAFF_PERMS)
+BOT_STEADY = 1 << 10 | 1 << 11 | 1 << 13 | 1 << 16 | 1 << 31 | 1 << 38
 STAFF_PERMS = 805317681  # what the bot itself was invited with — a bot cannot grant more than it holds
 TEXT, VOICE, CATEGORY, FORUM = 0, 2, 4, 15
 
@@ -81,6 +92,7 @@ LAYOUT = {
         ("🧑‍💻│code-review-practice", "All tech majors: post code, a repo link or a short video walkthrough and get an interview-style code review from peers and staff. Read the pinned rubric first.", FORUM, None),
         ("🛡️│cyber-review-practice", "Cybersecurity: post lab write-ups, detection rules, scripts or video walkthroughs and get reviewed the way a security interview panel would. Read the pinned rubric first.", FORUM, None),
         ("🐙│github-academy", "Beginner GitHub videos and tutorials, in order. Start with 'Week 0'. Ask questions inside any post.", FORUM, None),
+        ("🎬│git-in-10-minutes", "Never used Git or GitHub? Ten short videos (5–10 min each) from verified or widely watched channels, in order: what Git is → first commit → push → branches → pull requests. Watch one, do it, reply with a question.", FORUM, None),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }
@@ -331,6 +343,19 @@ That's your proof you can run unfamiliar code safely — a real habit employers 
 4. When done, go to **github.com/codespaces** and **delete** the codespace so it stops using your quota.
 
 **Remember:** do not add real secrets; use the repo's example/sample env values. Ask here if you get stuck.""")],
+    "🎬│git-in-10-minutes": [
+        ('📌 How to use this channel (read first)', 'Ten videos, numbered 1 to 10, each 5–10 minutes, picked from verified channels (GitHub, VS Code, Net Ninja, Codecademy, ByteByteGo) or channels with hundreds of thousands of views. Watched and checked by TLDP staff on 2026-09-16.\n\n**How:** watch one, do the "Then do this" line, reply in the post if you get stuck. One a day and you are done in two weeks.\n**Order matters:** 1–3 explain the idea, 4–7 use buttons in VS Code, 8–10 use the terminal and branches.\n**After 10:** go to 🐙 github-academy Week 2 and make a real pull request.'),
+        ('1 · What Git actually is (4 min)', '**How Git Works: Explained in 4 Minutes** — ByteByteGo · 4:18 · 944K views · verified channel\nhttps://www.youtube.com/watch?v=e9lnsKot_SQ\n\n**You will learn:** The one idea to get: Git saves **snapshots** of your project, and GitHub is where those snapshots live online.\n**Then do this:** Nothing to install yet. Just watch.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('2 · Git for beginners, from GitHub itself (9 min)', '**A brief introduction to Git for beginners** — GitHub (official) · 9:08 · 2.0M views · verified channel\nhttps://www.youtube.com/watch?v=r8jQ9hVA2qs\n\n**You will learn:** Repository, commit, branch, and why teams use them. Straight from the company that runs GitHub.\n**Then do this:** Make a free account at github.com if you have not.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('3 · Git vs GitHub in 7 minutes', '**Git and Github Explained in 7 Minutes** — Tech With Diego · 7:37 · 214K views · widely watched\nhttps://www.youtube.com/watch?v=y-an0v208A0\n\n**You will learn:** Clears up the most common confusion: Git is the tool on your laptop, GitHub is the website.\n**Then do this:** Say out loud what the difference is. If you can, move on.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('4 · Using GitHub as a beginner (10 min)', "**How To Use GitHub For Beginners** — corbin · 10:29 · 1.6M views · verified channel\nhttps://www.youtube.com/watch?v=a9u2yZvsqHA\n\n**You will learn:** Create a repo, add files, and read someone else's repo on the website. No terminal.\n**Then do this:** Create your first repo with a README.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes)."),
+        ('5 · Git inside VS Code, official tutorial (7 min)', '**Using Git with Visual Studio Code (Official Beginner Tutorial)** — Visual Studio Code (official) · 6:56 · 2.0M views · verified channel\nhttps://www.youtube.com/watch?v=i_23KUAEtUM\n\n**You will learn:** Stage, commit and push with buttons instead of commands. This is how most students do it day to day.\n**Then do this:** Install VS Code + Git (links in 🐙 github-academy Week 1).\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('6 · Commit and push from VS Code (5 min)', '**How to Commit and Push to Github from VSCode** — The Code City · 5:06 · 353K views · widely watched\nhttps://www.youtube.com/watch?v=4dkNn93DIx4\n\n**You will learn:** The exact click-by-click: edit, stage, commit, push, refresh GitHub and see your change.\n**Then do this:** Push one change to the repo you made in step 4.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('7 · Git + GitHub in VS Code, from GitHub (9 min)', "**How to use Git and GitHub in VS Code | Tutorial for beginners** — GitHub (official) · 9:04 · 31K views · verified channel\nhttps://www.youtube.com/watch?v=NFjz1AGKA4c\n\n**You will learn:** GitHub's own 2026 walkthrough of the same flow, including cloning a repo down to your laptop.\n**Then do this:** Clone any public repo, change a file, commit.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes)."),
+        ('8 · Making commits, the command line way (7 min)', '**Git & GitHub Tutorial for Beginners #6 - Making Commits** — Net Ninja · 6:48 · 187K views · verified channel\nhttps://www.youtube.com/watch?v=Fhgga2s_RmM\n\n**You will learn:** `git add`, `git commit -m`, `git log`. Same thing as the buttons, now you know what they do.\n**Then do this:** Repeat step 6 using the terminal instead of buttons.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('9 · Branches (10 min)', '**Git & GitHub Tutorial for Beginners #8 - Branches** — Net Ninja · 10:07 · 394K views · verified channel\nhttps://www.youtube.com/watch?v=QV0kVNvkMxc\n\n**You will learn:** Why you never work directly on `main`, and how a branch lets you try things safely.\n**Then do this:** Make a branch, commit on it, switch back to main.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+        ('10 · What is a pull request? (8 min)', '**What is a pull request?** — Codecademy · 8:13 · 162K views · verified channel\nhttps://www.youtube.com/watch?v=For9VtrQx58\n\n**You will learn:** The last piece: how your branch gets reviewed and merged. This is what open-source contribution is.\n**Then do this:** Open a pull request on your own repo and merge it. Then go to 🐙 github-academy Week 2.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
+    ],
     "🐙│github-academy": [
         ("Run it safely — sandbox before you run anyone's code", """Before Week 0, one habit that protects your laptop: **never run code you did not write on your real machine first.** A repo passing our checks is not proof it is safe.
 
@@ -393,6 +418,7 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 • **#announcements** — staff posts.
 • **🧑‍💻 code-review-practice / 🛡️ cyber-review-practice** — post code, write-ups or a short video and get an interview-style review (3-2-1 format, rubric pinned). Reviewing others counts too.
 • **🐙 github-academy** — new to GitHub? Four short weekly lessons, videos and tutorials, in order. Start at Week 0.
+• **🎬 git-in-10-minutes** — never touched Git? Ten 5–10 minute videos, numbered 1 to 10. Watch one a day.
 
 **Spring requirements (both graded)**
 • **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
@@ -405,7 +431,7 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 """
 
 
-def api(method, path, body=None):
+def api(method, path, body=None, _retry=True):
     req = urllib.request.Request(f"{API}{path}", method=method, data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Authorization": f"Bot {TOKEN}", "Content-Type": "application/json",
                                           "User-Agent": "project-scout (github.com/tldpprojectscout/project-scout, 1.0)"})
@@ -413,7 +439,11 @@ def api(method, path, body=None):
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r) if r.status != 204 else None
     except urllib.error.HTTPError as e:
-        raise SystemExit(f"{method} {path} -> {e.code}: {e.read()[:300].decode(errors='replace')}")
+        raw = e.read()[:300]
+        if e.code == 429 and _retry:  # Discord rate limit: wait what it asks, then retry once
+            time.sleep(float(json.loads(raw).get("retry_after", 5)) + 0.5)
+            return api(method, path, body, _retry=False)
+        raise SystemExit(f"{method} {path} -> {e.code}: {raw.decode(errors='replace')}")
 
 
 def icon_png() -> str | None:
@@ -467,21 +497,43 @@ def main() -> int:
         return 1
     if "--invites" in sys.argv:
         return invites(int(sys.argv[sys.argv.index("--invites") + 1]))
+    if "--enroll" in sys.argv:
+        roles = {r["name"]: r["id"] for r in api("GET", f"/guilds/{GUILD}/roles")}
+        keep = {roles["TLDP Staff"], roles["TLDP Student"]}
+        n = 0
+        for m in api("GET", f"/guilds/{GUILD}/members?limit=100"):  # 403 => enable Server Members Intent (dev portal > Bot)
+            if m["user"].get("bot") or keep & set(m["roles"]):
+                continue
+            api("PUT", f"/guilds/{GUILD}/members/{m['user']['id']}/roles/{roles['TLDP Student']}")
+            print("enrolled:", m["user"]["username"]); n += 1
+        print(f"{n} enrolled")
+        return 0
+    if "--bot-steady" in sys.argv:
+        roles = api("GET", f"/guilds/{GUILD}/roles")
+        bot_role = next(r for r in roles if r.get("tags", {}).get("bot_id") == APP_ID)
+        try:
+            api("PATCH", f"/guilds/{GUILD}/roles/{bot_role['id']}", {"permissions": str(BOT_STEADY)})
+            print("bot role trimmed to steady-state perms; re-elevate in Server Settings > Roles before rerunning setup")
+        except SystemExit as e:  # Discord: a bot cannot edit its own (top) managed role
+            print("Discord refused:", e)
+            print(f"Owner: Server Settings > Roles > {bot_role['name']} > keep only View Channels, Send Messages, "
+                  "Manage Messages, Read Message History, Use Application Commands, Send Messages in Threads")
+        return 0
     if "--staff" in sys.argv:
         return staff(sys.argv[sys.argv.index("--staff") + 1:])
     print("guild:", api("GET", f"/guilds/{GUILD}")["name"])
 
     # 1. server hardening + icon
-    patch = {"verification_level": 2, "default_message_notifications": 1}
+    patch = {"verification_level": 2, "default_message_notifications": 1, "explicit_content_filter": 2}
     icon = icon_png()
     if icon:
         patch["icon"] = icon
     api("PATCH", f"/guilds/{GUILD}", patch)
     roles = {r["name"]: r for r in api("GET", f"/guilds/{GUILD}/roles")}
     everyone = roles["@everyone"]
-    api("PATCH", f"/guilds/{GUILD}/roles/{everyone['id']}", {"permissions": str(int(everyone["permissions"]) & ~CREATE_INVITE)})
+    api("PATCH", f"/guilds/{GUILD}/roles/{everyone['id']}", {"permissions": str(int(everyone["permissions"]) & ~EVERYONE_STRIP)})
     bot_role = next((r for r in roles.values() if r.get("tags", {}).get("bot_id") == APP_ID), None)
-    print("server: verification=medium, invites staff-only, icon", "set" if icon else "skipped (no Pillow)")
+    print("server: verification=medium, explicit filter=all, @everyone stripped, icon", "set" if icon else "skipped (no Pillow)")
 
     # 2. roles
     def role(name, perms, color, hoist=False):

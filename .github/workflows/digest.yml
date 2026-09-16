@@ -27,7 +27,7 @@ concurrency:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 350   # first uncached run screens the whole index (clone+4 engines each); later runs reuse the cache and finish in minutes
     permissions:
       contents: read
     steps:
