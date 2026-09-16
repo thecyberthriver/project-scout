@@ -71,6 +71,7 @@ LAYOUT = {
     "🎯 SPRING REQUIREMENTS": (True, [
         ("🏁│nyc-hackathons", "In-person hackathons in the NYC area, city-wide + private + public sector, updated every 6 h from Devpost and MLH. Attend one by spring. Reply in a post to find teammates.", FORUM, "hackathons"),
         ("🎓│capstone", "Your capstone project, judged in spring. Post your idea, repo link, weekly progress, and questions for staff.", TEXT, None),
+        ("📁│case-studies", "Contribute to real case-study collections, and add your own case to github.com/thecyberthriver/tldp-case-studies. Every merged case is announced here with your name. Monday: case of the week.", TEXT, "cases"),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
 }
@@ -94,6 +95,7 @@ Private server for the 45 TLDP students. Please don't share the invite link.
 **Spring requirements (both graded)**
 • **🏁 nyc-hackathons** — attend one in-person hackathon in the NYC area. New listings from Devpost and MLH land here automatically; reply in a post to find teammates.
 • **🎓 capstone** — your capstone project, judged in spring. Post your idea, your repo, and weekly progress there.
+• **📁 case-studies** — contribute to real case collections (Tidy Tuesday, Atomic Red Team, Sigma, OWASP, Open Case Studies…) and write one case of your own in the TLDP case library on GitHub. Merged cases are announced here with your name.
 
 **Start now:** /verify, introduce yourself, pick one repo this week and open one good-first-issue PR.
 """

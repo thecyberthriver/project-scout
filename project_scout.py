@@ -168,6 +168,53 @@ def course_rotation(major: str) -> list[tuple[str, str, int]]:
     return [(f"🎓 {cs[i][0]}", cs[i][1], 1)]
 
 
+# Case studies students can CONTRIBUTE to: community collections on GitHub (live open-issue counts) + legit
+# non-GitHub challenges (links). Verified 2026-09-15; archived repos left out. "all" applies to every major.
+CASES_REPO = "thecyberthriver/tldp-case-studies"
+CASES = {
+    "all": [(CASES_REPO, "TLDP's own case library — every student contributes one case by spring (template inside)")],
+    "data": [("rfordatascience/tidytuesday", "a new real dataset every Tuesday; submit your analysis by pull request"),
+             ("https://www.opencasestudies.org/", "Johns Hopkins Open Case Studies — full data cases (repos at github.com/opencasestudies)"),
+             ("https://www.makeovermonday.co.uk/", "Makeover Monday — weekly Tableau / Power BI challenge, publish yours"),
+             ("https://www.workout-wednesday.com/", "Workout Wednesday — weekly Tableau and Power BI build challenges")],
+    "cyber": [("redcanaryco/atomic-red-team", "one test per ATT&CK technique; add or fix an atomic"),
+              ("SigmaHQ/sigma", "detection rules from real incidents; contribute a rule"),
+              ("OWASP/CheatSheetSeries", "case-style secure-coding guidance; issues welcome newcomers"),
+              ("center-for-threat-informed-defense/adversary_emulation_library", "full adversary emulation plans (case studies of real intrusions)"),
+              ("MISP/misp-galaxy", "threat-actor and tool knowledge base; add or update entries"),
+              ("https://thedfirreport.com/", "The DFIR Report — real incident write-ups to study (read-only)")],
+    "swe": [("aosabook/aosabook", "The Architecture of Open Source Applications — chapter-length case studies of real systems"),
+            ("donnemartin/system-design-primer", "system-design case studies; pull requests welcome"),
+            ("https://hacktoberfest.com/", "Hacktoberfest (October) — four merged pull requests, counts as an event")],
+    "pm": [("https://openpracticelibrary.com/", "Red Hat Open Practice Library — practices with worked examples; contribute via its GitHub"),
+           ("https://guides.18f.gov/methods/", "18F Methods — US public-sector delivery methods (read-only)"),
+           ("https://www.agilealliance.org/resources/experience-reports/", "Agile Alliance experience reports — real project retrospectives")],
+    "marketing": [("PostHog/posthog.com", "product-analytics docs and tutorials; write a how-to"),
+                  ("mautic/user-documentation", "marketing-automation docs; 150+ open issues"),
+                  ("https://www.kaggle.com/datasets?search=marketing", "marketing datasets for your own case write-up")],
+    "fintech": [("OpenBB-finance/OpenBB", "contribute an analysis or data integration to the open-source terminal"),
+                ("https://www.kaggle.com/competitions?searchQuery=finance", "finance competitions with public write-ups")],
+    "quant": [("QuantConnect/Lean", "the open backtesting engine; research and strategy contributions"),
+              ("https://www.quantconnect.com/research", "community research posts — publish a strategy write-up"),
+              ("https://www.kaggle.com/competitions?searchQuery=trading", "trading competitions with public notebooks")],
+}
+
+
+def render_case(entry: tuple[str, str], repo: dict | None) -> str:
+    target, blurb = entry
+    if repo:
+        return (f'• <a href="{repo["html_url"]}">{esc(repo["full_name"])}</a> ⭐{repo["stargazers_count"]} · {repo.get("open_issues_count", 0)} open issues · {difficulty(repo)}\n'
+                f'  {esc(blurb)} · <a href="{repo["html_url"]}{GFI}">good first issues</a>')
+    return f'• <a href="{target}">{esc(target.replace("https://", "").rstrip("/"))}</a>\n  {esc(blurb)}'
+
+
+def cases_for(key: str) -> list[tuple[tuple[str, str], dict | None]]:
+    out = []
+    for entry in CASES.get(key, []) + CASES["all"]:
+        out.append((entry, gh_repo(entry[0]) if "/" in entry[0] and not entry[0].startswith("http") else None))
+    return out
+
+
 def cyber_rotation() -> list[tuple[str, str, int]]:
     """Two CISSP domains per run (all eight covered every 4 runs) plus the general cyber search."""
     keys = list(CYBER_DOMAINS)
@@ -441,7 +488,12 @@ def refresh_static() -> None:
     for k, (label, _t, names, ref) in CYBER_DOMAINS.items():
         domains[k] = {"label": label, "ref": list(ref), "repos": [row(r) for r in (gh_repo(n) for n in names) if r]}
         time.sleep(0.3)
-    st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains})
+    cases = {}
+    for key in list(MAJORS) + ["all"]:
+        cases[key] = [{"target": e[0], "blurb": e[1], "repo": row(r) | {"open_issues_count": r.get("open_issues_count", 0)} if r else None}
+                      for e, r in (((e, gh_repo(e[0]) if "/" in e[0] and not e[0].startswith("http") else None) for e in CASES.get(key, [])))]
+        time.sleep(0.3)
+    st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains, "cases": cases})
 
 
 def save_index() -> None:
@@ -757,6 +809,17 @@ def main() -> int:
             if os.environ.get("DISCORD_WEBHOOKS"):
                 discord(key, head + "\n" + "\n".join(rows))
             print(f"posted course map: {key} ({len(rows)} courses)")
+        return 0
+    if "--cases" in sys.argv:  # one-time: "case studies you can contribute to" per major
+        for key, (label, *_r) in MAJORS.items():
+            rows = [render_case(e, r) for e, r in cases_for(key)]
+            text = (f"\n<b>📁 {label} — case studies you can contribute to</b>\n"
+                    "<i>Real collections from legit orgs. Pick one, read its CONTRIBUTING file, claim an issue. Your own case goes in the TLDP library.</i>\n"
+                    + "\n".join(rows))
+            for m in messages([text]):
+                send(m)
+            discord(key, text)
+        print("posted case-study sections for all majors")
         return 0
     if "--cyber-domains" in sys.argv:  # one-time: 8 curated posts (one per CISSP domain) into the cyber channel
         for k, (label, _t, repos, (ref_name, ref_url)) in CYBER_DOMAINS.items():

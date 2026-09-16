@@ -32,7 +32,8 @@ const RESEARCH_ANCHOR = { quant: '"quantitative finance"', fintech: '"financial"
 const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
                      org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
                      basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start",
-                     hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons" };
+                     hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons",
+                     case: "cases", casestudy: "cases", casestudies: "cases", contribute2: "cases" };
 // SWE flavors: one language per GitHub query, so /swe runs Python + SQL + frontend in parallel by default;
 // "/swe sql", "/swe frontend", "/swe java" … pick one. Mirrors BUILD_QUERIES in ../project_scout.py.
 export const SWE_FLAVORS = {
@@ -106,6 +107,22 @@ export function coursesHelp(major) {
   return `<b>🎓 ${MAJORS[m].label} — course codes you can search</b>\n` +
     Object.entries(COURSES[m]).map(([k, [name]]) => `${cmd} ${k} — ${name}`).join("\n") +
     `\nAdd keywords after the code: <code>${cmd} ${Object.keys(COURSES[m])[0]} python</code>`;
+}
+// Case studies students can contribute to — served from index.static.cases (refreshed weekly by the feed).
+export async function caseItems(major) {
+  const idx = await loadIndex().catch(() => null);
+  const cs = idx?.static?.cases;
+  if (!cs) return null;
+  const list = [...(cs[major] || []), ...(cs.all || [])];
+  return list.length ? list : null;
+}
+export function renderCases(head, items, md = false) {
+  const e = md ? (s) => String(s) : esc;
+  const link = (t, u) => (md ? `[${t}](<${u}>)` : `<a href="${u}">${e(t)}</a>`);
+  const rows = items.map(({ target, blurb, repo }) => repo
+    ? `• ${link(repo.full_name, repo.html_url)} ⭐${repo.stargazers_count} · ${repo.open_issues_count || 0} open issues · ${difficulty(repo)}\n  ${e(blurb)} · ${link("good first issues", repo.html_url + GFI)}`
+    : `• ${link(target.replace("https://", "").replace(/\/$/, ""), target)}\n  ${e(blurb)}`);
+  return `${head}\n${rows.join("\n")}\n\n${md ? "*" : "<i>"}Pick one, read its CONTRIBUTING file, claim an issue. Your own case goes in the TLDP library.${md ? "*" : "</i>"}`;
 }
 // Cybersecurity by the 8 CISSP domains: "/cyber d7", "/cyber d7 sigma". Mirrors CYBER_DOMAINS in ../project_scout.py.
 export const CYBER_DOMAINS = {
@@ -257,7 +274,8 @@ const HELP =
   "/research &lt;major&gt; — fresh paper code (cites arXiv) to reproduce or join\n" +
   "/orgs [major] — non-profit, public-sector and company repos that welcome contributors (resume-ready, with LinkedIn links)\n" +
   "/basics &lt;major&gt; — start here: curated idea lists, roadmaps, beginner courses and sample apps\n" +
-  "/hackathons — NYC in-person hackathons, live from Devpost + MLH\n\n" +
+  "/hackathons — NYC in-person hackathons, live from Devpost + MLH\n" +
+  "/cases &lt;major&gt; — real case-study collections you can contribute to, plus the TLDP case library\n\n" +
   "Add keywords to narrow: <code>/cyber honeypot</code>, <code>/oss data pandas</code>, <code>/research quant</code>.\n" +
   "Any other text = keyword search across all majors.\n\n" +
   "<i>New repos are pushed here automatically as they appear (checked every 2 h).</i>";
@@ -433,7 +451,7 @@ export function parse(text) {
   // in groups Telegram sends "/oss@BotName cyber" — drop the @mention
   const words = text.trim().replace(/^\/(\w+)@\w+/, "$1").replace(/^\//, "").split(/\s+/);
   let lane = words[0].toLowerCase();
-  lane = LANES[lane] || ["orgs", "start", "hackathons"].includes(lane) ? lane : LANE_ALIAS[lane];
+  lane = LANES[lane] || ["orgs", "start", "hackathons", "cases"].includes(lane) ? lane : LANE_ALIAS[lane];
   if (lane) words.shift(); else lane = "build";
   let major = (words[0] || "").toLowerCase();
   major = MAJORS[major] ? major : ALIAS[major] || null;
@@ -466,6 +484,12 @@ async function handleUpdate(env, update) {
   if (lane === "hackathons") {
     try { await tgSend(env, chatId, renderHacks("<b>🏁 NYC in-person hackathons (Devpost + MLH, live)</b>", await hackathonsNyc())); }
     catch (e) { await tgSend(env, chatId, `⚠️ ${esc(e.message)}`); }
+    return;
+  }
+  if (lane === "cases") {
+    const items = await caseItems(major || "swe");
+    await tgSend(env, chatId, items ? renderCases(`<b>📁 Case studies you can contribute to · ${MAJORS[major || "swe"].label}</b>`, items)
+      : "Case-study index isn't built yet — try again after the next feed run.");
     return;
   }
   const laneLabel = { orgs: "🤝 Mission-driven orgs", start: "📚 Start here — ideas & basics" }[lane] || LANES[lane].label;

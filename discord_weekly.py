@@ -81,9 +81,13 @@ def hackathons() -> str:
             f"\n\nNew listings post automatically in 🏁 nyc-hackathons. More: {more}")
 
 
-def webhook_post(url: str, content: str) -> None:
-    urllib.request.urlopen(urllib.request.Request(url, data=json.dumps({"content": content[:2000]}).encode(),
+def webhook_post_body(url: str, body: dict) -> None:
+    urllib.request.urlopen(urllib.request.Request(url + "?wait=true", data=json.dumps(body).encode(),
                                                   headers={"Content-Type": "application/json", "User-Agent": UA}), timeout=30)
+
+
+def webhook_post(url: str, content: str) -> None:
+    webhook_post_body(url, {"content": content[:2000]})
 
 
 def telegram(text: str) -> None:
@@ -92,13 +96,70 @@ def telegram(text: str) -> None:
                                                   data=body, headers={"Content-Type": "application/json"}), timeout=30)
 
 
+def gh(path: str):
+    h = {"User-Agent": UA, "Accept": "application/vnd.github+json"}
+    if os.environ.get("GITHUB_TOKEN"):
+        h["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
+    with urllib.request.urlopen(urllib.request.Request(f"https://api.github.com{path}", headers=h), timeout=30) as r:
+        return json.load(r)
+
+
+def newest_issues(repo: str, n: int = 2) -> list[str]:
+    """Newest open issues in a case collection = cases waiting for someone (1 search request)."""
+    import time
+    time.sleep(2.5)
+    q = urllib.parse.quote(f"repo:{repo} is:issue is:open")
+    items = gh(f"/search/issues?q={q}&sort=created&order=desc&per_page={n}").get("items", [])
+    return [f"  · [{i['title'][:80]}](<{i['html_url']}>)" for i in items]
+
+
+def case_of_the_week() -> dict[str, str]:
+    """Monday drop per forum: this week's live cases to pick up. Keys match DISCORD_WEBHOOKS."""
+    y = datetime.now(timezone.utc).year
+    out = {}
+    try:  # data: newest Tidy Tuesday dataset + the two Tableau/Power BI weekly challenges
+        folders = sorted(f["name"] for f in gh(f"/repos/rfordatascience/tidytuesday/contents/data/{y}") if f["type"] == "dir")
+        latest = folders[-1]
+        tt = f"https://github.com/rfordatascience/tidytuesday/tree/main/data/{y}/{latest}"
+        out["data"] = (f"📁 **Case of the week — Data Analytics**\n• Tidy Tuesday **{latest}** dataset: <{tt}> — analyze it, open a pull request with your notebook or chart.\n"
+                       f"• Makeover Monday: <https://www.makeovermonday.co.uk/> · Workout Wednesday: <https://www.workout-wednesday.com/> (Tableau / Power BI, publish and share the link here)")
+    except Exception as e:
+        print(f"tidytuesday: {e}", file=sys.stderr)
+    for key, repos, label in (("cyber", ["redcanaryco/atomic-red-team", "SigmaHQ/sigma"], "Cybersecurity"),
+                              ("swe", ["donnemartin/system-design-primer", "aosabook/aosabook"], "Software Engineering"),
+                              ("marketing", ["PostHog/posthog.com", "mautic/user-documentation"], "Digital Marketing"),
+                              ("fintech", ["OpenBB-finance/OpenBB"], "Finance / FinTech"),
+                              ("quant", ["QuantConnect/Lean"], "Quant")):
+        lines = []
+        for r in repos:
+            try:
+                lines += [f"• **{r}** — newest open issues:"] + newest_issues(r)
+            except Exception as e:
+                print(f"{r}: {e}", file=sys.stderr)
+        if lines:
+            out[key] = f"📁 **Case of the week — {label}**\n" + "\n".join(lines) + "\nClaim one by commenting on the issue, then post your PR in #show-your-work."
+    out["cases"] = ("📁 **Case of the week** — new cases posted in each major's forum. Reminder: every student adds one case of their own to "
+                    "<https://github.com/thecyberthriver/tldp-case-studies> by spring (template in the repo).")
+    return out
+
+
 def main() -> int:
     day = "friday" if "--friday" in sys.argv else "monday" if "--monday" in sys.argv else \
         ("friday" if datetime.now(timezone.utc).weekday() == 4 else "monday")
     if day == "monday":
         telegram("📌 Pick of the week: choose 1 repo per major from this week's drops in TLDP_2026_2027, "
                  "post it in #announcements and pin it. 45 people focus better on 7 shared projects than on 200.")
-        print("monday reminder sent")
+        hooks = json.loads(os.environ.get("DISCORD_WEBHOOKS") or "{}")
+        for key, text in case_of_the_week().items():
+            if hooks.get(key):
+                body = {"content": text[:2000]}
+                if key != "cases":
+                    body["thread_name"] = f"📁 Case of the week · {datetime.now():%b %d}"  # feed channels are forums
+                try:
+                    webhook_post_body(hooks[key], body)
+                except Exception as e:
+                    print(f"case post {key}: {e}", file=sys.stderr)
+        print("monday reminder + case of the week sent")
         return 0
     channels = {c["name"]: c for c in api("GET", f"/guilds/{GUILD}/channels")}
     post(channels["find-a-team"]["id"], claims(channels))
