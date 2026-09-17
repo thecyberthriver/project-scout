@@ -7,6 +7,9 @@
  *
  * Secrets (wrangler secret put … -c wrangler.discord.toml): DISCORD_PUBLIC_KEY, DISCORD_APP_ID, DISCORD_GUILD_ID,
  *   STUDENT_ROLE_ID, STAFF_ROLE_ID. All five are required; a missing one fails closed.
+ * `/verify` grants the TLDP Student role (which unlocks every gated channel) to whoever runs it, so a student who
+ *   joined with a staff-issued invite can self-enrol. It needs DISCORD_BOT_TOKEN; without it verification falls back
+ *   to "ask staff". The invite link is the gate — keep issuing single-use invites (enroll.py --invites).
  */
 import { MAJORS, LANES, OTHER_LANES, PAUSE_MSG, loadPublished, answerFor, mdEsc } from "./worker.js";
 
@@ -84,6 +87,32 @@ export function allowed(i, env) {
 const json = (o) => new Response(JSON.stringify(o), { headers: { "content-type": "application/json" } });
 const ephemeral = (content) => json({ type: 4, data: { content, flags: 64, allowed_mentions: { parse: [] } } });
 export const VERIFY_MSG = "Verification is handled by TLDP staff. Post in #introductions and a staff member will enroll you.";
+export const VERIFY_OK = "You're verified. Every channel is now visible — if the list looks the same, reload Discord (Ctrl+R). Say hi in #introductions.";
+export const VERIFY_ALREADY = "You're already verified — you can see every channel. If the list looks short, reload Discord (Ctrl+R).";
+export const VERIFY_FAIL = "Discord wouldn't apply the role just now. Post in #introductions and a staff member will enroll you.";
+
+// What /verify should do for this caller. Pure (no network) so it can be checked without Discord.
+export function verifyPlan(i, env) {
+  if (!env.DISCORD_BOT_TOKEN || !env.STUDENT_ROLE_ID || !env.DISCORD_GUILD_ID) return { action: "unconfigured" };
+  const roles = i.member?.roles || [];
+  if (roles.includes(String(env.STUDENT_ROLE_ID)) || (env.STAFF_ROLE_ID && roles.includes(String(env.STAFF_ROLE_ID))))
+    return { action: "already" };
+  const userId = String(i.member?.user?.id || "");
+  if (!/^\d{5,25}$/.test(userId)) return { action: "unconfigured" };
+  return { action: "grant", userId };
+}
+
+async function grantStudent(env, userId) {  // PUT is idempotent: re-running /verify is harmless
+  const url = `https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${userId}/roles/${env.STUDENT_ROLE_ID}`;
+  try {
+    const r = await fetch(url, { method: "PUT", headers: { authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "content-length": "0" } });
+    if (!r.ok) console.log("verify grant failed", r.status);
+    return r.ok;
+  } catch (e) {
+    console.log("verify grant error", e?.message);
+    return false;
+  }
+}
 
 async function answer(env, interaction, lane, major, extra) {
   let content;
@@ -111,7 +140,13 @@ export default {
     if (typeof i.id !== "string" || replay(i.id)) return ephemeral("Duplicate request ignored.");
     const v = validate(i, env);
     if (!v.ok) return ephemeral(v.msg);
-    if (v.name === "verify") return ephemeral(VERIFY_MSG);           // never assigns roles, no roster, no name matching
+    if (v.name === "verify") {                                        // grants TLDP Student; no roster, no name matching
+      const plan = verifyPlan(i, env);
+      if (plan.action === "unconfigured") return ephemeral(VERIFY_MSG);
+      if (plan.action === "already") return ephemeral(VERIFY_ALREADY);
+      if (rateLimited(plan.userId)) return ephemeral("Slow down — try again in a minute.");
+      return ephemeral((await grantStudent(env, plan.userId)) ? VERIFY_OK : VERIFY_FAIL);
+    }
     const userId = String(i.member?.user?.id || "");
     if (!userId || !allowed(i, env)) return ephemeral("Project Scout isn't configured for you yet. Ask TLDP staff to enroll you.");
     if (rateLimited(userId)) return ephemeral("Slow down — try again in a minute.");

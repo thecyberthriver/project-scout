@@ -156,7 +156,10 @@ shown, and pause with everything else when screening is stale. `huggingface.co` 
 Your roster of student names is the distribution list, not a self-typed password. `python enroll.py --invites` mints
 one unique, single-use, 7-day Discord invite per roster entry (into gitignored `roster_invites_local.json`, never
 printed); staff DM each student their link. `python enroll.py --grant` gives the Student role to everyone who joined.
-`/verify` no longer checks names. Stronger SSO / signed-token options are documented but not enabled.
+`/verify` checks no names: it grants the **TLDP Student** role (which unlocks every gated channel) to whoever runs it,
+so the invite link is the gate. Keep issuing single-use invites. `python discord_setup.py --enroll` grants the same
+role to everyone already in the server, for students who joined before verifying (it uses member search, so the
+privileged Server Members Intent stays off). Stronger SSO / signed-token options are documented but not enabled.
 
 ## Tuning
 
@@ -206,6 +209,9 @@ channel (#quant-projects … #open-source-orgs).
 `discord_weekly.py` + `.github/workflows/weekly.yml`: Friday it posts the 🙋 claims of the week
 to #find-a-team, a leaderboard of links posted in #show-your-work, and open hackathons (Devpost)
 to #announcements; Monday it reminds you (private Telegram) to pin a "pick of the week".
-`/verify name: major:` (Discord) matches the student against the `ROSTER` Worker secret (JSON
-array of names — never commit it) and grants the "TLDP Student" + major roles that unlock the
-gated categories. `python discord_setup.py --invites 45` prints single-use invite links.
+`/verify` (Discord) grants the "TLDP Student" role that unlocks every gated category — no name
+matching, no roster: anyone holding a staff-issued invite can self-enrol. It needs the
+`DISCORD_BOT_TOKEN` Worker secret; without it the command falls back to "ask staff". Major roles
+are cosmetic (mentions only) and gate nothing. Check the logic with `node test_verify.mjs`. `python discord_setup.py --invites 45` prints single-use invite links.
+`python discord_setup.py --seed` adds any new forum channel + missing seed posts without a full rebuild
+(used for **#🔌│mcp-servers-for-codex**: per-major MCP servers students install with `codex mcp add`, plus a NYC open-data post).

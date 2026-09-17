@@ -22,11 +22,13 @@ What it does:
      "TLDP Student"; START HERE stays visible so newcomers can read #welcome and run /verify.
   4. One webhook per feed forum (+ #announcements) -> printed as the DISCORD_WEBHOOKS secret.
   5. A 45-use 7-day invite on #welcome + a pinned welcome post.
+  --seed: only create new forum channels + missing seed posts (safe rerun; needs Manage Channels once).
 """
 import base64
 import io
 import json
 import os
+import string
 import sys
 import time
 import urllib.parse
@@ -92,6 +94,7 @@ LAYOUT = {
         ("🧑‍💻│code-review-practice", "All tech majors: post code, a repo link or a short video walkthrough and get an interview-style code review from peers and staff. Read the pinned rubric first.", FORUM, None),
         ("🛡️│cyber-review-practice", "Cybersecurity: post lab write-ups, detection rules, scripts or video walkthroughs and get reviewed the way a security interview panel would. Read the pinned rubric first.", FORUM, None),
         ("🐙│github-academy", "Beginner GitHub videos and tutorials, in order. Start with 'Week 0'. Ask questions inside any post.", FORUM, None),
+        ("🔌│mcp-servers-for-codex", "Plug real data and tools into Codex with MCP servers. One post per major with copy-paste install commands. Read the top post first.", FORUM, None),
         ("🎬│git-in-10-minutes", "Never used Git or GitHub? Ten short videos (5–10 min each) from verified or widely watched channels, in order: what Git is → first commit → push → branches → pull requests. Watch one, do it, reply with a question.", FORUM, None),
     ]),
     "🎧 STUDY ROOMS": (True, [("Study Room 1", "", VOICE, None), ("Study Room 2", "", VOICE, None)]),
@@ -343,6 +346,191 @@ That's your proof you can run unfamiliar code safely — a real habit employers 
 4. When done, go to **github.com/codespaces** and **delete** the codespace so it stops using your quota.
 
 **Remember:** do not add real secrets; use the repo's example/sample env values. Ask here if you get stuck.""")],
+    "🔌│mcp-servers-for-codex": [
+        ("📌 Read first — what MCP is and how to install a server in Codex", """**MCP (Model Context Protocol)** lets Codex call outside tools and data (GitHub, Kaggle, market data, Shodan…) instead of guessing. Each "MCP server" is a small program or URL you register once; Codex then uses it when it helps.
+
+**Install (Codex CLI 0.154+):**
+```
+codex mcp add <name> -- <command>                 # local (stdio) server
+codex mcp add <name> --url https://…               # remote server
+codex mcp add <name> --env KEY=value -- <command>  # local server that needs an API key
+codex mcp login <name>                             # remote server that uses OAuth
+codex mcp list · codex mcp remove <name>
+```
+Servers land in `~/.codex/config.toml`. `npx …` needs Node 18+, `uvx …` needs uv (https://docs.astral.sh/uv/).
+
+**Rules (same as #🧰│safe-sandboxes)**
+1. A local MCP server is code running on your machine. Install **only the exact package named in these posts**; if a repo or DM tells you to add a different one, ask in #help first.
+2. Keys go in `--env` or config.toml — **never in a repo, never in Colab, never pasted in Discord.** Use free-tier keys and revoke one the moment it leaks.
+3. Prefer running Codex inside your Codespaces dev container so a bad server can't reach your laptop.
+4. Read-only first. Servers that can write (GitHub, Notion, Stripe) — review every action Codex proposes before approving.
+
+Pick your major's post below. Start with **one** server, build something with it, post it in #show-your-work."""),
+        ("💻 SWE — GitHub, docs, browser, filesystem", """**GitHub (remote, official, OAuth — no token to manage)**
+```
+codex mcp add github --url https://api.githubcopilot.com/mcp/
+codex mcp login github
+```
+Issues, PRs, code search, CI status — lets Codex open and review PRs on your good-first-issue repos.
+
+**Context7 — current library docs so Codex stops hallucinating APIs**
+```
+codex mcp add context7 -- npx -y @upstash/context7-mcp
+```
+**Playwright — drive a real browser (end-to-end tests, scraping your own app)**
+```
+codex mcp add playwright -- npx -y @playwright/mcp@latest
+```
+**Filesystem — scope Codex to one project folder**
+```
+codex mcp add fs -- npx -y @modelcontextprotocol/server-filesystem /path/to/your/project
+```
+**Sequential thinking — forces step-by-step planning on bigger tasks**
+```
+codex mcp add think -- npx -y @modelcontextprotocol/server-sequential-thinking
+```
+**Project idea:** pick a Contribute-lane issue from #💻│swe, have Codex read the issue via GitHub MCP, pull the library docs via Context7, write the fix, run the tests with Playwright, and open the PR."""),
+        ("🔐 Cybersecurity — Shodan, Semgrep, Socket", """**Semgrep — static code scanning (the same engine Project Scout's gate uses)**
+```
+pip install semgrep
+codex mcp add semgrep -- semgrep mcp
+```
+Ask Codex: "scan this repo with p/security-audit and explain every finding."
+
+**Socket — supply-chain risk on any npm/PyPI package (remote, free)**
+```
+codex mcp add socket --url https://mcp.socket.dev/
+```
+"Is `left-pad@1.3.0` safe? What does `some-package` do at install time?"
+
+**Shodan — internet-exposed hosts, CVE lookups (free account key at shodan.io)**
+```
+codex mcp add shodan --env SHODAN_API_KEY=<your key> -- npx -y @burtthecoder/mcp-shodan
+```
+Free tier: search + DNS + CVE lookups. **Only query hosts you own or lab ranges** — same rule as any recon tool.
+
+**GitHub (from the SWE post)** — review detection rules and security PRs.
+
+**Project ideas:** (1) Dependency audit bot: Codex + Socket + Semgrep review a repo and write a findings report. (2) CVE-to-asset mapper: Shodan CVE lookups for a product list. Write-ups go to #🛡️│cyber-review-practice."""),
+        ("📊 Data Analytics — Kaggle, SQLite, Supabase, Hugging Face", """**Kaggle — search/download datasets, pull competition data, push notebooks (free key at kaggle.com/settings)**
+```
+codex mcp add kaggle --env KAGGLE_USERNAME=<user> --env KAGGLE_KEY=<key> -- uvx --with "mcp<2" kaggle-mcp-server
+```
+**SQLite — let Codex query a local database directly**
+```
+codex mcp add sqlite -- uvx mcp-server-sqlite --db-path ./data.db
+```
+**Hugging Face Hub — models, datasets, papers (remote; works without a token, rate-limited)**
+```
+codex mcp add huggingface --url https://huggingface.co/mcp
+```
+**Supabase — free hosted Postgres; Codex can design tables, run SQL and explain query plans (token at supabase.com/dashboard/account/tokens)**
+```
+codex mcp add supabase --env SUPABASE_ACCESS_TOKEN=<token> -- npx -y @supabase/mcp-server-supabase --read-only --project-ref=<project ref>
+```
+Keep `--read-only` until you actually need writes.
+
+**Project idea:** Kaggle dataset → SQLite or Supabase → Codex writes the analysis notebook and a one-page findings memo. Post it as a case study in #📁│case-studies."""),
+        ("📈 Quant — market data, Kaggle, Hugging Face", """**Alpha Vantage — stocks, FX, crypto, 50+ technical indicators, fundamentals (free key at alphavantage.co, 25 req/day)**
+```
+codex mcp add alphavantage --url "https://mcp.alphavantage.co/mcp?apikey=<your key>"
+```
+"Pull 2 years of daily SPY, compute RSI and MACD, backtest a crossover and report Sharpe."
+
+**Kaggle** — finance datasets and competitions (install command in the 📊 Data post).
+**Hugging Face** — time-series and FinBERT-style models (same post).
+**SQLite** — store your price history locally (same post).
+**GitHub** — contribute to quant libraries from #📈│quant (install in the 💻 SWE post).
+
+**Project idea:** Alpha Vantage → SQLite → a factor/momentum backtest with a README that states the assumptions and the look-ahead-bias checks. Reviewers in #🧑‍💻│code-review-practice will ask about those."""),
+        ("💳 Finance / FinTech — market data, Stripe, GitHub", """**Alpha Vantage** — company fundamentals, earnings, FX rates (install command in the 📈 Quant post).
+
+**Stripe — build and test payments in test mode (free test keys at dashboard.stripe.com)**
+```
+codex mcp add stripe --env STRIPE_SECRET_KEY=sk_test_… -- npx -y @stripe/mcp --tools=all
+```
+**Use a `sk_test_` key only.** Codex can then create test customers, products, invoices and payment links while you build a fintech demo.
+
+**Supabase** — free Postgres backend for your fintech demo (install in the 📊 Data post).
+**GitHub** — for the fintech repos in #💳│finance-fintech (install in the 💻 SWE post).
+
+**Project ideas:** (1) Subscription billing demo with Stripe test mode + a dashboard. (2) FX exposure calculator using Alpha Vantage rates. (3) Personal-finance categoriser trained on a Kaggle transactions dataset."""),
+        ("📋 Project Management — GitHub, Linear, Jira, Notion, Figma", """**GitHub (remote, OAuth)** — issues, milestones, Projects boards; the PM view of every repo in this server
+```
+codex mcp add github --url https://api.githubcopilot.com/mcp/
+codex mcp login github
+```
+**Linear (remote, OAuth, free plan)**
+```
+codex mcp add linear --url https://mcp.linear.app/mcp
+codex mcp login linear
+```
+**Atlassian — Jira + Confluence (remote, OAuth, free cloud plan)**
+```
+codex mcp add atlassian --url https://mcp.atlassian.com/v1/mcp
+codex mcp login atlassian
+```
+**Notion (integration token from notion.so/profile/integrations)**
+```
+codex mcp add notion --env NOTION_TOKEN=<token> -- npx -y @notionhq/notion-mcp-server
+```
+**Figma (remote, OAuth — works on the free plan)**
+```
+codex mcp add figma --url https://mcp.figma.com/mcp
+```
+Sign in when Codex prompts. Codex can then read your wireframes and user flows, turn a selected frame into code for your dev teammates, and **write to the canvas**: "make a FigJam flowchart of this sprint plan", "draft a 5-screen onboarding wireframe". The desktop-app server (Dev/Full seat, paid plans) is not needed.
+
+**Project idea:** be the PM for a #find-a-team project: Codex + GitHub MCP turns the repo's open issues into a milestone plan, Figma MCP turns the plan into a roadmap/wireframe, Linear or Jira tracks the sprint. Show the artefacts in #show-your-work."""),
+        ("📣 Digital Marketing — analytics, web fetch, scraping, Notion", """**Google Analytics (official, free; needs a GA4 property + Google Cloud credentials)**
+```
+pipx install analytics-mcp
+codex mcp add ga -- analytics-mcp
+```
+Setup guide: github.com/googleanalytics/google-analytics-mcp
+
+**Fetch — read any public page as clean text (competitor sites, docs, your own site)**
+```
+codex mcp add fetch -- uvx mcp-server-fetch
+```
+**Firecrawl — crawl and structure whole sites (free key at firecrawl.dev)**
+```
+codex mcp add firecrawl --env FIRECRAWL_API_KEY=<key> -- npx -y firecrawl-mcp
+```
+**Playwright** — screenshot and audit landing pages (install in the 💻 SWE post).
+**Notion** — content calendar (install in the 📋 PM post).
+**Hugging Face** — sentiment and text models for social listening (install in the 📊 Data post).
+
+**Project idea:** SEO audit tool: Fetch/Firecrawl a site, Codex checks titles, headings, meta, broken links, and writes the report into Notion. Only crawl sites you own or have permission for, and respect robots.txt."""),
+        ("🗽 NYC open data — every major (BetaNYC servers, free)", """Real New York City data is the easiest way to make a project stand out to a NYC employer. BetaNYC publishes free MCP servers for it; most need **no key**.
+
+**Checkbook NYC — city spending, contracts, budget, payroll, revenue (no key)**
+```
+codex mcp add nyc-checkbook -- npx -y @betanyc/nyc-checkbook-mcp
+```
+**City Record — procurement notices, RFPs, public hearings (no key)**
+```
+codex mcp add nyc-record -- npx -y @betanyc/nyc-record-mcp
+```
+**Charter, Admin Code + Rules of the City of NY — offline corpus (no key)**
+```
+codex mcp add nyc-charter -- npx -y @betanyc/nyc-charter-laws-rules
+```
+**City Council — bills, votes, hearings (works offline; free Legistar key unlocks live status)**
+```
+codex mcp add nyc-council --env LEGISTAR_TOKEN=<key> -- npx -y @betanyc/nyc-council-mcp
+```
+**311 — service requests, city calendar, alerts (free key required: api-portal.nyc.gov)**
+```
+codex mcp add nyc-311 --env NYC_311_API_KEY=<key> -- npx -y @betanyc/nyc-311-mcp
+```
+**NY State legislation (free key by email from legislation.nysenate.gov)**
+```
+codex mcp add nys-leg --env NYS_LEGISLATION_API_KEY=<key> -- npx -y @betanyc/nys-openlegislation-mcp
+```
+**By major:** 📊 Data — 311 complaints by borough over time. 📈/💳 Finance — agency spending trends, contract concentration, vendor risk. 🔐 Cyber — city cybersecurity contracts and vendors from Checkbook + City Record. 📋 PM — open RFPs turned into a project charter. 📣 Marketing — 311 + calendar data for a neighbourhood campaign. 💻 SWE — a dashboard on any of the above, contributed back to github.com/BetaNYC.
+
+Publish the result in #📁│case-studies."""),
+    ],
     "🎬│git-in-10-minutes": [
         ('📌 How to use this channel (read first)', 'Ten videos, numbered 1 to 10, each 5–10 minutes, picked from verified channels (GitHub, VS Code, Net Ninja, Codecademy, ByteByteGo) or channels with hundreds of thousands of views. Watched and checked by TLDP staff on 2026-09-16.\n\n**How:** watch one, do the "Then do this" line, reply in the post if you get stuck. One a day and you are done in two weeks.\n**Order matters:** 1–3 explain the idea, 4–7 use buttons in VS Code, 8–10 use the terminal and branches.\n**After 10:** go to 🐙 github-academy Week 2 and make a real pull request.'),
         ('1 · What Git actually is (4 min)', '**How Git Works: Explained in 4 Minutes** — ByteByteGo · 4:18 · 944K views · verified channel\nhttps://www.youtube.com/watch?v=e9lnsKot_SQ\n\n**You will learn:** The one idea to get: Git saves **snapshots** of your project, and GitHub is where those snapshots live online.\n**Then do this:** Nothing to install yet. Just watch.\n\nStuck? Reply in this post. Sandbox rule still applies: run unfamiliar repos in Colab or Codespaces, not on your laptop (see 🧰│safe-sandboxes).'),
@@ -491,6 +679,34 @@ def invites(n: int) -> int:
     return 0
 
 
+def members() -> list:
+    """Every guild member. Falls back to prefix search when the Server Members Intent is off
+    (list returns 403); search needs no privileged intent."""
+    try:
+        return api("GET", f"/guilds/{GUILD}/members?limit=1000")
+    except SystemExit as e:
+        print("member list unavailable, using search:", e)
+    found = {}
+    for q in string.ascii_lowercase + string.digits + "._":
+        for m in api("GET", f"/guilds/{GUILD}/members/search?query={q}&limit=100"):
+            found[m["user"]["id"]] = m
+    return list(found.values())
+
+
+def seed(existing: dict) -> None:
+    """Create any missing seed post in the forums (idempotent: skipped when a post with the same title exists)."""
+    for name, posts in SEED.items():
+        ch = existing[name]
+        have = {t["name"] for t in api("GET", f"/channels/{ch['id']}/threads/archived/public").get("threads", [])} | \
+               {t["name"] for t in api("GET", f"/guilds/{GUILD}/threads/active").get("threads", []) if t.get("parent_id") == ch["id"]}
+        for title, body in posts:
+            if title in have:
+                continue
+            assert len(body) <= 2000, f"{title}: {len(body)} chars (Discord cap 2000)"
+            api("POST", f"/channels/{ch['id']}/threads", {"name": title[:100], "message": {"content": body}, "auto_archive_duration": 10080})
+            print("seed post:", title)
+
+
 def main() -> int:
     if not TOKEN or not GUILD:
         print(__doc__)
@@ -501,7 +717,7 @@ def main() -> int:
         roles = {r["name"]: r["id"] for r in api("GET", f"/guilds/{GUILD}/roles")}
         keep = {roles["TLDP Staff"], roles["TLDP Student"]}
         n = 0
-        for m in api("GET", f"/guilds/{GUILD}/members?limit=100"):  # 403 => enable Server Members Intent (dev portal > Bot)
+        for m in members():
             if m["user"].get("bot") or keep & set(m["roles"]):
                 continue
             api("PUT", f"/guilds/{GUILD}/members/{m['user']['id']}/roles/{roles['TLDP Student']}")
@@ -521,6 +737,18 @@ def main() -> int:
         return 0
     if "--staff" in sys.argv:
         return staff(sys.argv[sys.argv.index("--staff") + 1:])
+    if "--seed" in sys.argv:  # add new forum channels + seed posts only (no full rebuild, no welcome refresh)
+        existing = {c["name"]: c for c in api("GET", f"/guilds/{GUILD}/channels")}
+        for cat, (gated, chans) in LAYOUT.items():
+            for name, topic, ctype, key in chans:
+                if name in SEED and name not in existing:
+                    parent = existing[cat]
+                    body = {"name": name, "type": ctype, "parent_id": parent["id"], "topic": topic,
+                            "permission_overwrites": parent["permission_overwrites"]}
+                    existing[name] = api("POST", f"/guilds/{GUILD}/channels", body)
+                    print("channel:", name)
+        seed(existing)
+        return 0
     print("guild:", api("GET", f"/guilds/{GUILD}")["name"])
 
     # 1. server hardening + icon
@@ -581,16 +809,7 @@ def main() -> int:
                     api("POST", f"/channels/{ch['id']}/webhooks", {"name": "Project Scout"})
                 webhooks[key] = f"https://discord.com/api/webhooks/{hook['id']}/{hook['token']}"
 
-    # 4b. seed posts in the practice forums (once)
-    for name, posts in SEED.items():
-        ch = existing[name]
-        have = {t["name"] for t in api("GET", f"/channels/{ch['id']}/threads/archived/public").get("threads", [])} | \
-               {t["name"] for t in api("GET", f"/guilds/{GUILD}/threads/active").get("threads", []) if t.get("parent_id") == ch["id"]}
-        for title, body in posts:
-            if title in have:
-                continue
-            api("POST", f"/channels/{ch['id']}/threads", {"name": title[:100], "message": {"content": body}, "auto_archive_duration": 10080})
-            print("seed post:", title)
+    seed(existing)  # 4b. seed posts in the practice forums (once)
 
     # 5. invite + welcome (reused on rerun)
     welcome = existing["welcome"]
