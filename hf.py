@@ -14,7 +14,7 @@ public metadata pinned to the commit SHA the API reports:
   5. executables / archives in the file list                      -> withheld
   6. pickle-only weights (no .safetensors/.gguf/.onnx), pickled datasets -> withheld
   7. README — and a Space's app file — read AT THE PINNED SHA and screened with links.py: a blocking link or install
-     instruction (download hosts, curl | sh, archive passwords, "disable your antivirus") -> withheld.
+     instruction (download hosts, curl-pipe-shell, archive passwords, "disable your antivirus") -> withheld.
      A README that exists but cannot be read is "incomplete" -> withheld (fail closed), never published on trust.
 
 Custom code (.py in a model or dataset repo) is published with a WARNING instead of being withheld — a deliberate
