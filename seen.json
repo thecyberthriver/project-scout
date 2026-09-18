@@ -125,5 +125,15 @@
 "cobanov/fly-connectome-template": "2026-09-17",
 "wikimedia/node-cssjanus": "2026-09-17",
 "aftermathlabs/discord-crasher": "2026-09-17",
-"mozilla/lookml-generator": "2026-09-17"
+"mozilla/lookml-generator": "2026-09-17",
+"hf:datasets/paperswithbacktest/Stocks-Daily-Price": "2026-09-18",
+"hf:datasets/takala/financial_phrasebank": "2026-09-18",
+"hf:datasets/Josephgflowers/Finance-Instruct-500k": "2026-09-18",
+"hf:models/Skywork/Matrix-Game-2.0": "2026-09-18",
+"hf:models/Skywork/Matrix-Game-3.0": "2026-09-18",
+"hf:models/Nguuma/security-slm-unsloth-1.5b": "2026-09-18",
+"hf:datasets/OpenClaw/clawhub-security-signals": "2026-09-18",
+"hf:models/tabularisai/multilingual-sentiment-analysis": "2026-09-18",
+"hf:spaces/pszemraj/document-summarization": "2026-09-18",
+"hf:datasets/daekeun-ml/naver-news-summarization-ko": "2026-09-18"
 }
