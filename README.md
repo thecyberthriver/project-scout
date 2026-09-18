@@ -1,8 +1,27 @@
 # Project Scout
 
-Telegram bot that pulls **project ideas, open-source contribution opportunities and
-research code from GitHub** for students majoring in Quant, Finance/FinTech,
-Software Engineering, Cybersecurity, and Data Analytics.
+**Project ideas students can safely start — screened before anyone sees them.**
+
+Project Scout finds fresh GitHub repositories, open "good first issue" tickets, paper code and Hugging Face
+models, datasets and Spaces for students majoring in Quant, Finance/FinTech, Software Engineering,
+Cybersecurity, Data Analytics, Project Management and Digital Marketing — then puts everything through one
+publishing gate before it reaches a Discord channel or a Telegram bot.
+
+The gate is the point. Of **382 candidates screened, 40 were published**: the rest were withheld for a failing
+check, an incomplete one, or a check that could not run. Nothing is ever silently downgraded to make an item
+publishable, and every recommendation carries the same line — *"Automated checks completed; not a safety
+guarantee."* What the checks do and do **not** establish is written down in **[`docs/SCREENING.md`](docs/SCREENING.md)**.
+
+![The TLDP Discord server the feed posts into](docs/server.png)
+
+Built for the TLDP student cohort (45 students) and running on a schedule: GitHub Actions screens and publishes,
+two Cloudflare Workers answer `/scout` on Discord and the bot on Telegram from the pre-screened snapshot.
+
+**Start here:** [What the gate does and its honest limits](docs/SCREENING.md) ·
+[Scanner coverage](docs/SCANNERS.md) · [Security write-up, and how to report a problem](SECURITY.md) ·
+[MIT licensed](LICENSE)
+
+---
 
 Four lanes per major:
 
@@ -92,7 +111,7 @@ Screening (`gate.screen_one`, only stage that touches an untrusted repo) runs, p
    ambiguous dual-use offensive tooling is kept out of the general feed; curated security tools are not flagged.
 3. **Deep vet** (`vet.py`) — root binaries, README-only shells, bought stars, brand-new owners, clone farms, Scorecard.
 4. **Link + install screening** (`links.py`) — download hosts, executable links, archive passwords, "disable your
-   antivirus", `curl | sh` all block; shorteners warn. Repo text is data, never instructions. Optional shortener
+   antivirus", curl-pipe-shell all block; shorteners warn. Repo text is data, never instructions. Optional shortener
    resolution is **SSRF-guarded** (refuses private/loopback/link-local/metadata IPs, re-validates every redirect hop).
 5. **Isolated code scan** (`scan.py`) — clone at the pinned commit into an empty-HOME throwaway dir, no hooks, no LFS,
    no submodules, non-https disabled; **nothing in the repo is executed**. Semgrep static-only with

@@ -32,9 +32,11 @@ jobs:
           semgrep scan --config p/security-audit --config p/secrets --config p/python --config p/javascript \
             --config p/github-actions --severity ERROR --error --metrics=off \
             --exclude docs --exclude __pycache__ --json --output semgrep-project.json . || status=$?
-          # the malware ruleset matches its own regex strings, so it is scanned separately with its folder excluded
+          # the malware ruleset matches its own regex strings, so it is scanned separately with BOTH rule folders
+          # excluded: yara-rules/malware.yar lists the same credential paths and payload strings semgrep-rules does.
           semgrep scan --config semgrep-rules/malware.yml --severity ERROR --error --metrics=off \
-            --exclude docs --exclude __pycache__ --exclude semgrep-rules --json --output semgrep-malware.json . || status=$?
+            --exclude docs --exclude __pycache__ --exclude semgrep-rules --exclude yara-rules \
+            --json --output semgrep-malware.json . || status=$?
           python - <<'EOF'
           import json, os
           rows = []

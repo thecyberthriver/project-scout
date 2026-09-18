@@ -6,6 +6,14 @@ the security work done to make it safe enough for a **supervised student pilot**
 built, how each was verified, and the honest limits. It makes no promise of a numeric security score, malware-free
 repositories, or guaranteed legal or privacy safety.
 
+## Reporting a problem
+
+Found something the gate let through — a repository, model, dataset or Space that should not be in front of students —
+or a weakness in the pipeline itself? Open a **private** security advisory on this repository
+(Security → Advisories → Report a vulnerability), or tell TLDP staff directly in the Discord server. Please do not
+open a public issue with a working exploit. Students are told the same thing: report anything suspicious rather than
+running it.
+
 ## The problem
 
 The bot's raw material is public GitHub search. GitHub search returns real malicious content: wallet drainers,
