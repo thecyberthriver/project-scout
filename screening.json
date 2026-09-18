@@ -496,8 +496,8 @@
 },
 "AnjanJ/rails_error_dashboard": {
 "full_name": "AnjanJ/rails_error_dashboard",
-"sha": "6072caa5ebf20ef8e1a2981c05d71f054b50cd20",
-"at": "2026-09-18T04:34:18+00:00",
+"sha": "30802f8b5994a29d13b2b64ce97a2a1dcb84f370",
+"at": "2026-09-18T06:32:29+00:00",
 "language": "Ruby",
 "size": 19707,
 "pushed_at": "2026-09-18",
@@ -517,8 +517,8 @@
 "primary_language": "Ruby",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 13086879,
-"files": 826,
+"bytes": 13151468,
+"files": 833,
 "notebooks_extracted": 0,
 "semgrepignore_removed": 0,
 "signals": {
@@ -567,7 +567,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-19T04:34:18+00:00"
+"expires": "2026-09-19T06:32:29+00:00"
 },
 "Appllama/liquid-glass-screens": {
 "full_name": "Appllama/liquid-glass-screens",
@@ -726,8 +726,8 @@
 },
 "Aryan-20-04/mdrap": {
 "full_name": "Aryan-20-04/mdrap",
-"sha": "e82c578a0034405350aa8e34722686a47dcbdbce",
-"at": "2026-09-18T00:33:52+00:00",
+"sha": "141b807564a1182d17d401ebc4b6cf4e0b3e8e06",
+"at": "2026-09-18T06:33:12+00:00",
 "language": "Python",
 "size": 2714,
 "pushed_at": "2026-09-16",
@@ -749,7 +749,7 @@
 "primary_language": "Python",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 3047470,
+"bytes": 3047700,
 "files": 244,
 "notebooks_extracted": 1,
 "semgrepignore_removed": 0,
@@ -805,7 +805,7 @@
 ],
 "vet_soft": []
 },
-"expires": "2026-09-20T00:33:52+00:00"
+"expires": "2026-09-20T06:33:12+00:00"
 },
 "Asabeneh/30-Days-Of-Python": {
 "full_name": "Asabeneh/30-Days-Of-Python",
@@ -1704,13 +1704,13 @@
 },
 "Eurekaleo/awesome-ai-for-games": {
 "full_name": "Eurekaleo/awesome-ai-for-games",
-"sha": "79cd6c45bdb95ea6ebbfa6e6533732e88c48a76f",
-"at": "2026-09-17T18:32:29+00:00",
+"sha": "becbe55a3f8fd94e53d1a7291c6daa64c4e69415",
+"at": "2026-09-18T06:33:51+00:00",
 "language": "TeX",
 "size": 75301,
-"pushed_at": "2026-09-17",
+"pushed_at": "2026-09-18",
 "created_at": "2026-09-04",
-"stars": 180,
+"stars": 186,
 "curated": false,
 "scanner": {
 "semgrep": "1.177.0",
@@ -1719,7 +1719,7 @@
 "policy_version": 2,
 "result": "fail",
 "reasons": [
-"180 stars on a 13-day-old repo (bought stars)",
+"186 stars on a 14-day-old repo (bought stars)",
 "repository too large to scan (75301 KB > 60000 KB)"
 ],
 "coverage": {
@@ -1739,11 +1739,11 @@
 "error": null
 },
 "vet_hard": [
-"180 stars on a 13-day-old repo (bought stars)"
+"186 stars on a 14-day-old repo (bought stars)"
 ],
 "vet_soft": []
 },
-"expires": "2026-09-19T18:32:29+00:00"
+"expires": "2026-09-20T06:33:51+00:00"
 },
 "FankChen/tracecrate": {
 "full_name": "FankChen/tracecrate",
@@ -1893,8 +1893,8 @@
 },
 "GCWing/OpenBitFun": {
 "full_name": "GCWing/OpenBitFun",
-"sha": "ffa2795aa45acea9c0c30bb02e82b9f35598740c",
-"at": "2026-09-18T04:35:04+00:00",
+"sha": "2eb339927424939ad8145736930b2c9e9d7a5b7c",
+"at": "2026-09-18T06:33:55+00:00",
 "language": "Rust",
 "size": 205526,
 "pushed_at": "2026-09-18",
@@ -1929,7 +1929,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:35:04+00:00"
+"expires": "2026-09-20T06:33:55+00:00"
 },
 "GSA/MasteringAgenticAISystems_supplementals": {
 "full_name": "GSA/MasteringAgenticAISystems_supplementals",
@@ -3856,13 +3856,13 @@
 },
 "PennyLaneAI/pennylane": {
 "full_name": "PennyLaneAI/pennylane",
-"sha": "705043f3d4d961c718b6e35dde2b1ce5d914c217",
-"at": "2026-09-18T00:40:27+00:00",
+"sha": "8b493badfb6846f62ad7151139142005a90d98ce",
+"at": "2026-09-18T06:34:07+00:00",
 "language": "Python",
-"size": 213912,
-"pushed_at": "2026-09-17",
+"size": 213967,
+"pushed_at": "2026-09-18",
 "created_at": "2018-04-17",
-"stars": 3470,
+"stars": 3472,
 "curated": false,
 "scanner": {
 "semgrep": "1.177.0",
@@ -3871,7 +3871,7 @@
 "policy_version": 2,
 "result": "fail",
 "reasons": [
-"repository too large to scan (213912 KB > 60000 KB)"
+"repository too large to scan (213967 KB > 60000 KB)"
 ],
 "coverage": {
 "primary_language": "Python",
@@ -3892,12 +3892,12 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T00:40:27+00:00"
+"expires": "2026-09-20T06:34:07+00:00"
 },
 "PostHog/posthog": {
 "full_name": "PostHog/posthog",
-"sha": "a0647ff9c4b3b131105c092964982e0ec5a32f90",
-"at": "2026-09-18T04:36:14+00:00",
+"sha": "776653a3558b74a9fcca39b6199896245258cdeb",
+"at": "2026-09-18T06:34:10+00:00",
 "language": "Python",
 "size": 7042056,
 "pushed_at": "2026-09-16",
@@ -3932,7 +3932,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:36:14+00:00"
+"expires": "2026-09-20T06:34:10+00:00"
 },
 "PostHog/posthog.com": {
 "full_name": "PostHog/posthog.com",
@@ -4979,8 +4979,8 @@
 },
 "StarRocks/starrocks": {
 "full_name": "StarRocks/starrocks",
-"sha": "502c56b573ae2e5ec904f0cde11ec28ed285b870",
-"at": "2026-09-18T04:36:20+00:00",
+"sha": "e3f6614b2366507efe4eb90366a8b58a73cd827e",
+"at": "2026-09-18T06:34:17+00:00",
 "language": "Java",
 "size": 842407,
 "pushed_at": "2026-09-18",
@@ -5015,7 +5015,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:36:20+00:00"
+"expires": "2026-09-20T06:34:17+00:00"
 },
 "Superalgos/Superalgos": {
 "full_name": "Superalgos/Superalgos",
@@ -5218,8 +5218,8 @@
 },
 "TheAlgorithms/Python": {
 "full_name": "TheAlgorithms/Python",
-"sha": "56858d6126891a5405d9713c7b8d46d8af67a99e",
-"at": "2026-09-18T04:36:24+00:00",
+"sha": "947c413cf4996dcebdf3e13f7976f5be0e9a7e5b",
+"at": "2026-09-18T06:34:21+00:00",
 "language": "Python",
 "size": 17634,
 "pushed_at": "2026-09-16",
@@ -5239,8 +5239,8 @@
 "primary_language": "Python",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 15556803,
-"files": 1670,
+"bytes": 15559502,
+"files": 1672,
 "notebooks_extracted": 0,
 "semgrepignore_removed": 0,
 "signals": {
@@ -5289,7 +5289,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-19T04:36:24+00:00"
+"expires": "2026-09-19T06:34:21+00:00"
 },
 "Tyche-MKR/scientific-agent-skills": {
 "full_name": "Tyche-MKR/scientific-agent-skills",
@@ -5984,8 +5984,8 @@
 },
 "Zipstack/unstract": {
 "full_name": "Zipstack/unstract",
-"sha": "6154891fdcc596b210e476cc72df1bc02afcb52d",
-"at": "2026-09-18T04:38:01+00:00",
+"sha": "6fe7d8df4f12cd8895ca4d636e372b46779c60d8",
+"at": "2026-09-18T06:35:06+00:00",
 "language": "Python",
 "size": 107057,
 "pushed_at": "2026-09-18",
@@ -6022,7 +6022,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:38:01+00:00"
+"expires": "2026-09-20T06:35:06+00:00"
 },
 "academic/awesome-datascience": {
 "full_name": "academic/awesome-datascience",
@@ -6254,8 +6254,8 @@
 },
 "agentic-os-org/ANOLISA": {
 "full_name": "agentic-os-org/ANOLISA",
-"sha": "a4f2f86bb559bbc762f6d904e951f06b3deda459",
-"at": "2026-09-18T04:38:04+00:00",
+"sha": "0559b9ee59dc5787a6db4c0a401c66e47871b19a",
+"at": "2026-09-18T06:35:11+00:00",
 "language": "Rust",
 "size": 69581,
 "pushed_at": "2026-09-18",
@@ -6295,7 +6295,7 @@
 ],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:38:04+00:00"
+"expires": "2026-09-20T06:35:11+00:00"
 },
 "airbytehq/airbyte": {
 "full_name": "airbytehq/airbyte",
@@ -7156,8 +7156,8 @@
 },
 "apache/datafusion": {
 "full_name": "apache/datafusion",
-"sha": "3b16a3d0eef765b81ce5aad20997b193a42ad02a",
-"at": "2026-09-18T04:38:09+00:00",
+"sha": "0e292dcbfdabc41a1297c57df9a1e0368b53e64d",
+"at": "2026-09-18T06:35:19+00:00",
 "language": "Rust",
 "size": 244380,
 "pushed_at": "2026-09-18",
@@ -7194,12 +7194,12 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:38:09+00:00"
+"expires": "2026-09-20T06:35:19+00:00"
 },
 "apache/datafusion-comet": {
 "full_name": "apache/datafusion-comet",
-"sha": "1adf5e34596814921c7a35e4f339cb47c0aaafa2",
-"at": "2026-09-18T04:38:12+00:00",
+"sha": "f51f5831b07e11a56e3d083e7c77b1395f53e715",
+"at": "2026-09-18T06:35:22+00:00",
 "language": "Scala",
 "size": 60273,
 "pushed_at": "2026-09-18",
@@ -7238,12 +7238,12 @@
 "README link: chat invite link discord.gg"
 ]
 },
-"expires": "2026-09-20T04:38:12+00:00"
+"expires": "2026-09-20T06:35:22+00:00"
 },
 "apache/gravitino": {
 "full_name": "apache/gravitino",
-"sha": "bff141888cbf0843168c5c9e564d9bbb8a3cd036",
-"at": "2026-09-18T04:38:15+00:00",
+"sha": "3d068320f60eb2ed6c6c0de63bc0d78148153712",
+"at": "2026-09-18T06:35:25+00:00",
 "language": "Java",
 "size": 97950,
 "pushed_at": "2026-09-17",
@@ -7278,7 +7278,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:38:15+00:00"
+"expires": "2026-09-20T06:35:25+00:00"
 },
 "apache/hugegraph": {
 "full_name": "apache/hugegraph",
@@ -7359,8 +7359,8 @@
 },
 "apache/magpie": {
 "full_name": "apache/magpie",
-"sha": "207708cb085b6842fd1b61a1603c9c3f4e823ff5",
-"at": "2026-09-18T04:38:17+00:00",
+"sha": "856f3a5ee4fd96731a0d269c08679f47421b6c5f",
+"at": "2026-09-18T06:35:29+00:00",
 "language": "Python",
 "size": 19981,
 "pushed_at": "2026-09-18",
@@ -7434,12 +7434,12 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:38:17+00:00"
+"expires": "2026-09-20T06:35:29+00:00"
 },
 "apache/superset": {
 "full_name": "apache/superset",
-"sha": "394bca55c792b7b3547e23f6e175a7cb0f0757e8",
-"at": "2026-09-18T04:39:31+00:00",
+"sha": "bd786e2bea2171d517d612babed8ca6a52c97401",
+"at": "2026-09-18T06:36:45+00:00",
 "language": "Python",
 "size": 1140017,
 "pushed_at": "2026-09-18",
@@ -7476,7 +7476,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:39:31+00:00"
+"expires": "2026-09-20T06:36:45+00:00"
 },
 "appeeky/expo-healthkit": {
 "full_name": "appeeky/expo-healthkit",
@@ -8337,8 +8337,8 @@
 },
 "boxlite-ai/boxlite": {
 "full_name": "boxlite-ai/boxlite",
-"sha": "743831a3292b10f78c7ad84f06a97ad542f68685",
-"at": "2026-09-18T04:40:32+00:00",
+"sha": "e82aaf91f9bccd8da6bc4c622d22e0642e60e7c4",
+"at": "2026-09-18T06:36:55+00:00",
 "language": "TypeScript",
 "size": 27040,
 "pushed_at": "2026-09-18",
@@ -8359,7 +8359,7 @@
 "primary_language": "TypeScript",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 23707658,
+"bytes": 23733239,
 "files": 3062,
 "notebooks_extracted": 0,
 "semgrepignore_removed": 0,
@@ -8418,12 +8418,12 @@
 ],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:40:32+00:00"
+"expires": "2026-09-20T06:36:55+00:00"
 },
 "bytebase/bytebase": {
 "full_name": "bytebase/bytebase",
-"sha": "bff6c8d1618efc3acc157973b62d02d1890e4bfe",
-"at": "2026-09-18T04:42:39+00:00",
+"sha": "5d1db2ac121d684ec3b338f010707c277d4de71f",
+"at": "2026-09-18T06:39:05+00:00",
 "language": "Go",
 "size": 192493,
 "pushed_at": "2026-09-18",
@@ -8460,7 +8460,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:42:39+00:00"
+"expires": "2026-09-20T06:39:05+00:00"
 },
 "cashapp/hermit": {
 "full_name": "cashapp/hermit",
@@ -9499,6 +9499,76 @@
 },
 "expires": "2026-09-18T16:33:13+00:00"
 },
+"cyancity/easy-unlocker": {
+"full_name": "cyancity/easy-unlocker",
+"sha": "7b696c35870ea434e12d23c1d3d1700e8dcbdc17",
+"at": "2026-09-18T06:39:12+00:00",
+"language": "Kotlin",
+"size": 819,
+"pushed_at": "2026-09-17",
+"created_at": "2026-09-16",
+"stars": 10,
+"curated": false,
+"scanner": {
+"semgrep": "1.177.0",
+"ruleset_sha256": "a1c27781667d4f223e8d80574ec78ea09673c3495ee933e71005b85dd70ae325"
+},
+"policy_version": 2,
+"result": "pass",
+"reasons": [],
+"coverage": {
+"primary_language": "Kotlin",
+"supported": true,
+"note": "generic + language rules",
+"bytes": 1843141,
+"files": 205,
+"notebooks_extracted": 0,
+"semgrepignore_removed": 0,
+"signals": {
+"has_tests": true,
+"has_dockerfile": false,
+"compose_services": 0,
+"has_k8s": false,
+"has_terraform": false,
+"dep_count": 3,
+"readme_bytes": 9266,
+"top_level_entries": 19
+},
+"engines_not_ran": [],
+"code_scan_result": "pass",
+"blocking": [],
+"advisory": {
+"osv_vulnerabilities": 92
+},
+"engines": {
+"semgrep": "ran",
+"yara": "ran",
+"clamav": "ran",
+"osv": "ran"
+},
+"yara": {
+"status": "ran",
+"hits": []
+},
+"clamav": {
+"status": "ran",
+"hits": []
+},
+"osv": {
+"status": "ran",
+"malicious": [],
+"vulnerable": 92
+},
+"links": {
+"block": [],
+"warn": [],
+"error": null
+},
+"vet_hard": [],
+"vet_soft": []
+},
+"expires": "2026-10-02T06:39:12+00:00"
+},
 "daishuge/pcb-skill": {
 "full_name": "daishuge/pcb-skill",
 "sha": "6e939b64907e3c63236c7522c511af5d7d1afaad",
@@ -10373,8 +10443,8 @@
 },
 "elastic/elasticsearch": {
 "full_name": "elastic/elasticsearch",
-"sha": "7788b08b4273cd975fc7e88f3c9d96b97ff6310f",
-"at": "2026-09-18T04:44:17+00:00",
+"sha": "0e25069d852bf95b658746dc79c83be2f69b23c6",
+"at": "2026-09-18T06:39:39+00:00",
 "language": "Java",
 "size": 1768808,
 "pushed_at": "2026-09-16",
@@ -10410,12 +10480,12 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:44:17+00:00"
+"expires": "2026-09-20T06:39:39+00:00"
 },
 "elastic/kibana": {
 "full_name": "elastic/kibana",
-"sha": "b410e1ff543de9536f4628e93aee5ea96e506ec7",
-"at": "2026-09-18T04:44:20+00:00",
+"sha": "880f70380af26b8dc5021ab048e2fe783fad7cbb",
+"at": "2026-09-18T06:39:43+00:00",
 "language": "TypeScript",
 "size": 17425681,
 "pushed_at": "2026-09-18",
@@ -10450,7 +10520,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:44:20+00:00"
+"expires": "2026-09-20T06:39:43+00:00"
 },
 "eldarshiraliyev/BugScanner": {
 "full_name": "eldarshiraliyev/BugScanner",
@@ -10832,8 +10902,8 @@
 },
 "firstcontributions/first-contributions": {
 "full_name": "firstcontributions/first-contributions",
-"sha": "c19d7e1325733c7dd0f0e2d5b07e9e36e22fc810",
-"at": "2026-09-18T04:44:24+00:00",
+"sha": "6cc1e8e3bc4b3b8025749973a66529174eae2432",
+"at": "2026-09-18T06:39:49+00:00",
 "language": null,
 "size": 50290,
 "pushed_at": "2026-09-16",
@@ -10868,7 +10938,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:44:24+00:00"
+"expires": "2026-09-20T06:39:49+00:00"
 },
 "florinpop17/app-ideas": {
 "full_name": "florinpop17/app-ideas",
@@ -10912,8 +10982,8 @@
 },
 "frappe/frappe": {
 "full_name": "frappe/frappe",
-"sha": "106a87150343b8d79eae7f7608e6fe05824feebf",
-"at": "2026-09-18T04:44:27+00:00",
+"sha": "6326bd8a6bcebfa5e0f6f768df85978f40557195",
+"at": "2026-09-18T06:39:53+00:00",
 "language": "Python",
 "size": 884510,
 "pushed_at": "2026-09-18",
@@ -10950,7 +11020,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:44:27+00:00"
+"expires": "2026-09-20T06:39:53+00:00"
 },
 "g0h4n/PassTheCert-rs": {
 "full_name": "g0h4n/PassTheCert-rs",
@@ -11222,13 +11292,13 @@
 },
 "ghostfolio/ghostfolio": {
 "full_name": "ghostfolio/ghostfolio",
-"sha": "6e677145604ab17d4b6aeb69bb0ee23ca4080aef",
-"at": "2026-09-17T12:51:19+00:00",
+"sha": "71db6efe07dd2c5398af61bbbb5471fb648315dc",
+"at": "2026-09-18T06:39:57+00:00",
 "language": "TypeScript",
 "size": 102208,
 "pushed_at": "2026-09-17",
 "created_at": "2021-04-13",
-"stars": 9308,
+"stars": 9313,
 "curated": false,
 "scanner": {
 "semgrep": "1.177.0",
@@ -11261,7 +11331,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-19T12:51:19+00:00"
+"expires": "2026-09-20T06:39:57+00:00"
 },
 "github/codeql": {
 "full_name": "github/codeql",
@@ -11515,8 +11585,8 @@
 },
 "google/osv.dev": {
 "full_name": "google/osv.dev",
-"sha": "0d27c7bc64cd21cb125413a8fb0a61ce549dde64",
-"at": "2026-09-18T04:45:04+00:00",
+"sha": "70c45ffb6785cf9fe59fde6b769b5552e09389ee",
+"at": "2026-09-18T06:40:02+00:00",
 "language": "Go",
 "size": 113259,
 "pushed_at": "2026-09-18",
@@ -11553,7 +11623,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:45:04+00:00"
+"expires": "2026-09-20T06:40:02+00:00"
 },
 "google/perfetto": {
 "full_name": "google/perfetto",
@@ -11601,8 +11671,8 @@
 },
 "grafana/grafana": {
 "full_name": "grafana/grafana",
-"sha": "9c249774cf0323bcb95bdd7c36027c134cd63c8d",
-"at": "2026-09-18T04:45:10+00:00",
+"sha": "b3de87475610108c55d1d376c82a40bc56e70ec0",
+"at": "2026-09-18T06:40:06+00:00",
 "language": "TypeScript",
 "size": 1998133,
 "pushed_at": "2026-09-18",
@@ -11637,7 +11707,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:45:10+00:00"
+"expires": "2026-09-20T06:40:06+00:00"
 },
 "grah4na/prism": {
 "full_name": "grah4na/prism",
@@ -12145,6 +12215,77 @@
 "vet_soft": []
 },
 "expires": "2026-09-19T18:56:32+00:00"
+},
+"herliansyah/pantau": {
+"full_name": "herliansyah/pantau",
+"sha": "7d8829b2477016cf4c1b049dc389f4bba0a7a263",
+"at": "2026-09-18T06:40:11+00:00",
+"language": "HTML",
+"size": 1956,
+"pushed_at": "2026-09-18",
+"created_at": "2026-09-08",
+"stars": 21,
+"curated": false,
+"scanner": {
+"semgrep": "1.177.0",
+"ruleset_sha256": "a1c27781667d4f223e8d80574ec78ea09673c3495ee933e71005b85dd70ae325"
+},
+"policy_version": 2,
+"result": "pass",
+"reasons": [],
+"coverage": {
+"primary_language": "HTML",
+"supported": true,
+"note": "generic + language rules",
+"bytes": 2895348,
+"files": 97,
+"notebooks_extracted": 0,
+"semgrepignore_removed": 0,
+"signals": {
+"has_tests": true,
+"has_dockerfile": true,
+"compose_services": 1,
+"has_k8s": false,
+"has_terraform": false,
+"dep_count": 15,
+"readme_bytes": 20656,
+"top_level_entries": 19
+},
+"engines_not_ran": [],
+"code_scan_result": "pass",
+"blocking": [],
+"advisory": {
+"WARNING": 2,
+"osv_vulnerabilities": 1
+},
+"engines": {
+"semgrep": "ran",
+"yara": "ran",
+"clamav": "ran",
+"osv": "ran"
+},
+"yara": {
+"status": "ran",
+"hits": []
+},
+"clamav": {
+"status": "ran",
+"hits": []
+},
+"osv": {
+"status": "ran",
+"malicious": [],
+"vulnerable": 1
+},
+"links": {
+"block": [],
+"warn": [],
+"error": null
+},
+"vet_hard": [],
+"vet_soft": []
+},
+"expires": "2026-10-02T06:40:11+00:00"
 },
 "hirotomasato/paygateme": {
 "full_name": "hirotomasato/paygateme",
@@ -14582,8 +14723,8 @@
 },
 "metasfresh/metasfresh": {
 "full_name": "metasfresh/metasfresh",
-"sha": "e95df05ee3d6a9db70a68a1ba266dac5184a50b0",
-"at": "2026-09-18T00:55:44+00:00",
+"sha": "7f9ef59e6220425650c75ead2e6236ec253f4d42",
+"at": "2026-09-18T06:40:54+00:00",
 "language": "Java",
 "size": 377425,
 "pushed_at": "2026-09-17",
@@ -14618,7 +14759,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T00:55:44+00:00"
+"expires": "2026-09-20T06:40:54+00:00"
 },
 "microsoft/AzureTRE": {
 "full_name": "microsoft/AzureTRE",
@@ -15039,8 +15180,8 @@
 },
 "microsoft/mssql-python": {
 "full_name": "microsoft/mssql-python",
-"sha": "e279a4f6c12241603b978602acf01e64520a819f",
-"at": "2026-09-17T06:45:14+00:00",
+"sha": "375a5bfc822709d8099f5f0ccd146d9d2477a83f",
+"at": "2026-09-18T06:41:00+00:00",
 "language": "Python",
 "size": 128086,
 "pushed_at": "2026-09-16",
@@ -15075,7 +15216,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-19T06:45:14+00:00"
+"expires": "2026-09-20T06:41:00+00:00"
 },
 "microsoft/openvmm": {
 "full_name": "microsoft/openvmm",
@@ -15271,8 +15412,8 @@
 },
 "microsoft/vscode": {
 "full_name": "microsoft/vscode",
-"sha": "1e1fd0e847eaa77b4ae77fffc0102582fc66a78e",
-"at": "2026-09-18T04:46:06+00:00",
+"sha": "a07c6dc37c1adaf5b9cad7dfe5d723bc4b02fe70",
+"at": "2026-09-18T06:41:05+00:00",
 "language": "TypeScript",
 "size": 1462027,
 "pushed_at": "2026-09-16",
@@ -15307,7 +15448,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:46:06+00:00"
+"expires": "2026-09-20T06:41:05+00:00"
 },
 "mimblewimble/grin-pm": {
 "full_name": "mimblewimble/grin-pm",
@@ -16534,8 +16675,8 @@
 },
 "n8n-io/n8n": {
 "full_name": "n8n-io/n8n",
-"sha": "39ef24a169bae69b20b992a32e7a490cbc88bada",
-"at": "2026-09-18T04:46:20+00:00",
+"sha": "82f3a0154bb9a48435423b7285914ed138faf8d3",
+"at": "2026-09-18T06:41:15+00:00",
 "language": "TypeScript",
 "size": 617746,
 "pushed_at": "2026-09-16",
@@ -16572,7 +16713,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:46:20+00:00"
+"expires": "2026-09-20T06:41:15+00:00"
 },
 "nahrek/polyledger": {
 "full_name": "nahrek/polyledger",
@@ -17562,8 +17703,8 @@
 },
 "nmatt0/mithril": {
 "full_name": "nmatt0/mithril",
-"sha": "02ddc22e6d7b65cc362edcf566576762cfd49b90",
-"at": "2026-09-18T04:46:25+00:00",
+"sha": "de8c14e7e966e157532a982bcce52b6d2e6b5eb2",
+"at": "2026-09-18T06:41:24+00:00",
 "language": "C++",
 "size": 410,
 "pushed_at": "2026-09-17",
@@ -17583,7 +17724,7 @@
 "primary_language": "C++",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 872196,
+"bytes": 879989,
 "files": 268,
 "notebooks_extracted": 0,
 "semgrepignore_removed": 0,
@@ -17631,15 +17772,15 @@
 },
 "vet_hard": [],
 "vet_soft": [
-"230 stars on a 11-day-old repo (bought stars)"
+"231 stars on a 11-day-old repo (bought stars)"
 ]
 },
-"expires": "2026-09-19T04:46:25+00:00"
+"expires": "2026-09-19T06:41:24+00:00"
 },
 "nordic-institute/X-Road": {
 "full_name": "nordic-institute/X-Road",
-"sha": "b787d97721f9143b27390df27239c570ff5e9455",
-"at": "2026-09-17T19:10:54+00:00",
+"sha": "c6389eee84d77f936e39d496dff800d5663bcecf",
+"at": "2026-09-18T06:41:41+00:00",
 "language": "Java",
 "size": 381357,
 "pushed_at": "2026-09-17",
@@ -17676,7 +17817,7 @@
 "Scorecard Dangerous-Workflow 0/10"
 ]
 },
-"expires": "2026-09-19T19:10:54+00:00"
+"expires": "2026-09-20T06:41:41+00:00"
 },
 "noskillish/bankmcp": {
 "full_name": "noskillish/bankmcp",
@@ -18060,8 +18201,8 @@
 },
 "opf/openproject": {
 "full_name": "opf/openproject",
-"sha": "f09c161bfa11cd0c1c10ed5fa4ff34b788a791c2",
-"at": "2026-09-18T04:47:15+00:00",
+"sha": "5a5722b8823f2905f042692235d2a2815e8e9958",
+"at": "2026-09-18T06:41:46+00:00",
 "language": "Ruby",
 "size": 2947946,
 "pushed_at": "2026-09-16",
@@ -18096,7 +18237,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:47:15+00:00"
+"expires": "2026-09-20T06:41:46+00:00"
 },
 "ory/kratos": {
 "full_name": "ory/kratos",
@@ -18647,8 +18788,8 @@
 },
 "prestodb/presto": {
 "full_name": "prestodb/presto",
-"sha": "2f1aac08389fc0ee5a02d3e9245825127f4e9d8b",
-"at": "2026-09-18T04:47:19+00:00",
+"sha": "f7363fe2fd3945cb181e7ad531c9fa410056247f",
+"at": "2026-09-18T06:41:52+00:00",
 "language": "Java",
 "size": 285817,
 "pushed_at": "2026-09-18",
@@ -18685,7 +18826,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:47:19+00:00"
+"expires": "2026-09-20T06:41:52+00:00"
 },
 "primer/brand": {
 "full_name": "primer/brand",
@@ -19232,11 +19373,11 @@
 },
 "ram0verflow/ram0verflow": {
 "full_name": "ram0verflow/ram0verflow",
-"sha": "fed0f139c83fcf328f84ccdda0ee19990e1bc814",
-"at": "2026-09-18T04:47:28+00:00",
+"sha": "7893070dde1bdd7430e90041fd1f4db6d1d0f7c2",
+"at": "2026-09-18T06:41:58+00:00",
 "language": "Python",
-"size": 862617,
-"pushed_at": "2026-09-17",
+"size": 973556,
+"pushed_at": "2026-09-18",
 "created_at": "2026-09-06",
 "stars": 62,
 "curated": false,
@@ -19247,8 +19388,8 @@
 "policy_version": 2,
 "result": "fail",
 "reasons": [
-"62 stars on a 11-day-old repo (bought stars)",
-"repository too large to scan (862617 KB > 60000 KB)"
+"62 stars on a 12-day-old repo (bought stars)",
+"repository too large to scan (973556 KB > 60000 KB)"
 ],
 "coverage": {
 "primary_language": "Python",
@@ -19267,11 +19408,11 @@
 "error": null
 },
 "vet_hard": [
-"62 stars on a 11-day-old repo (bought stars)"
+"62 stars on a 12-day-old repo (bought stars)"
 ],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:47:28+00:00"
+"expires": "2026-09-20T06:41:58+00:00"
 },
 "ranaroussi/yfinance": {
 "full_name": "ranaroussi/yfinance",
@@ -19545,8 +19686,8 @@
 },
 "replicatedhq/kots": {
 "full_name": "replicatedhq/kots",
-"sha": "a88c94b007b14616ee4963c2277c5390047956e7",
-"at": "2026-09-18T00:59:57+00:00",
+"sha": "6075f0d0f6c4446c2eff25a7dd8ac4ee5e3a138a",
+"at": "2026-09-18T06:42:02+00:00",
 "language": "Go",
 "size": 161911,
 "pushed_at": "2026-09-17",
@@ -19581,7 +19722,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T00:59:57+00:00"
+"expires": "2026-09-20T06:42:02+00:00"
 },
 "repoboost-hq/github-launch-checklist": {
 "full_name": "repoboost-hq/github-launch-checklist",
@@ -21557,8 +21698,8 @@
 },
 "tableau/server-client-python": {
 "full_name": "tableau/server-client-python",
-"sha": "a1a7ed4b09fb2f496eac3d14fe604f22a1762458",
-"at": "2026-09-18T01:01:42+00:00",
+"sha": "b7134a182400a2ffb173fedbf5d6157fad997959",
+"at": "2026-09-18T06:42:13+00:00",
 "language": "Python",
 "size": 7202,
 "pushed_at": "2026-09-11",
@@ -21578,8 +21719,8 @@
 "primary_language": "Python",
 "supported": true,
 "note": "generic + language rules",
-"bytes": 3363272,
-"files": 488,
+"bytes": 3379865,
+"files": 491,
 "notebooks_extracted": 0,
 "semgrepignore_removed": 0,
 "signals": {
@@ -21628,7 +21769,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-19T01:01:42+00:00"
+"expires": "2026-09-19T06:42:13+00:00"
 },
 "tensorcircuit/tensorcircuit-ng": {
 "full_name": "tensorcircuit/tensorcircuit-ng",
@@ -22218,8 +22359,8 @@
 },
 "trinodb/trino": {
 "full_name": "trinodb/trino",
-"sha": "1e5b340b152c5417169378248bd4794aeddf7353",
-"at": "2026-09-18T04:55:45+00:00",
+"sha": "a125f6e930434bb22798ca1bac40199ff78b39b6",
+"at": "2026-09-18T06:42:41+00:00",
 "language": "Java",
 "size": 322188,
 "pushed_at": "2026-09-18",
@@ -22254,7 +22395,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T04:55:45+00:00"
+"expires": "2026-09-20T06:42:41+00:00"
 },
 "trufflesecurity/trufflehog": {
 "full_name": "trufflesecurity/trufflehog",
@@ -23611,8 +23752,8 @@
 },
 "wireshark/wireshark": {
 "full_name": "wireshark/wireshark",
-"sha": "5f33468b90a35ba4dcf7b28dc9034115f6c52c46",
-"at": "2026-09-18T01:02:58+00:00",
+"sha": "4c0463fb6cb70a358f033cdd691f9696d53d3600",
+"at": "2026-09-18T06:42:51+00:00",
 "language": "C",
 "size": 1515493,
 "pushed_at": "2026-09-16",
@@ -23647,7 +23788,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T01:02:58+00:00"
+"expires": "2026-09-20T06:42:51+00:00"
 },
 "xournalpp/xournalpp": {
 "full_name": "xournalpp/xournalpp",
@@ -23768,8 +23909,8 @@
 },
 "ytsaurus/ytsaurus": {
 "full_name": "ytsaurus/ytsaurus",
-"sha": "e065e0e6f6b3798ec5ad99d09a6be2c9167d71d1",
-"at": "2026-09-18T01:03:00+00:00",
+"sha": "d3f095aa31fdccfe3c03342307879deb2a2ee9b1",
+"at": "2026-09-18T06:42:55+00:00",
 "language": "C++",
 "size": 1327070,
 "pushed_at": "2026-09-17",
@@ -23806,7 +23947,7 @@
 "vet_hard": [],
 "vet_soft": []
 },
-"expires": "2026-09-20T01:03:00+00:00"
+"expires": "2026-09-20T06:42:55+00:00"
 },
 "zachealy1/orchestrator": {
 "full_name": "zachealy1/orchestrator",
@@ -24107,5 +24248,5 @@
 "semgrep_version": null,
 "ruleset_sha256": "a1c27781667d4f223e8d80574ec78ea09673c3495ee933e71005b85dd70ae325",
 "policy_version": 2,
-"generated_at": "2026-09-18T04:57:33+00:00"
+"generated_at": "2026-09-18T06:43:45+00:00"
 }
