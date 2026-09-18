@@ -39,6 +39,15 @@ SYNTHETIC = {
 }
 
 
+NOTE_COOLDOWN_DAYS = 7  # SYNTHETIC is one fixed string per major: without this it reposts verbatim every run
+
+
+def _note_recent(seen: dict, key: str) -> bool:
+    """True if this major's synthetic idea was already posted inside the cooldown."""
+    last = seen.get("note:" + key)
+    return bool(last and (ps.date.today() - ps.date.fromisoformat(last)).days < NOTE_COOLDOWN_DAYS)
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -430,6 +439,8 @@ def publish(in_dir: str, index_only: bool = False) -> int:
                      (lambda r: gate.eligible(r, store, quarantine, meta)[0])
                 part["rows"] = [r for r in part["rows"] if r["full_name"] not in seen and ok(r)]
             sec["sections"] = [p for p in sec["sections"] if p["rows"]]
+            if sec.get("note") and _note_recent(seen, sec["key"]):
+                sec.pop("note")  # same synthetic idea as last time; posting it again is just noise
             if not sec["sections"] and not sec.get("note"):  # keep a section that carries a synthetic beginner idea
                 continue
         elif "orgs" in sec:
@@ -452,6 +463,8 @@ def publish(in_dir: str, index_only: bool = False) -> int:
             seen[r["full_name"]] = ps.date.today().isoformat()
         for h in sec.get("hacks", []):
             seen["hack:" + h["url"]] = ps.date.today().isoformat()
+        if sec.get("note"):
+            seen["note:" + sec["key"]] = ps.date.today().isoformat()
         sent += 1
 
     # merged case-library PRs (read-only public data), still gated for links by the Worker allowlist on render

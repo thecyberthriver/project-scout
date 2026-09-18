@@ -97,5 +97,18 @@ class Status(unittest.TestCase):
         self.assertIn(gate.LABEL, txt)
 
 
+class SyntheticNote(unittest.TestCase):
+    """The synthetic idea is one fixed string per major, so it must not repost every run."""
+
+    def test_note_is_suppressed_inside_the_cooldown_and_allowed_after(self):
+        import datetime
+        today = datetime.date.today()
+        fresh = {"note:data": (today - datetime.timedelta(days=1)).isoformat()}
+        stale = {"note:data": (today - datetime.timedelta(days=pipeline.NOTE_COOLDOWN_DAYS + 1)).isoformat()}
+        self.assertTrue(pipeline._note_recent(fresh, "data"))
+        self.assertFalse(pipeline._note_recent(stale, "data"))
+        self.assertFalse(pipeline._note_recent({}, "data"))  # never posted
+
+
 if __name__ == "__main__":
     unittest.main()

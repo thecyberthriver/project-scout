@@ -86,6 +86,11 @@ jobs:
           CAMPUS_CHAT_ID: ${{ secrets.CAMPUS_CHAT_ID }}
           DISCORD_WEBHOOKS: ${{ secrets.DISCORD_WEBHOOKS }}
         run: python project_scout.py --publish build/
+      - name: Grant the Student role to anyone who joined since the last run
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+        run: python enroll.py --sweep   # idempotent; students who ran /verify are skipped
       - name: Commit state
         run: |
           git config user.name "project-scout-bot"

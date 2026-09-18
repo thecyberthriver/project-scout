@@ -10,4 +10,6 @@ workers_dev = true
 #   npx wrangler secret put DISCORD_GUILD_ID   -c wrangler.discord.toml   the TLDP server id (commands from any other server are rejected)
 #   npx wrangler secret put STUDENT_ROLE_ID    -c wrangler.discord.toml   TLDP Student role id
 #   npx wrangler secret put STAFF_ROLE_ID      -c wrangler.discord.toml   TLDP Staff role id
-# No GitHub token, no bot token, no roster: this Worker only renders published.json and never assigns roles.
+#   npx wrangler secret put DISCORD_BOT_TOKEN   -c wrangler.discord.toml   Bot tab → token (only used to grant the Student role on /verify)
+# No GitHub token and no roster: this Worker renders published.json and, on /verify, grants the TLDP Student role.
+# Anyone who is already in the guild can self-enrol with /verify — the invite link is the gate, so keep invites single-use.

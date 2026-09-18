@@ -11,6 +11,9 @@ Access is granted by two staff-run steps, each one command, no per-repo or per-s
                                  #   random code = unpredictable. Only people you invite can join.
   python enroll.py --grant       # give the TLDP Student role to every human member who joined and doesn't have it
                                  #   yet (skips bots and staff). Run it after invites go out; members == roster size.
+  python enroll.py --sweep       # same grant, but enumerates members with the member-search endpoint instead of the
+                                 #   member list, so it works WITHOUT the privileged Server Members Intent (which
+                                 #   makes --grant/--reconcile fail 403 "Missing Access"). Slower; safe to re-run.
   python enroll.py --reconcile   # counts only: roster size vs current members vs students granted. No names printed.
   python enroll.py --self-check  # offline checks of the roster-loading and redaction logic (no network).
 
@@ -21,7 +24,10 @@ Never run against a live server without approval.
 """
 import json
 import os
+import string
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -70,6 +76,16 @@ def redact(name: str) -> str:
     return f"{initials}·{len(name)}"
 
 
+def needs_grant(member: dict, student_id: str, staff_id: str | None) -> bool:
+    """True for a human member who should get the Student role. Bots, staff and the already-granted are skipped."""
+    if member.get("user", {}).get("bot"):
+        return False
+    roles = member.get("roles", [])
+    if staff_id and staff_id in roles:
+        return False
+    return student_id not in roles
+
+
 def _fail_closed_guild() -> str:
     g = _env("DISCORD_GUILD_ID")
     if not g:
@@ -108,20 +124,53 @@ def grant_students() -> int:
         if not members:
             break
         for m in members:
-            uid = m["user"]["id"]
-            if m["user"].get("bot") or (staff_id and staff_id in m.get("roles", [])):
+            if not needs_grant(m, student_id, staff_id):
                 skipped += 1
                 continue
-            if student_id in m.get("roles", []):
-                skipped += 1
-                continue
-            api("PUT", f"/guilds/{guild}/members/{uid}/roles/{student_id}")
+            api("PUT", f"/guilds/{guild}/members/{m['user']['id']}/roles/{student_id}")
             granted += 1
         after = members[-1]["user"]["id"]
         if len(members) < 1000:
             break
     print(f"granted {STUDENT_ROLE} to {granted} member(s); skipped {skipped} (bots/staff/already-granted). "
           f"Cross-check: member count should equal your roster size.")
+    return 0
+
+
+def _search(guild: str, query: str) -> list:
+    """Member search — unlike the member list, it does NOT need the Server Members Intent. Backs off on 429."""
+    for _ in range(6):
+        try:
+            return api("GET", f"/guilds/{guild}/members/search?query={urllib.parse.quote(query)}&limit=100")
+        except urllib.error.HTTPError as e:
+            if e.code != 429:
+                raise
+            time.sleep(float(json.loads(e.read()).get("retry_after", 2)) + 0.5)
+    return []
+
+
+def sweep_students() -> int:
+    """--grant without the privileged intent: enumerate members by name prefix, grant whoever is missing the role."""
+    guild = _fail_closed_guild()
+    roles = {r["name"]: r for r in api("GET", f"/guilds/{guild}/roles")}
+    if STUDENT_ROLE not in roles:
+        raise SystemExit(f"role {STUDENT_ROLE!r} missing; run discord_setup.py first")
+    student_id, staff_id = roles[STUDENT_ROLE]["id"], roles.get(STAFF_ROLE, {}).get("id")
+    # ponytail: one search per leading character, 100 hits each — fine for a cohort server, misses anyone whose
+    # username, nick and display name ALL start with a non-alphanumeric, and truncates a prefix with >100 members.
+    # Upgrade path: enable the Server Members Intent and use --grant, which pages the real member list.
+    found = {}
+    for q in string.ascii_lowercase + string.digits:
+        for m in _search(guild, q):
+            found[m["user"]["id"]] = m
+        time.sleep(1.2)
+    granted = 0
+    for uid, m in found.items():
+        if needs_grant(m, student_id, staff_id):
+            api("PUT", f"/guilds/{guild}/members/{uid}/roles/{student_id}")
+            granted += 1
+    print(f"swept {len(found)} member(s) found by search; granted {STUDENT_ROLE} to {granted}. "
+          f"Re-runnable: already-granted members, bots and staff are skipped.")
     return 0
 
 
@@ -155,6 +204,12 @@ def self_check() -> int:
     assert r == ["Ada Lovelace", "Alan Turing"], r
     assert redact("Ada Lovelace") == "AL·12", redact("Ada Lovelace")
     assert redact("") == "?·0"
+    S, F = "role_student", "role_staff"
+    assert needs_grant({"user": {"id": "1"}, "roles": []}, S, F)                      # plain member: grant
+    assert not needs_grant({"user": {"id": "1"}, "roles": [S]}, S, F)                 # already a student
+    assert not needs_grant({"user": {"id": "1"}, "roles": [F]}, S, F)                 # staff
+    assert not needs_grant({"user": {"id": "1", "bot": True}, "roles": []}, S, F)     # bot
+    assert needs_grant({"user": {"id": "1"}, "roles": []}, S, None)                   # server with no staff role
     print("enroll self-check ok")
     return 0
 
@@ -166,6 +221,8 @@ if __name__ == "__main__":
         raise SystemExit(make_invites())
     if "--grant" in sys.argv:
         raise SystemExit(grant_students())
+    if "--sweep" in sys.argv:
+        raise SystemExit(sweep_students())
     if "--reconcile" in sys.argv:
         raise SystemExit(reconcile())
     print(__doc__)
