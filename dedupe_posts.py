@@ -26,7 +26,7 @@ import urllib.request
 
 import enroll
 
-REPO = re.compile(r"github\.com/([A-Za-z0-9._-]+/[A-Za-z0-9._-]+)")
+REPO = re.compile(r"(github\.com|huggingface\.co)/((?:datasets/|spaces/)?[A-Za-z0-9._-]+/[A-Za-z0-9._-]+)")
 EVERGREEN = ("🗺", "📚", "🎓")  # one-time posts; the feed drops are seen-gated and are left alone
 APPLY = "--apply" in sys.argv
 
@@ -97,7 +97,7 @@ def duplicates(threads: list[dict]) -> dict[str, str]:
             # hash the whole post, not just its repo links: a drop whose only content is the canned
             # "build-it-yourself idea" has no links at all, and those were the ones repeating.
             "text": hashlib.sha1(" ".join(text.split()).encode()).hexdigest(),
-            "repos": sorted({r.rstrip(".").lower() for r in REPO.findall(text)}),
+            "repos": sorted({f"{h}/{p}".rstrip(".").lower() for h, p in REPO.findall(text)}),
             "msgs": len(msgs),
             "human": [m for m in msgs if not m["author"].get("bot")],
             "reacts": sum(sum(r["count"] for r in m.get("reactions", [])) for m in msgs),
