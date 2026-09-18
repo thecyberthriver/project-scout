@@ -348,6 +348,7 @@ def status_text() -> str:
 
 if __name__ == "__main__":
     import sys
+    sys.stdout.reconfigure(errors="replace")   # the status line starts with an emoji; a Windows cp1252 console crashes on it
     if "--status" in sys.argv:
         print(status_text())
     else:
