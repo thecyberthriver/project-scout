@@ -15,6 +15,7 @@ const HELP =
   "**New here? Run `/scout lane:Learning path major:<yours>`** — your whole year in order, stage by stage.\n" +
   "`/scout major:Cyber` fresh repos to build · `lane:Contribute` open good-first-issues · `lane:Research` fresh paper code.\n" +
   "Add `keywords:` to narrow, e.g. `/scout major:Data keywords:nba`. Add `level:` for Beginner, Intermediate or Advanced.\n" +
+  "`lane:Hugging Face` — models, datasets & Spaces to build on: link-screened metadata + README, **not** code-scanned.\n" +
   "*Results come from a snapshot rebuilt every 6 hours after automated screening. Automated checks completed; not a safety guarantee. " +
   "Read a project's install steps before running anything; report suspicious links to TLDP staff.*";
 

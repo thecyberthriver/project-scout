@@ -19,6 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 import gate
+import hf
 import levels
 import links
 import project_scout as ps
@@ -204,8 +205,12 @@ def _build_published(idx: dict, store: dict, meta: dict, quarantine: dict) -> di
         ever["paths"][major] = new_stages
     hacks = idx.get("hackathons", {})
     items = [h for h in hacks.get("items", []) if _hack_ok(h)]
+    hugging = idx.get("hf", {})
+    hf_items = {m: [r for r in (rows or []) if hf.eligible(r)] for m, rows in (hugging.get("items") or {}).items()}
     return {"meta": meta, "feed": feed, "evergreen": ever,
             "hackathons": {"at": hacks.get("at", meta["generated_at"]), "items": items},
+            "huggingface": {"at": hugging.get("at", meta["generated_at"]),
+                            "items": {m: rows for m, rows in hf_items.items() if rows}},
             "fallback": SYNTHETIC}
 
 
@@ -253,6 +258,14 @@ def validate_published(pub: dict, store: dict, quarantine: dict, meta: dict) -> 
             problems.append(f"{section} {row.get('full_name')}: {why[0] if why else 'ineligible'}")
         if len(problems) >= 50:
             break
+    # Hugging Face rows are not repositories and never claim a code scan; they are re-validated against their own
+    # record the same way (passing screen, pinned SHA, not expired, link-screened URL).
+    for major, rows in ((pub.get("huggingface") or {}).get("items") or {}).items():
+        for r in rows:
+            if not isinstance(r, dict) or not str(r.get("full_name", "")).startswith("hf:"):
+                problems.append(f"huggingface:{major}: malformed row")
+            elif not hf.eligible(r):
+                problems.append(f"huggingface:{major} {r.get('full_name')}: screening missing, expired or not passing")
     return (not problems), problems
 
 
@@ -286,6 +299,14 @@ def _drop_sections(published: dict, seen: dict) -> list[dict]:
                     seen[r["full_name"]] = ps.date.today().isoformat()
                 parts.append({"lane": lane, "header": tag, "rows": rows})
         note = None if parts else SYNTHETIC[major]  # no beginner repo cleared this slot -> synthetic beginner, never harder
+        # Hugging Face rows ride in the same section (same channel, same seen-dedupe) but are their own lane: they are
+        # link-screened, not code-scanned, and they never stand in for a beginner project (hence: after `note`).
+        hf_rows = [r for r in (published.get("huggingface", {}).get("items", {}).get(major) or [])
+                   if r["full_name"] not in seen][:hf.PICKS]
+        if hf_rows:
+            for r in hf_rows:
+                seen[r["full_name"]] = ps.date.today().isoformat()
+            parts.append({"lane": "hf", "header": hf.HEADER, "rows": hf_rows})
         if parts or note:
             out.append({"key": major, "label": label, "sections": parts, "note": note})
     # orgs
@@ -324,6 +345,10 @@ def discover(out_dir: str, full: bool = False) -> int:
     except Exception as e:
         print(f"static refresh: {e}", file=sys.stderr)
     ps._index["hackathons"] = {"at": _now_iso(), "items": ps.hackathons_nyc()}
+    try:
+        ps._index["hf"] = {"at": _now_iso(), "items": hf.discover()}   # screened here; rows expire in 14 days
+    except Exception as e:
+        print(f"hugging face: {e}", file=sys.stderr)                   # keep the previous rows; they expire on their own
     idx = ps._index
     store = _screen_all(idx)
     passing = sum(1 for r in store["records"].values() if r.get("result") == "pass")
@@ -354,6 +379,9 @@ def _render_section(sec: dict) -> str:
             "\n".join(ps.render_hack(h) for h in sec["hacks"]) + ps.hack_footer()
     parts = [f"\n<b>{sec['label']}</b> <i>· 🟢 Beginner by default — /scout level:intermediate or level:challenge for more</i>"]
     for part in sec.get("sections", []):
+        if part["lane"] == "hf":
+            parts.append(f"<i>{part['header']} · {hf.NOTE}</i>\n" + "\n".join(hf.render(r) for r in part["rows"]))
+            continue
         parts.append(f"<i>{part['header']}</i>\n" + "\n".join(ps.render_repo(r, part["lane"]) for r in part["rows"]))
     if sec.get("note"):
         parts.append("<i>🟢 Beginner build-it-yourself idea (no beginner repo cleared screening this slot)</i>\n• "
@@ -398,7 +426,9 @@ def publish(in_dir: str, index_only: bool = False) -> int:
         # OFFLINE re-validation: every row must still pass the gate right now, and not already be sent
         if "sections" in sec:
             for part in sec["sections"]:
-                part["rows"] = [r for r in part["rows"] if r["full_name"] not in seen and gate.eligible(r, store, quarantine, meta)[0]]
+                ok = (lambda r: hf.eligible(r)) if part["lane"] == "hf" else \
+                     (lambda r: gate.eligible(r, store, quarantine, meta)[0])
+                part["rows"] = [r for r in part["rows"] if r["full_name"] not in seen and ok(r)]
             sec["sections"] = [p for p in sec["sections"] if p["rows"]]
             if not sec["sections"] and not sec.get("note"):  # keep a section that carries a synthetic beginner idea
                 continue

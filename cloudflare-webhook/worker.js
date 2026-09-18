@@ -26,12 +26,13 @@ export const MAJORS = {
 };
 const ALIAS = { finance: "fintech", software: "swe", security: "cyber", analytics: "data", project: "pm", projectmanagement: "pm", digitalmarketing: "marketing", seo: "marketing" };
 export const LANES = { build: { label: "🧪 Build this" }, oss: { label: "🤝 Contribute" }, research: { label: "🔬 Research" } };
-export const OTHER_LANES = ["orgs", "start", "hackathons", "cases", "path"];
+export const OTHER_LANES = ["orgs", "start", "hackathons", "cases", "path", "hf"];
 const LANE_ALIAS = { contribute: "oss", opensource: "oss", paper: "research", papers: "research", new: "build",
   org: "orgs", nonprofit: "orgs", volunteer: "orgs", mission: "orgs",
   basics: "start", starter: "start", starters: "start", learn: "start", ideas: "start", begin: "start",
   hackathon: "hackathons", hack: "hackathons", hacks: "hackathons", events: "hackathons",
-  case: "cases", casestudy: "cases", casestudies: "cases", path: "path", paths: "path", roadmap: "path", year: "path", plan: "path" };
+  case: "cases", casestudy: "cases", casestudies: "cases", path: "path", paths: "path", roadmap: "path", year: "path", plan: "path",
+  huggingface: "hf", hugging: "hf", models: "hf", datasets: "hf", dataset: "hf", spaces: "hf", ai: "hf" };
 // First keyword → the feed sub-label it selects (keys are "major|lane|sublabel", written by the publisher).
 const SWE_LABEL = { python: "Python backend", backend: "Python backend", sql: "SQL", frontend: "Frontend", go: "Other languages" };
 const DATA_LABEL = { powerbi: "Power BI", power: "Power BI", tableau: "Tableau" };
@@ -72,7 +73,7 @@ export const HACK_LINKS = [
 ];
 
 // ---- links & escaping ---------------------------------------------------------------------------------------------
-export const ALLOWED_LINK_HOSTS = ["github.com", "gitlab.com", "devpost.com", "mlh.io", "arxiv.org", "www.kaggle.com", "kaggle.com",
+export const ALLOWED_LINK_HOSTS = ["github.com", "gitlab.com", "huggingface.co", "devpost.com", "mlh.io", "arxiv.org", "www.kaggle.com", "kaggle.com",
   "www.makeovermonday.co.uk", "www.workout-wednesday.com", "www.opencasestudies.org", "thedfirreport.com", "hacktoberfest.com", "openpracticelibrary.com",
   "guides.18f.gov", "www.agilealliance.org", "www.quantconnect.com", "overthewire.org", "play.picoctf.org", "tryhackme.com", "www.freecodecamp.org",
   "scrumguides.org", "www.atlassian.com", "learndigital.withgoogle.com", "academy.hubspot.com", "ctftime.org", "www.pmi.org", "www.linkedin.com",
@@ -297,6 +298,35 @@ export function renderPath(major, data, pub, isMd = false) {
   });
   return pack(head, blocks, noteLine(pub, isMd), limitFor(isMd));
 }
+// ---- Hugging Face lane (published by hf.py) -------------------------------------------------------------------------
+// These rows are NOT repositories: no clone, no code scan. Their own record (passing screen, 40-hex pinned SHA, not
+// expired) is re-checked here before anything renders, and the note under the head never claims a code scan.
+export const HF_NOTE = "link-screened metadata + README, not code-scanned — read the Files tab before you run anything";
+export function hfEligible(row, now = Date.now()) {
+  if (!row || typeof row.full_name !== "string" || !row.full_name.startsWith("hf:")) return false;
+  const s = row.screened;
+  if (!s || s.result !== "pass" || !/^[0-9a-f]{40}$/.test(s.sha || "")) return false;
+  const exp = Date.parse(s.expires || "");
+  return Number.isFinite(exp) && exp > now;
+}
+export function hfItems(pub, major, extra, now = Date.now()) {
+  const all = pub?.huggingface?.items || {};
+  const rows = major ? all[major] || [] : dedupe(Object.values(all).flat());
+  const tokens = tokensOf(extra);
+  return rows.filter((r) => hfEligible(r, now) && matches(r, tokens)).slice(0, MAX + 3);
+}
+export function renderHF(head, items, pub, isMd = false) {
+  const e = (s) => esc0(s, isMd);
+  if (!items.length) return `${head}\nNothing matched. Try fewer keywords, or another major.`;
+  head += "\n" + italic(HF_NOTE, isMd);
+  const blocks = items.map((r) => {
+    const meta = [r.industry ? `${r.industry_emoji || ""} ${r.industry}`.trim() : "", r.hf_kind, r.task, r.license]
+      .filter(Boolean).map(e).join(" · ");
+    const warn = (r.warnings || []).slice(0, 2).map((w) => `\n  ⚠️ ${e(w)}`).join("");
+    return `• ${link(r.id, r.html_url, isMd)} ❤${Number(r.likes) || 0} · ${meta}\n  ${e(r.description || "(no description)")}${warn}`;
+  });
+  return pack(head, blocks, noteLine(pub, isMd), limitFor(isMd));
+}
 export function renderHacks(head, items, isMd = false) {
   const e = (s) => esc0(s, isMd);
   const more = HACK_LINKS.map(([n, u]) => link(n, u, isMd)).join(" · ");
@@ -340,6 +370,10 @@ export function answerFor(pub, lane, major, extra, isMd, now = Date.now()) {
   if (!operational(pub, now)) return PAUSE_MSG;
   const b = (s) => bold(s, isMd);
   if (lane === "hackathons") return renderHacks(b("🏁 NYC in-person hackathons (Devpost + MLH, refreshed by the feed)"), hackathons(pub), isMd);
+  if (lane === "hf") {
+    const head = b(`🤗 Hugging Face · ${major ? MAJORS[major].label : "🔎 All majors"}`) + (extra ? ` · ${italic(esc0(extra, isMd), isMd)}` : "");
+    return renderHF(head, hfItems(pub, major, extra, now), pub, isMd);
+  }
   if (lane === "path") {
     const data = pathFor(pub, major || "swe", now);
     return data ? renderPath(major || "swe", data, pub, isMd) : "The learning path isn't published yet — try again after the next feed run.";
@@ -367,7 +401,8 @@ const HELP =
   "/research &lt;major&gt; — fresh paper code (cites arXiv)\n" +
   "/orgs — non-profit, public-sector and company repos that welcome contributors\n" +
   "/basics &lt;major&gt; — evergreen idea lists, roadmaps, beginner courses\n" +
-  "/hackathons — NYC in-person hackathons · /cases &lt;major&gt; — case-study collections\n\n" +
+  "/hackathons — NYC in-person hackathons · /cases &lt;major&gt; — case-study collections\n" +
+  "/hf &lt;major&gt; — Hugging Face models, datasets &amp; Spaces to build on (link-screened, not code-scanned)\n\n" +
   "Add keywords to narrow: <code>/cyber honeypot</code>, <code>/oss data pandas</code>.\n\n" +
   "<i>Everything here comes from a snapshot rebuilt every 6 hours after automated screening. Automated checks completed; not a safety guarantee. " +
   "Never run a project's install scripts before reading them; report anything suspicious to TLDP staff.</i>";
