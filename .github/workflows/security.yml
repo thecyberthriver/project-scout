@@ -29,18 +29,29 @@ jobs:
       - run: pip install semgrep==1.177.0
       - name: Semgrep (registry security rules + custom malware ruleset)
         run: |
+          # Generated state: harvested third-party text (repo names, descriptions, READMEs' link screens), rewritten
+          # every run. Scanning it means a stranger's repo description can turn this repo red — index.json once
+          # matched detected-facebook-oauth. These files are data, never executed, and gitleaks (secrets job) still
+          # scans them, so nothing here is a secrets-coverage gap.
+          STATE="--exclude index.json --exclude published.json --exclude screening.json --exclude seen.json"
+          STATE="$STATE --exclude vet_cache.json --exclude scan_cache.json"
           semgrep scan --config p/security-audit --config p/secrets --config p/python --config p/javascript \
             --config p/github-actions --severity ERROR --error --metrics=off \
-            --exclude docs --exclude __pycache__ --json --output semgrep-project.json . || status=$?
-          # the malware ruleset matches its own regex strings, so it is scanned separately with its folder excluded
+            --exclude docs --exclude __pycache__ $STATE --json --output semgrep-project.json . || status=$?
+          # the malware ruleset matches its own regex strings, so it is scanned separately with BOTH rule folders
+          # excluded: yara-rules/malware.yar lists the same credential paths and payload strings semgrep-rules does.
           semgrep scan --config semgrep-rules/malware.yml --severity ERROR --error --metrics=off \
-            --exclude docs --exclude __pycache__ --exclude semgrep-rules --json --output semgrep-malware.json . || status=$?
+            --exclude docs --exclude __pycache__ --exclude semgrep-rules --exclude yara-rules $STATE \
+            --json --output semgrep-malware.json . || status=$?
           python - <<'EOF'
           import json, os
           rows = []
           for f in ("semgrep-project.json", "semgrep-malware.json"):
               d = json.load(open(f)) if os.path.exists(f) else {"results": []}
               rows += [f"- `{r['path']}:{r['start']['line']}` {r['check_id'].split('.')[-1]}" for r in d["results"]]  # rule + location only, never matched text
+          print(f"Semgrep: {len(rows)} ERROR-level finding(s)")   # also in the log: the summary alone is not readable from the API
+          for row in rows:
+              print(row)
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as s:
               s.write(f"## Semgrep: {len(rows)} ERROR-level finding(s)\n\n" + ("\n".join(rows) if rows else "None.") + "\n")
           EOF

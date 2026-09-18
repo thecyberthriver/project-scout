@@ -7,3 +7,4 @@ docs/server.*
 roster_invites_local.json
 roster_local.json
 secrets_local.py
+sent_invites_local.json
