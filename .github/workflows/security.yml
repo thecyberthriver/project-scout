@@ -43,6 +43,9 @@ jobs:
           for f in ("semgrep-project.json", "semgrep-malware.json"):
               d = json.load(open(f)) if os.path.exists(f) else {"results": []}
               rows += [f"- `{r['path']}:{r['start']['line']}` {r['check_id'].split('.')[-1]}" for r in d["results"]]  # rule + location only, never matched text
+          print(f"Semgrep: {len(rows)} ERROR-level finding(s)")   # also in the log: the summary alone is not readable from the API
+          for row in rows:
+              print(row)
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as s:
               s.write(f"## Semgrep: {len(rows)} ERROR-level finding(s)\n\n" + ("\n".join(rows) if rows else "None.") + "\n")
           EOF
