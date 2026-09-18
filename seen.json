@@ -149,5 +149,7 @@
 "note:marketing": "2026-09-18",
 "hf:datasets/Lichess/standard-chess-games": "2026-09-18",
 "hf:datasets/atalaydenknalbant/video-games-dataset": "2026-09-18",
-"gal-a/qikly": "2026-09-18"
+"gal-a/qikly": "2026-09-18",
+"hf:datasets/gretelai/synthetic_text_to_sql": "2026-09-18",
+"hf:datasets/armand0e/claude-fable-5-claude-code": "2026-09-18"
 }
