@@ -2,7 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as w from "./worker.js";
-import discord, { validate, allowed, replay, rateLimited, verifySignature, VERIFY_MSG } from "./discord.js";
+import discord, { validate, allowed, replay, rateLimited, verifySignature, verifyPlan,
+  VERIFY_MSG, VERIFY_ALREADY, VERIFY_OK, VERIFY_FAIL } from "./discord.js";
 
 const NOW = Date.parse("2026-10-01T12:00:00Z");
 const iso = (ms) => new Date(ms).toISOString();
@@ -157,13 +158,46 @@ test("wrong guild / missing config / non-student / replay via the handler", asyn
   assert.ok(b.data.content.includes("Duplicate"));
 });
 
-test("/verify never assigns a role and is ephemeral even with a ROSTER env var", async () => {
+// /verify grants the TLDP Student role (the staff-issued invite is the gate). It matches NO names: a ROSTER env var
+// must never turn it into a name oracle, and it must stay ephemeral and fail closed when it is not configured.
+test("/verify: unconfigured and already-verified answer without any network call, and ignore ROSTER", async () => {
   const calls = [];
   globalThis.fetch = async (url) => { calls.push(String(url)); throw new Error("no network"); };
-  const b = await bodyOf(await discord.fetch(await signed(inter({ data: { name: "verify", options: [] } })), { ...SENV, ROSTER: '["Some Name"]', DISCORD_BOT_TOKEN: "t" }, ctx));
+  const verify = (over = {}) => inter({ data: { name: "verify", options: [] }, ...over });
+  // no bot token -> "ask staff", ephemeral, nothing called
+  let b = await bodyOf(await discord.fetch(await signed(verify()), { ...SENV, ROSTER: '["Some Name"]' }, ctx));
   assert.equal(b.data.content, VERIFY_MSG); assert.equal(b.data.flags, 64);
+  // already holds the Student role -> told so, still nothing called
+  b = await bodyOf(await discord.fetch(await signed(verify()), { ...SENV, DISCORD_BOT_TOKEN: "t", ROSTER: '["Some Name"]' }, ctx));
+  assert.equal(b.data.content, VERIFY_ALREADY); assert.equal(b.data.flags, 64);
   assert.deepEqual(calls, []);
   globalThis.fetch = async () => { throw new Error("network call attempted"); };
+});
+
+test("/verify: a member without the role gets it granted by id, never by name", async () => {
+  const calls = [];
+  globalThis.fetch = async (url, init) => { calls.push({ url: String(url), method: init?.method, auth: init?.headers?.authorization }); return new Response(null, { status: 204 }); };
+  const env = { ...SENV, DISCORD_BOT_TOKEN: "t", ROSTER: '["Some Name"]' };
+  const newcomer = inter({ data: { name: "verify", options: [] }, member: { roles: [], user: { id: "123456789" } } });
+  const b = await bodyOf(await discord.fetch(await signed(newcomer), env, ctx));
+  assert.equal(b.data.content, VERIFY_OK); assert.equal(b.data.flags, 64);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].method, "PUT");
+  assert.equal(calls[0].url, "https://discord.com/api/v10/guilds/g1/members/123456789/roles/s1");
+  assert.equal(calls[0].auth, "Bot t");
+  assert.ok(!JSON.stringify(calls).includes("Some Name"));      // no roster, no name matching
+  globalThis.fetch = async () => { throw new Error("network call attempted"); };
+});
+
+test("/verify: a refused grant fails closed, and a malformed caller is never granted", async () => {
+  globalThis.fetch = async () => new Response("nope", { status: 403 });
+  const env = { ...SENV, DISCORD_BOT_TOKEN: "t" };
+  const b = await bodyOf(await discord.fetch(await signed(inter({ data: { name: "verify", options: [] }, member: { roles: [], user: { id: "987654321" } } })), env, ctx));
+  assert.equal(b.data.content, VERIFY_FAIL); assert.equal(b.data.flags, 64);
+  globalThis.fetch = async () => { throw new Error("network call attempted"); };
+  assert.equal(verifyPlan({ member: { roles: [], user: { id: "nope" } } }, env).action, "unconfigured");
+  assert.equal(verifyPlan({ member: { roles: [], user: { id: "123456789" } } }, { ...env, DISCORD_BOT_TOKEN: "" }).action, "unconfigured");
+  assert.equal(verifyPlan({ member: { roles: ["st1"], user: { id: "123456789" } } }, env).action, "already");
 });
 
 test("/scout deferred reply carries allowed_mentions and the edit is mention-safe and published-only", async () => {
