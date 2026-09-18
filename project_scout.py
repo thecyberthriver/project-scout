@@ -70,15 +70,23 @@ LANES = {
 }
 # Build-lane sub-queries for majors that need more than one search. (label, GitHub query text, picks per run)
 # GitHub allows one `language:` per query, so languages are separate searches. SWE is weighted to Python + SQL.
+# CIS majors (cyber, swe, data) are themed on PYTHON and SQL you can actually run: the searches are weighted that way
+# and every slot keeps at least one SQL query, because SQL is the half students most often never practise. The
+# non-technical majors (pm, marketing) and the finance majors are NOT themed this way -- they keep broad,
+# quality-first sourcing, since a Python repo is rarely the best answer for them.
 BUILD_QUERIES = {
     "swe": [("🐍 Python backend", '"backend" OR api OR "web app" OR cli OR automation language:Python', 2),
             ("🗄 SQL & databases", 'sql OR postgres OR sqlite OR "data model" OR analytics language:SQL', 1),
             ("🗄 SQL with Python", 'sql OR postgres OR sqlalchemy OR "data pipeline" language:Python', 1),
-            ("🖥 Frontend", 'frontend OR react OR vue OR "web app" OR dashboard language:TypeScript', 1),
-            ("☕ Other languages", '"backend" OR api OR microservice OR cli language:Go', 1)],
+            ("🐍 Python practice", 'exercises OR katas OR "practice problems" OR "project ideas" language:Python', 1),
+            ("🖥 Frontend", 'frontend OR react OR vue OR "web app" OR dashboard language:TypeScript', 1)],
     "data": [("📊 Analysis & pipelines", MAJORS["data"][1], 2),
+             ("🐍 Pandas & notebooks", 'pandas OR notebook OR "exploratory data analysis" OR matplotlib language:Python', 1),
+             ("🗄 SQL analytics", 'sql OR postgres OR duckdb OR dbt OR "window function" language:SQL', 1),
              ("📈 Power BI", '"power bi" OR powerbi OR DAX OR "power query"', 1),
              ("📉 Tableau", 'tableau OR "tableau public" OR tabpy OR hyper', 1)],
+    "cyber": [("🐍 Python security scripting", 'detection OR "log analysis" OR forensics OR "incident response" language:Python', 2),
+              ("🗄 SQL for security", 'osquery OR siem OR "threat hunting" OR "log queries" language:SQL', 1)],
 }
 
 # Cybersecurity by the 8 CISSP domains: live search terms + curated legit projects + a reference link each.
@@ -446,6 +454,77 @@ STARTERS = {
     "marketing": ["PostHog/posthog", "umami-software/umami", "matomo-org/matomo", "mautic/mautic", "knadh/listmonk",
                   "n8n-io/n8n"],
 }
+# ---- the Python + SQL project ladder for the CIS majors -------------------------------------------------------------
+# Hand-picked, verified repos a student can work through in order: 🟢 start here, 🟡 once you can code a bit, 🔴 a real
+# piece of work. Each entry is (level, language, repo, what YOU build) — the repo is the material, the last field is the
+# assignment, because a link with no task is not a project. Screened as curated evergreen rows like every other static
+# set, so they are re-scanned monthly and dropped if one ever fails.
+LEVELS3 = {"start": "🟢 Start here", "build": "🟡 Build on it", "deep": "🔴 Go deep"}
+PROJECTS = {
+    "cyber": [
+        ("start", "Python", "OTRF/Security-Datasets",
+         "Load one attack dataset into pandas and find the logon that does not belong. Write three sentences on how you spotted it."),
+        ("start", "SQL", "osquery/osquery",
+         "Install it, then query your OWN machine: running processes, listening ports, startup items. Save five queries you would run during an incident."),
+        ("build", "Python", "SigmaHQ/sigma",
+         "Write one Sigma rule for a technique you care about, then test it against the Security-Datasets logs above. Tune it until it stops firing on normal activity."),
+        ("build", "Python", "thinkst/opencanary",
+         "Run a honeypot on a spare port for a week. Chart what hit it, where from, and what it tried. That chart is your write-up."),
+        ("deep", "Python", "volatilityfoundation/volatility3",
+         "Take a public memory capture and list its processes, network connections and any injected code. Document what a defender would do next."),
+        ("deep", "Python", "log2timeline/plaso",
+         "Build a super-timeline from a public disk image and answer one question: what happened first?"),
+    ],
+    "swe": [
+        ("start", "Python", "practical-tutorials/project-based-learning",
+         "Pick ONE Python tutorial and finish it end to end — including the README and the tests the tutorial skips."),
+        ("start", "Python", "Asabeneh/30-Days-Of-Python",
+         "Work days 1–15, then build the day-30 project with your own data instead of the book's."),
+        ("build", "Python", "TheAlgorithms/Python",
+         "Pick three algorithms you cannot yet explain, reimplement them from the docstring alone, and write tests that prove yours matches."),
+        ("build", "SQL", "lerocha/chinook-database",
+         "Load Chinook and answer ten business questions with SQL. Then add an index and show the query plan before and after."),
+        ("deep", "Python", "realworld-apps/realworld",
+         "Build the RealWorld API backend in FastAPI or Django and pass the published test suite. This is a portfolio piece."),
+        ("deep", "SQL", "sqlfluff/sqlfluff",
+         "Lint a messy SQL folder, fix what it finds, then write one custom rule. A merged rule is a real open-source contribution."),
+    ],
+    "data": [
+        ("start", "Python", "jvns/pandas-cookbook",
+         "Work the notebooks, then redo chapter 3 on a CSV of your own. Post the before/after."),
+        ("start", "SQL", "NUKnightLab/sql-mysteries",
+         "Solve the SQL Murder Mystery, then write your own three-table mystery and make a classmate solve it."),
+        ("build", "Python", "stefmolin/Hands-On-Data-Analysis-with-Pandas-2nd-edition",
+         "Follow the cleaning and EDA chapters, then apply the same steps to a fivethirtyeight dataset and publish the notebook."),
+        ("build", "SQL", "datacharmer/test_db",
+         "Load the employees database and answer five HR questions (attrition, pay gaps, tenure) with windowed SQL."),
+        ("deep", "Python", "ptyadana/SQL-Data-Analysis-and-Visualization-Projects",
+         "Recreate one project end to end on a DIFFERENT dataset, and say where the original analysis would mislead someone."),
+        ("deep", "SQL", "iweld/SQL_Coding_Challenge",
+         "Complete the challenge, then rewrite your three slowest queries and show the timing difference."),
+    ],
+}
+
+
+def gate_label() -> str:
+    """The same "not a safety guarantee" line the gated feed uses (imported lazily: gate imports nothing from here)."""
+    import gate
+    return gate.LABEL
+
+
+def projects_for(key: str) -> list[tuple[str, str, str, str]]:
+    return PROJECTS.get(key, [])
+
+
+def render_project(entry: tuple[str, str, str, str], repo: dict | None) -> str:
+    level, lang, name, todo = entry
+    head = f"{LEVELS3[level]} · {esc(lang)}"
+    if repo:
+        return (f'• {head} — <a href="{repo["html_url"]}">{esc(repo["full_name"])}</a> ⭐{repo["stargazers_count"]}\n'
+                f"  🛠 {esc(todo)}")
+    return f"• {head} — {esc(name)}\n  🛠 {esc(todo)}"
+
+
 STARTER_WHY = {
     "quant": "idea list → book code with notebooks → example strategies → two real backtest engines → free market data",
     "fintech": "open-source Bloomberg-style terminal → bank-linking sample app → payments sample → two budgeting apps to study → market data",
@@ -677,8 +756,13 @@ def refresh_static() -> None:
         paths[key] = [[{"target": t, "todo": todo, "repo": row(repos[t]) if repos.get(t) else None} for t, todo in stage] for stage in PATHS[key]]
         paths[key].append([{"target": t, "todo": todo, "repo": row(repos[t]) if repos.get(t) else None} for t, todo in CHALLENGE[key]])  # 5th = challenge track
         time.sleep(0.3)
+    projects = {}
+    for key, entries in PROJECTS.items():
+        projects[key] = [{"level": lv, "lang": lang, "name": name, "todo": todo, "repo": row(r) if r else None}
+                         for lv, lang, name, todo in entries for r in [gh_repo(name)]]
+        time.sleep(0.3)
     st.update({"refreshed_at": date.today().isoformat(), "starters": starters, "cyber_domains": domains, "cases": cases,
-               "paths": paths, "stages": STAGES})
+               "paths": paths, "stages": STAGES, "projects": projects})
 
 
 def save_index() -> None:
@@ -1178,6 +1262,22 @@ def main() -> int:
                 send(m)
             discord(key, text)
         print("posted learning paths for all majors")
+        return 0
+    if "--projects" in sys.argv:  # one-time: the Python + SQL project ladder per CIS major (cyber, swe, data)
+        wanted = [a for a in sys.argv[sys.argv.index("--projects") + 1:] if a in PROJECTS] or list(PROJECTS)
+        for key in wanted:
+            rows = []
+            for level in ("start", "build", "deep"):
+                items = [(e, gh_repo(e[2])) for e in PROJECTS[key] if e[0] == level]
+                if items:
+                    rows.append(f"<i>{LEVELS3[level]}</i>\n" + "\n".join(render_project(e, r) for e, r in items))
+            text = (f"\n<b>🐍 {MAJORS[key][0]} — Python &amp; SQL projects, easiest first</b>\n"
+                    "<i>Work down the list. Each one names what YOU build — finishing the task matters more than the repo.</i>\n"
+                    + "\n".join(rows) + f"\n\n<i>ℹ️ {gate_label()}</i>")
+            for m in messages([text]):
+                send(m)
+            discord(key, text)
+            print(f"posted project ladder: {key} ({len(PROJECTS[key])} projects)")
         return 0
     if "--cases" in sys.argv:  # one-time: "case studies you can contribute to" per major
         for key, (label, *_r) in MAJORS.items():

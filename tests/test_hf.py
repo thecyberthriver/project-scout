@@ -135,7 +135,7 @@ class InPipeline(unittest.TestCase):
         self.quar = gate.load_quarantine()
 
     def build(self, items):
-        idx = {"keys": {}, "static": {"starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}, "stages": []},
+        idx = {"keys": {}, "static": {"starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}, "projects": {}, "stages": []},
                "hackathons": {"at": self.meta["generated_at"], "items": []},
                "hf": {"at": self.meta["generated_at"], "items": items}}
         return pipeline._build_published(idx, {"policy_version": gate.POLICY_VERSION, "records": {}}, self.meta, self.quar)

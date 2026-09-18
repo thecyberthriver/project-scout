@@ -74,7 +74,9 @@ def _searches(full: bool):
             if not full and lane in ("oss", "research") and (lane == "oss") != (run_no % 2 == 0):
                 continue
             if lane == "build":
-                subs = ps.cyber_rotation() if key == "cyber" else ps.BUILD_QUERIES.get(key, [(None, terms, n)])
+                # cyber rotates its 8 CISSP domains AND carries the themed Python/SQL slots like the other CIS majors
+                subs = (ps.cyber_rotation() + ps.BUILD_QUERIES.get("cyber", [])) if key == "cyber" \
+                    else ps.BUILD_QUERIES.get(key, [(None, terms, n)])
                 if key in ps.COURSES and (full or key != "cyber"):
                     subs = list(subs) + (ps.course_rotation(key) if not full else [(f"🎓 {c[0]}", c[1], 1) for c in ps.COURSES[key]])
                 for sub_label, sub_terms, _n in subs:
@@ -96,6 +98,11 @@ def _static_repo_names(idx: dict):
             if r and r.get("full_name"):
                 yield r["full_name"], r
     for lst in st.get("cases", {}).values():
+        for item in lst:
+            r = item.get("repo")
+            if r and r.get("full_name"):
+                yield r["full_name"], r
+    for lst in st.get("projects", {}).values():
         for item in lst:
             r = item.get("repo")
             if r and r.get("full_name"):
@@ -177,7 +184,7 @@ def _build_published(idx: dict, store: dict, meta: dict, quarantine: dict) -> di
         if kept:
             feed[key] = kept
     st = idx.get("static", {})
-    ever = {"stages": st.get("stages", []), "starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}}
+    ever = {"stages": st.get("stages", []), "starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}, "projects": {}}
 
     def keep_repo(item_repo):
         if not item_repo or not item_repo.get("full_name"):
@@ -212,6 +219,16 @@ def _build_published(idx: dict, store: dict, meta: dict, quarantine: dict) -> di
                 new_stage.append({"target": item.get("target"), "todo": item.get("todo"), "repo": repo})
             new_stages.append(new_stage)
         ever["paths"][major] = new_stages
+    for major, lst in st.get("projects", {}).items():
+        items = []
+        for item in lst:
+            repo = keep_repo(item.get("repo")) if item.get("repo") else None
+            if item.get("repo") and not repo:
+                continue          # a curated project repo that failed screening is dropped entirely, task and all
+            items.append({"level": item.get("level"), "lang": item.get("lang"), "name": item.get("name"),
+                          "todo": item.get("todo"), "repo": repo})
+        if items:
+            ever["projects"][major] = items
     hacks = idx.get("hackathons", {})
     items = [h for h in hacks.get("items", []) if _hack_ok(h)]
     hugging = idx.get("hf", {})
@@ -245,6 +262,10 @@ def _all_repo_rows(pub: dict):
         for it in items:
             if it.get("repo"):
                 yield f"cases:{major}", it["repo"]
+    for major, items in (ev.get("projects") or {}).items():
+        for it in items:
+            if it.get("repo"):
+                yield f"projects:{major}", it["repo"]
     for major, stages in (ev.get("paths") or {}).items():
         for stage in stages:
             for it in stage:

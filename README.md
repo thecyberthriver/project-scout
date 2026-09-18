@@ -37,6 +37,20 @@ Hugging Face rows also carry an **industry label** (🏥 healthcare · 🏦 fina
 an item that matches nothing is simply unlabelled. The GitHub lanes have no industry axis: every industry there would
 be another search against the 30/min limit and the `SEARCH_BUDGET`.
 
+## The Python + SQL ladder (CIS majors)
+
+`PROJECTS` in `project_scout.py` is a hand-picked, screened ladder for **Cybersecurity, Software Engineering and Data
+Analytics** — six projects each, spanning 🟢 start here → 🟡 build on it → 🔴 go deep, always in both **Python and SQL**.
+Every entry names *what you build*, not just a repo: solve the SQL Murder Mystery then write your own; run a honeypot
+for a week and chart what hit it; build the RealWorld API and pass its published test suite.
+
+Post it once per major with `python project_scout.py --projects [major ...]`; students re-read it any time with
+`/scout lane:Projects` (aliases `/projects`, `/python`, `/sql`). These repos are screened as curated evergreen rows —
+same clone, same four engines, re-screened monthly — and an entry whose repo ever fails screening disappears, task and
+all. The ongoing feed for these three majors is themed the same way (`BUILD_QUERIES`): every slot keeps at least one
+SQL search, because SQL is the half students most often never practise. Project Management and Digital Marketing are
+deliberately **not** themed this way and keep broad, quality-first sourcing.
+
 ## Two halves, one gate
 
 Discovery is separated from what students see, and **every** student-visible path goes through the same gate
