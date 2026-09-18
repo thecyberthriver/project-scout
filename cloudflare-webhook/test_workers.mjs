@@ -258,3 +258,47 @@ test("levels: lookup defaults to beginner rows from the published feed", () => {
   const hard = w.lookup(p, "build", "cyber", "challenge", NOW).map((r) => r.full_name);
   assert.deepEqual(hard, ["x/chal"]);
 });
+
+// ---- Hugging Face lane ------------------------------------------------------------------------------------------
+const hrow = (id = "acme/demo", extra = {}) => ({
+  full_name: `hf:models/${id}`, id, hf_kind: "model", html_url: `https://huggingface.co/${id}`, likes: 42,
+  description: "a plain description", license: "apache-2.0", task: "text-classification",
+  industry: "healthcare", industry_emoji: "\u{1FA7A}", warnings: [],
+  screened: { result: "pass", sha: SHA, at: iso(NOW - 3600e3), expires: iso(NOW + 10 * 864e5) }, ...extra });
+const hpub = (rows, m = {}) => ({ ...pub([], m), huggingface: { at: iso(NOW), items: { cyber: rows } } });
+
+test("hf: only a passing, pinned, unexpired record renders", () => {
+  assert.equal(w.hfEligible(hrow(), NOW), true);
+  assert.equal(w.hfEligible(hrow("a/b", { screened: { result: "incomplete", sha: SHA, expires: iso(NOW + 864e5) } }), NOW), false);
+  assert.equal(w.hfEligible(hrow("a/b", { screened: { result: "pass", sha: SHA, expires: iso(NOW - 864e5) } }), NOW), false);
+  assert.equal(w.hfEligible(hrow("a/b", { screened: { result: "pass", sha: "notasha", expires: iso(NOW + 864e5) } }), NOW), false);
+  assert.equal(w.hfEligible(row("a/b"), NOW), false);              // a GitHub repo row never rides this lane
+});
+
+test("hf: answers are gated, labelled, and never claim a code scan", () => {
+  const out = w.answerFor(hpub([hrow(), hrow("bad/one", { screened: { result: "fail", sha: SHA, expires: iso(NOW + 864e5) } })]),
+                          "hf", "cyber", "", true, NOW);
+  assert.match(out, /huggingface\.co\/acme\/demo/);
+  assert.ok(!out.includes("bad/one"));
+  assert.ok(out.includes(w.HF_NOTE));
+  assert.equal(w.answerFor(hpub([hrow()], { status: "degraded" }), "hf", "cyber", "", true, NOW), w.PAUSE_MSG);
+  assert.match(w.answerFor(hpub([]), "hf", "cyber", "", true, NOW), /Nothing matched/);
+});
+
+test("hf: links render (huggingface.co is allow-listed), keywords filter, aliases parse", () => {
+  assert.equal(w.safeUrl("https://huggingface.co/acme/demo"), "https://huggingface.co/acme/demo");
+  assert.equal(w.safeUrl("https://evil.tld/acme/demo"), null);
+  assert.equal(w.hfItems(hpub([hrow()]), "cyber", "nomatchhere", NOW).length, 0);
+  assert.equal(w.hfItems(hpub([hrow()]), "cyber", "demo", NOW).length, 1);
+  assert.equal(w.parse("/hf cyber").lane, "hf");
+  assert.equal(w.parse("/huggingface cyber").lane, "hf");
+  assert.equal(w.parse("/datasets cyber").lane, "hf");
+});
+
+test("hf: warnings reach the student, and untrusted text is escaped", () => {
+  const out = w.answerFor(hpub([hrow("acme/demo", { warnings: ["custom code — needs trust_remote_code=True"] })]), "hf", "cyber", "", true, NOW);
+  assert.match(out, /trust..?_remote..?_code/);      // present, with Discord markdown escaping
+  const nasty = w.answerFor(hpub([hrow("acme/demo", { description: "[click](https://evil.tld) **bold** @everyone" })]), "hf", "cyber", "", true, NOW);
+  assert.ok(!nasty.includes("[click](https://evil.tld)"));
+  assert.ok(!nasty.includes("@everyone"));           // mdEsc puts a zero-width space after the @
+});
