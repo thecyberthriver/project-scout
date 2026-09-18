@@ -154,6 +154,40 @@ last ran.
   sandbox or a throwaway environment.
 - Automated checks reduce risk; they do not remove it, and they say nothing about a project's licence or legality.
 
+## The Hugging Face lane (`hf.py`) — a different check, honestly labelled
+
+Models, datasets and Spaces are **not** repositories in the sense the gate above means. They are not cloned and not
+code-scanned, for a concrete reason: Hugging Face's git server ignores `--filter=blob:limit`, so a shallow "screen it
+like a GitHub repo" pulls the full weights (`google/flan-t5-small` = 1.3 GB per candidate). Pretending otherwise would
+mean either an unscannable clone or a scan that only ever saw LFS pointers.
+
+What is checked instead, **pinned to the commit SHA the Hub API reports** for that item:
+
+| Withheld | Published with a warning |
+|---|---|
+| private, disabled or **gated** (a student could not open it anyway) | **custom code** (`.py`) in a model/dataset repo — the row says *needs `trust_remote_code=True`; read it first* |
+| the same `gate.content_policy` wording rules the repo feed uses | |
+| no license · below the likes floor (models 50, datasets/Spaces 25) · untouched for a year | |
+| no usable English description · throwaway-looking owner | |
+| an **executable or archive** file in the repo (`.exe`, `.zip`, `.jar`, …) | |
+| **pickle-only weights** — no `.safetensors`/`.gguf`/`.onnx` — or a dataset shipping `.pkl`/`.joblib` | |
+| a blocking `links.py` finding in the README, or in the app file a **Space** actually runs | |
+| a README that exists but could not be read → *incomplete* → withheld (fail closed) | |
+
+Records expire after **14 days**, exactly like the repo gate; `hf.eligible()` re-checks them offline before anything is
+sent, and `pipeline.validate_published()` re-validates every Hugging Face row in the snapshot the same way it
+re-validates every repository row. Rows are deduplicated through the same `seen.json` (keys are prefixed `hf:`, so they
+can never collide with a GitHub `owner/name`), and `dedupe_posts.py` fingerprints Hugging Face links too.
+
+Every Hugging Face line in the feed carries: *"link-screened metadata + README, not code-scanned — read the Files tab
+before you run anything."* It does **not** claim the repo-gate label. Two staff switches: `hf.ALLOW_CUSTOM_CODE`
+(currently `True` — warn instead of withhold) and `hf.REQUIRE_SAFETENSORS` (currently `True` — this does withhold some
+popular, legitimate pickle-only models).
+
+**What this does not establish:** that a model is unbiased, correctly licensed for a student's use, or safe to load
+with arbitrary code enabled; that a dataset is lawful to redistribute or free of personal data; or that a Space does
+what its card says. The likes floor is a popularity signal, not a safety signal.
+
 ## Honest limits
 
 Heuristics miss malicious projects and reject legitimate ones. Static analysis and link checks can be evaded. A repo

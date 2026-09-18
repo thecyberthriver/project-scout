@@ -4,13 +4,19 @@ Telegram bot that pulls **project ideas, open-source contribution opportunities 
 research code from GitHub** for students majoring in Quant, Finance/FinTech,
 Software Engineering, Cybersecurity, and Data Analytics.
 
-Three lanes per major:
+Four lanes per major:
 
 | Lane | Signal | GitHub query shape |
 |---|---|---|
 | 🧪 Build this | Repos **created in the last 2 weeks** that already have ⭐10+ = what people are building right now. Steal the idea, build your own. | `<terms> created:>=… stars:>=10` |
 | 🤝 Contribute | Active repos with **open "good first issue" tickets** (⭐50+, pushed in the last 30 days). Link goes straight to the issue list. | `<anchor> good-first-issues:>0 pushed:>=…` |
 | 🔬 Research | Fresh repos whose README **cites arXiv** = paper code to reproduce, extend, or join. | `"<field>" arxiv in:readme created:>=…` |
+| 🤗 Hugging Face | Models, datasets and Spaces students can build **on top of** — a dataset to analyse, a model to fine-tune, a Space to duplicate. Link-screened, **not** code-scanned (see below). | HF Hub API, `sort=likes`, short single-word terms per major |
+
+Hugging Face rows also carry an **industry label** (🏥 healthcare · 🏦 finance · 🛒 retail · 🏨 hospitality · 🎮 gaming
+· 📱 social media · 🎓 education · 🏛 public sector) read off the item's own card text, and are grouped by it inside the section — no extra API call, and
+an item that matches nothing is simply unlabelled. The GitHub lanes have no industry axis: every industry there would
+be another search against the 30/min limit and the `SEARCH_BUDGET`.
 
 ## Two halves, one gate
 
@@ -21,6 +27,9 @@ Discovery is separated from what students see, and **every** student-visible pat
 |---|---|---|
 | `project_scout.py --discover` → `--publish` | GitHub Actions, two jobs (`.github/workflows/digest.yml`) | **screen** (untrusted, no secrets): search GitHub, screen every candidate through the gate (clone + Semgrep + deep vet + link screen), write `build/`. **publish** (secrets): re-validate offline, send, commit `published.json`/`screening.json`/`seen.json`/`index.json`. |
 | `cloudflare-webhook/worker.js`, `discord.js` | Cloudflare Workers | Render the pre-screened `published.json` snapshot only. **No live GitHub/GitLab search.** Fail closed (pause) if screening is stale, degraded, or missing. |
+
+`published.json` also carries a `huggingface` section, screened by `hf.py` (metadata + README, no clone) and
+re-validated at publish time like every other section.
 
 `published.json` (served to the Workers from the repo) contains only repositories that passed the gate and are inside
 the 30-day freshness window; each row carries its screening record (reviewed SHA + expiry) and the label
@@ -94,6 +103,34 @@ Records (`screening.json`) carry identity, reviewed SHA, scan time, scanner + ru
 **expire** (14 days fresh, 30 curated); a changed commit forces a re-screen. The Cloudflare Workers render only
 `published.json` and **pause** if screening is stale. `python vet.py` still writes the private `docs/vetting-report.md`;
 `purge_posts.py` edits already-posted Discord messages if a rule is added later.
+
+### Hugging Face (`hf.py`) — screened, but never code-scanned
+
+Hugging Face repos are git repos, but HF's git server ignores `--filter=blob:limit`: cloning `google/flan-t5-small`
+pulls **1.3 GB** of weights, so screening models the way `scan.py` screens GitHub repos is not viable. HF items are
+instead screened from public metadata **pinned to the commit SHA the API reports**, and they never claim a code scan —
+the feed line says *"link-screened metadata + README, not code-scanned"*.
+
+Withheld: private / disabled / **gated**, anything failing the same `gate.content_policy` the repo feed uses, no
+license, below the likes floor (models 50, datasets/Spaces 25), untouched for a year, no usable English description,
+throwaway-looking owner, an **executable or archive** in the file list, **pickle-only weights** (no
+`.safetensors`/`.gguf`/`.onnx`) or a dataset shipping `.pkl`, and any blocking `links.py` finding in the README — or,
+for a Space, in the app file it actually runs. A README that exists but cannot be read is *incomplete* → withheld.
+
+Published with a **warning**, not withheld: custom code (`.py`) in a model or dataset repo — that is what
+`trust_remote_code=True` costs, and the student is told. Flip `hf.ALLOW_CUSTOM_CODE = False` to withhold instead;
+`hf.REQUIRE_SAFETENSORS = False` relaxes the pickle rule (it currently withholds popular pickle-only models).
+
+Records expire after 14 days like the repo gate, `hf.eligible()` re-checks them offline at publish time, and
+`dedupe_posts.py` fingerprints HF links alongside GitHub ones. Self-check: `python hf.py` · live preview:
+`python hf.py --preview`.
+
+Students can pull the lane themselves, so nobody has to ask staff for a re-query: **`/scout lane:Hugging Face`** on
+Discord (re-register the command once with `register_discord.py` so the new choice appears) and **`/hf <major>`** on
+Telegram — aliases `/huggingface`, `/models`, `/datasets`, `/spaces`. The Workers render the same pre-screened
+`published.json` snapshot, re-check each row's record (passing screen, 40-hex pinned SHA, not expired) before it is
+shown, and pause with everything else when screening is stale. `huggingface.co` is on the Worker link allowlist;
+`node --test cloudflare-webhook/test_workers.mjs` covers the lane.
 
 ## Enrollment (roster-gated, no name oracle)
 

@@ -31,7 +31,8 @@ LANES = [("Learning path (your year in order — start here)", "path"),
          ("Research (fresh paper code)", "research"),
          ("Orgs (non-profit / public / private sector, resume-ready)", "orgs"),
          ("NYC hackathons (in-person, live from Devpost + MLH)", "hackathons"),
-         ("Case studies (collections you can contribute to)", "cases")]
+         ("Case studies (collections you can contribute to)", "cases"),
+         ("Hugging Face (models, datasets & Spaces to build on)", "hf")]
 COMMANDS = [{
     "name": "verify",
     "description": "How to get enrolled in the TLDP server (staff-handled)",
