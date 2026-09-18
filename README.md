@@ -136,6 +136,11 @@ throwaway-looking owner, an **executable or archive** in the file list, **pickle
 `.safetensors`/`.gguf`/`.onnx`) or a dataset shipping `.pkl`, and any blocking `links.py` finding in the README — or,
 for a Space, in the app file it actually runs. A README that exists but cannot be read is *incomplete* → withheld.
 
+Also withheld: anything a student cannot actually start — a task we have **no starter recipe** for (image-to-video,
+image-text-to-text …), data that is **not in English** (`language:` tags), and models **over 3B parameters** or whose
+size is not stated (Qwen3-Coder-30B is 61 GB of weights; a laptop will not load it). Every published row therefore
+carries what to install, **three numbered steps**, and a "done when" line — see `hf.TASK_STEPS`.
+
 Published with a **warning**, not withheld: custom code (`.py`) in a model or dataset repo — that is what
 `trust_remote_code=True` costs, and the student is told. Flip `hf.ALLOW_CUSTOM_CODE = False` to withhold instead;
 `hf.REQUIRE_SAFETENSORS = False` relaxes the pickle rule (it currently withholds popular pickle-only models).

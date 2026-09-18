@@ -54,6 +54,7 @@ API_BYTES = 4_000_000      # cap on an API listing response
 SPACING = 0.3              # seconds between API calls — be a polite anonymous client
 REQUIRE_SAFETENSORS = True
 ALLOW_CUSTOM_CODE = True   # .py in a model/dataset repo -> warning, not withheld (staff decision, 2026-09-17)
+MAX_PARAMS = 3_000_000_000  # a model a student can actually load on a laptop. Qwen3-Coder-30B is 61 GB of weights.
 
 HEADER = "🤗 Hugging Face — models, datasets & Spaces"
 NOTE = "link-screened metadata + README, not code-scanned — read the Files tab before you run anything"
@@ -91,6 +92,121 @@ def industry_of(text: str) -> tuple[str, str]:
         if rx.search(text or ""):
             return name, emoji
     return "", ""
+
+
+# What a student actually DOES with an item, per kind and task. An item we cannot hand a first move for is not
+# published at all: a link with no first step is how a project dies before it starts. Each recipe is
+# (what to install, three steps, what "done" looks like). {id} is substituted with the repo id.
+DATASET_STEPS = ("pip install datasets pandas matplotlib", [
+    "Open the Dataset Viewer on the page and read 20 rows. Before any code, write down ONE question you want it to answer.",
+    'Load it: `from datasets import load_dataset` · `d = load_dataset("{id}", split="train").to_pandas()` · `d.head()`.',
+    "Answer your question with one groupby and one chart, then post the chart in #show-your-work.",
+], "you can explain one thing the data shows that you did not know before")
+
+SPACE_STEPS = ("a free Hugging Face account", [
+    "Open the Space and try three inputs of your own — note where it does badly, that gap is your project.",
+    "Click ⋮ → Duplicate this Space. You now own a running copy; nothing to install.",
+    "Change ONE thing in app.py (a prompt, a threshold, the model) and redeploy. Compare before and after.",
+], "your copy behaves differently from the original and you can say why")
+
+# model task -> the same shape. Tasks absent from this table are not published.
+TASK_STEPS = {
+    "text-classification": ("pip install transformers torch", [
+        'Run it: `from transformers import pipeline` · `p = pipeline("text-classification", model="{id}")` · `p("your sentence")`.',
+        "Write 20 sentences of your own and label them yourself first, then compare the model's answers to your labels.",
+        "Report its accuracy on your 20 and show the ones it got wrong — the mistakes are the interesting part.",
+    ], "you can name one kind of sentence this model reliably gets wrong"),
+    "token-classification": ("pip install transformers torch", [
+        'Run it: `p = pipeline("token-classification", model="{id}")` on a paragraph of news text.',
+        "Feed it 10 paragraphs from a domain you care about and count what it misses.",
+        "Build a tiny script that extracts every entity from a folder of text files into a CSV.",
+    ], "your CSV has the entities from 10 documents and you know its error rate"),
+    "question-answering": ("pip install transformers torch", [
+        'Run it: `p = pipeline("question-answering", model="{id}")` with a context paragraph and a question.',
+        "Paste in a page of your own course notes and ask it five questions.",
+        "Wrap it in a loop that answers a list of questions about one document and prints the confidence.",
+    ], "it answers five questions about your own notes and you can judge each answer"),
+    "summarization": ("pip install transformers torch", [
+        'Run it: `p = pipeline("summarization", model="{id}")` on one long article.',
+        "Summarise five articles you have actually read, and mark each summary good or bad yourself.",
+        "Add a length setting and compare a short summary to a long one for the same article.",
+    ], "you can say when this model's summaries are trustworthy and when they are not"),
+    "translation": ("pip install transformers torch sentencepiece", [
+        'Run it: `p = pipeline("translation", model="{id}")` on five sentences.',
+        "Translate text you can check yourself, or have a classmate who speaks the language check it.",
+        "Build a script that translates a file line by line and flags lines it left unchanged.",
+    ], "you have five checked translations and a list of what it failed on"),
+    "zero-shot-classification": ("pip install transformers torch", [
+        'Run it: `p = pipeline("zero-shot-classification", model="{id}")` with your own candidate labels.',
+        "Sort 30 real items (emails, tickets, posts) into your labels and check the results by hand.",
+        "Tune the label wording — small changes move the results a lot. Record what worked.",
+    ], "you can show how label wording changed the accuracy on your 30 items"),
+    "fill-mask": ("pip install transformers torch", [
+        'Run it: `p = pipeline("fill-mask", model="{id}")` with a sentence containing the mask token.',
+        "Try 10 sentences from your field and see whether the top prediction is domain-aware.",
+        "Use it to build a small quiz: hide a word, ask a classmate, compare to the model.",
+    ], "you can say whether this model knows your subject area"),
+    "sentence-similarity": ("pip install sentence-transformers", [
+        'Run it: `from sentence_transformers import SentenceTransformer` · `m = SentenceTransformer("{id}")`.',
+        "Embed 50 short texts of your own and find the closest pair with cosine similarity.",
+        "Build a tiny search box: type a query, return the three closest items.",
+    ], "your search returns sensible matches over your own 50 items"),
+    "feature-extraction": ("pip install sentence-transformers", [
+        'Run it: `from sentence_transformers import SentenceTransformer` · `m = SentenceTransformer("{id}")`.',
+        "Embed 50 short texts of your own and find the closest pair with cosine similarity.",
+        "Build a tiny search box: type a query, return the three closest items.",
+    ], "your search returns sensible matches over your own 50 items"),
+    "automatic-speech-recognition": ("pip install transformers torch librosa", [
+        'Run it: `p = pipeline("automatic-speech-recognition", model="{id}")` on a 30-second clip you record.',
+        "Transcribe five clips with different accents or background noise and count the word errors.",
+        "Make it write an .srt subtitle file with timestamps.",
+    ], "you have subtitles for your own clip and a word-error count"),
+    "image-classification": ("pip install transformers torch pillow", [
+        'Run it: `p = pipeline("image-classification", model="{id}")` on one of your own photos.',
+        "Try 20 photos, including deliberately hard ones, and record what it confuses.",
+        "Sort a folder of images into subfolders by the predicted label.",
+    ], "your folder is sorted and you can describe its failure pattern"),
+    "text-to-image": ("pip install diffusers torch", [
+        "Generate one image from the example prompt on the model page — start with the page's own settings.",
+        "Change one thing at a time (prompt wording, steps, seed) and keep a table of what each change did.",
+        "Produce a set of five images that belong together — a small asset pack, consistent in style.",
+    ], "you have five consistent images and notes on which setting did what"),
+    "text-generation": ("pip install transformers torch", [
+        'Run it: `p = pipeline("text-generation", model="{id}")` with a prompt from your own coursework.',
+        "Run the same prompt at temperature 0.2 and 1.0 five times each. Write down the difference you see.",
+        "Wrap it in a command-line tool that takes a prompt and prints the answer.",
+    ], "your CLI answers a prompt and you can explain what temperature changed"),
+}
+TASK_ALIAS = {"text2text-generation": "summarization", "image-to-text": "image-classification",
+              "audio-classification": "image-classification", "sentence-transformers": "sentence-similarity"}
+
+
+def recipe(kind: str, task: str) -> tuple[str, list[str], str] | None:
+    """(prereq, steps, done_when) for this item, or None when we have no honest first move to offer."""
+    if kind == "datasets":
+        return DATASET_STEPS
+    if kind == "spaces":
+        return SPACE_STEPS
+    t = TASK_ALIAS.get(task or "", task or "")
+    return TASK_STEPS.get(t)
+
+
+def language_ok(item: dict) -> bool:
+    """English data only. HF tags carry `language:xx`; no language tag at all (most code/vision repos) is fine."""
+    langs = {t.split(":", 1)[1].lower() for t in (item.get("tags") or [])
+             if isinstance(t, str) and t.startswith("language:")}
+    return not langs or bool(langs & {"en", "eng", "english", "multilingual"})
+
+
+def params_of(item_id: str, fetch=None) -> int | None:
+    """Parameter count from the model's own API record. None = unknown (GGUF-only repos carry no count)."""
+    fetch = fetch or _get
+    try:
+        d = json.loads(fetch(f"{API}/models/{urllib.parse.quote(item_id)}", cap=API_BYTES) or b"{}")
+    except Exception:                                            # noqa: BLE001 — unknown size fails closed below
+        return None
+    total = (d.get("safetensors") or {}).get("total")
+    return int(total) if isinstance(total, (int, float)) and total > 0 else None
 
 
 EXEC_FILE = re.compile(r"\.(exe|msi|dll|apk|scr|bat|cmd|vbs|vbe|jse|hta|jar|iso|img|dmg|pkg|lnk|zip|rar|7z)$", re.I)
@@ -222,6 +338,20 @@ def screen(item: dict, kind: str, fetch=None) -> dict:
     except ValueError:
         reasons.append("no last-modified date")
 
+    # Can a student actually start this? No recipe for the task, data in a language they cannot read, or a model too
+    # big to load on a laptop are all withheld — a link a student cannot act on is worse than no link.
+    task = item.get("pipeline_tag") or item.get("sdk") or ""
+    if not recipe(kind, task):
+        reasons.append(f"no starter steps for a {kind[:-1]} of type {task or 'unknown'}")
+    if not language_ok(item):
+        reasons.append("data is not in English")
+    if kind == "models" and not reasons:                      # one extra API call, only for candidates still standing
+        n = params_of(item_id, fetch=fetch)
+        if n is None:
+            reasons.append("model size not stated (no safetensors index) — cannot promise it runs on a laptop")
+        elif n > MAX_PARAMS:
+            reasons.append(f"{n / 1e9:.0f}B parameters — too large for a student laptop (cap {MAX_PARAMS / 1e9:.0f}B)")
+
     names = files_of(item)
     bad = [n for n in names if EXEC_FILE.search(n)]
     if bad:
@@ -269,10 +399,13 @@ def row(item: dict, kind: str, rec: dict) -> dict:
     desc = describe(item, kind)
     tags = " ".join(t for t in (item.get("tags") or []) if isinstance(t, str))
     industry, emoji = industry_of(f"{item_id} {desc} {tags}")
+    task = item.get("pipeline_tag") or item.get("sdk") or ""
+    prereq, steps, done = recipe(kind, task) or ("", [], "")   # screening guarantees a recipe exists for published rows
     return {"industry": industry, "industry_emoji": emoji, "full_name": f"hf:{kind}/{item_id}", "id": item_id, "hf_kind": kind, "html_url": url_for(kind, item_id),
             "likes": int(item.get("likes") or 0), "downloads": int(item.get("downloads") or 0),
-            "task": item.get("pipeline_tag") or item.get("sdk") or "", "library": item.get("library_name") or "",
+            "task": task, "library": item.get("library_name") or "",
             "license": license_of(item), "description": desc,
+            "prereq": prereq, "steps": [s.replace("{id}", item_id) for s in steps], "done": done,
             "updated": (item.get("lastModified") or "")[:10], "warnings": rec.get("warnings", []), "screened": rec}
 
 
@@ -339,6 +472,12 @@ def render(r: dict) -> str:
             f'  {ps.esc(r.get("description") or "(no description)")}')
     for w in r.get("warnings", [])[:2]:
         line += f"\n  ⚠️ {ps.esc(w)}"
+    if r.get("prereq"):
+        line += f'\n  🧰 Need first: <code>{ps.esc(r["prereq"])}</code>'
+    for i, s in enumerate(r.get("steps", [])[:3], 1):
+        line += f"\n  {i}. {ps.esc(s)}"
+    if r.get("done"):
+        line += f'\n  ✅ Done when {ps.esc(r["done"])}.'
     return line
 
 
@@ -349,8 +488,11 @@ def _demo() -> None:
             "cardData": {"license": "apache-2.0"}, "pipeline_tag": "text-classification",
             "siblings": [{"rfilename": "README.md"}, {"rfilename": "model.safetensors"}]}
 
-    def rec(item, kind="models"):                      # offline: the file reader is stubbed to "no such file"
-        return screen(dict(base, **item), kind, fetch=lambda url, accept_404=False: None)
+    def rec(item, kind="models", size=b'{"safetensors": {"total": 135000000}}'):
+        # offline: the API record answers the size check, every file read says "no such file"
+        def fetch(url, accept_404=False, cap=None):
+            return size if "/api/models/" in url else None
+        return screen(dict(base, **item), kind, fetch=fetch)
 
     assert "no license declared" in rec({"cardData": {}, "tags": []})["reasons"]
     assert any("only 3 likes" in x for x in rec({"likes": 3})["reasons"])
@@ -382,6 +524,12 @@ def _demo() -> None:
     assert license_of({"tags": ["license:mit"]}) == "mit"
     assert industry_of("patient triage notes")[0] == "healthcare"
     assert industry_of("hotel booking reviews")[0] == "hospitality"
+    assert any("too large" in x for x in rec({}, size=b'{"safetensors": {"total": 30500000000}}')["reasons"])
+    assert any("size not stated" in x for x in rec({}, size=b"{}")["reasons"])
+    assert any("no starter steps" in x for x in rec({"pipeline_tag": "image-text-to-video"})["reasons"])
+    assert any("not in English" in x for x in rec({"tags": ["language:ko"]})["reasons"])
+    assert recipe("datasets", "") and recipe("spaces", "gradio") and recipe("models", "summarization")
+    assert recipe("models", "image-to-video") is None
     assert industry_of("npc dialogue for a video game")[0] == "gaming"
     assert industry_of("toxic comment detection on reddit")[0] == "social media"
     assert industry_of("a general text model")[0] == ""

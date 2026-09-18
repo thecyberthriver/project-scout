@@ -264,6 +264,8 @@ const hrow = (id = "acme/demo", extra = {}) => ({
   full_name: `hf:models/${id}`, id, hf_kind: "model", html_url: `https://huggingface.co/${id}`, likes: 42,
   description: "a plain description", license: "apache-2.0", task: "text-classification",
   industry: "healthcare", industry_emoji: "\u{1FA7A}", warnings: [],
+  prereq: "pip install transformers torch", steps: ["Run it on one sentence.", "Label 20 of your own.", "Report accuracy."],
+  done: "you can name one kind of sentence it gets wrong",
   screened: { result: "pass", sha: SHA, at: iso(NOW - 3600e3), expires: iso(NOW + 10 * 864e5) }, ...extra });
 const hpub = (rows, m = {}) => ({ ...pub([], m), huggingface: { at: iso(NOW), items: { cyber: rows } } });
 
@@ -293,6 +295,14 @@ test("hf: links render (huggingface.co is allow-listed), keywords filter, aliase
   assert.equal(w.parse("/hf cyber").lane, "hf");
   assert.equal(w.parse("/huggingface cyber").lane, "hf");
   assert.equal(w.parse("/datasets cyber").lane, "hf");
+});
+
+test("hf: every rendered row carries the steps a student starts with", () => {
+  const out = w.answerFor(hpub([hrow()]), "hf", "cyber", "", true, NOW);
+  assert.match(out, /Need first/);
+  assert.match(out, /1\. Run it on one sentence\./);
+  assert.match(out, /3\. Report accuracy\./);
+  assert.match(out, /Done when/);
 });
 
 test("hf: warnings reach the student, and untrusted text is escaped", () => {

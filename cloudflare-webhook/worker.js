@@ -323,7 +323,10 @@ export function renderHF(head, items, pub, isMd = false) {
     const meta = [r.industry ? `${r.industry_emoji || ""} ${r.industry}`.trim() : "", r.hf_kind, r.task, r.license]
       .filter(Boolean).map(e).join(" · ");
     const warn = (r.warnings || []).slice(0, 2).map((w) => `\n  ⚠️ ${e(w)}`).join("");
-    return `• ${link(r.id, r.html_url, isMd)} ❤${Number(r.likes) || 0} · ${meta}\n  ${e(r.description || "(no description)")}${warn}`;
+    const prereq = r.prereq ? `\n  🧰 Need first: ${e(r.prereq)}` : "";
+    const steps = (r.steps || []).slice(0, 3).map((s, i) => `\n  ${i + 1}. ${e(s)}`).join("");
+    const done = r.done ? `\n  ✅ Done when ${e(r.done)}.` : "";
+    return `• ${link(r.id, r.html_url, isMd)} ❤${Number(r.likes) || 0} · ${meta}\n  ${e(r.description || "(no description)")}${warn}${prereq}${steps}${done}`;
   });
   return pack(head, blocks, noteLine(pub, isMd), limitFor(isMd));
 }
