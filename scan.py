@@ -48,6 +48,11 @@ SEMGREP_LANGS = {"Python", "JavaScript", "TypeScript", "Java", "Go", "Ruby", "PH
                  "Swift", "Shell", "Dockerfile", "HCL", "Solidity", "Elixir", "Lua", "OCaml", "Dart", "Clojure", "Julia", "R",
                  "JSON", "YAML", "HTML", "Vue", "Jupyter Notebook", "Jsonnet", "Apex", "Cairo", "Lisp", "Scheme", "XML"}
 DOC_LANGS = {"Markdown", "TeX", "CSS", "SCSS", "Less", "Makefile", "Batchfile", "Roff", "AsciiDoc", "reStructuredText"}
+# SQL dialects: Semgrep has no language parser for them, so they are screened like a documentation repo — generic
+# (regex) malware and secrets rules, plus YARA, ClamAV and osv-scanner over the whole checkout. Declared separately
+# from DOC_LANGS so the coverage note tells a student exactly what did and did not run. Without this, every SQL
+# teaching repo is withheld as "unsupported", which is why the feed had no SQL projects at all.
+SQL_LANGS = {"SQL", "TSQL", "PLpgSQL", "PLSQL", "MySQL", "SQLPL"}
 NON_CODE_SCANNABLE = {"JSON", "YAML", "HTML", "XML", "Vue"}   # structured/markup: 0 Semgrep code findings is normal
 CODE_LANGS = SEMGREP_LANGS - NON_CODE_SCANNABLE - DOC_LANGS   # a repo in one of these MUST have >=1 file Semgrep parsed
 REQUIRED_ENGINES = ("semgrep", "yara", "clamav", "osv")       # all four must run for an authoritative pass (fail closed)
@@ -83,6 +88,8 @@ def coverage_for(language: str | None) -> tuple[bool, str]:
         return True, "generic + language rules" if language != "Jupyter Notebook" else "notebook code cells extracted to Python"
     if language in DOC_LANGS:
         return True, "documentation repo: generic (regex) rules only"
+    if language in SQL_LANGS:
+        return True, "SQL repo: generic (regex) rules only — Semgrep has no SQL parser; YARA, ClamAV and osv-scanner still run"
     return False, f"primary language {language or 'unknown'} is not parsed by Semgrep"
 
 

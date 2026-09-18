@@ -30,7 +30,7 @@ class Published(unittest.TestCase):
         self.quar = gate.load_quarantine()
 
     def build(self, keys, records):
-        idx = {"keys": keys, "static": {"starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}, "stages": []},
+        idx = {"keys": keys, "static": {"starters": {}, "cyber_domains": {}, "cases": {}, "paths": {}, "projects": {}, "stages": []},
                "hackathons": {"at": self.meta["generated_at"], "items": []}}
         store = {"policy_version": gate.POLICY_VERSION, "records": records}
         return pipeline._build_published(idx, store, self.meta, self.quar)
@@ -112,3 +112,44 @@ class SyntheticNote(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProjectLadder(unittest.TestCase):
+    """The curated Python + SQL ladder is screened like every other repo — no shortcut for being hand-picked."""
+
+    def setUp(self):
+        self.meta = pipeline._meta("operational")
+        self.quar = gate.load_quarantine()
+
+    def build(self, records):
+        item = lambda name, lv="start": {"level": lv, "lang": "Python", "name": name, "todo": "do the thing",
+                                         "repo": frow(name) | {"kind": "evergreen"}}
+        idx = {"keys": {}, "static": {"starters": {}, "cyber_domains": {}, "cases": {}, "paths": {},
+                                      "projects": {"cyber": [item("good/a"), item("bad/b", "deep")]}, "stages": []},
+               "hackathons": {"at": self.meta["generated_at"], "items": []}}
+        return pipeline._build_published(idx, {"policy_version": gate.POLICY_VERSION, "records": records}, self.meta, self.quar)
+
+    def test_a_failing_project_repo_is_dropped_task_and_all(self):
+        pub = self.build({"good/a": rec("good/a"), "bad/b": rec("bad/b", result="fail")})
+        names = [it["repo"]["full_name"] for it in pub["evergreen"]["projects"]["cyber"]]
+        self.assertEqual(names, ["good/a"])
+
+    def test_validator_checks_project_repos_too(self):
+        pub = self.build({"good/a": rec("good/a")})
+        pub["evergreen"]["projects"]["cyber"].append({"level": "deep", "lang": "SQL", "name": "sneaky/x",
+                                                      "todo": "x", "repo": frow("sneaky/x") | {"kind": "evergreen"}})
+        ok, problems = pipeline.validate_published(pub, {"records": {"good/a": rec("good/a")}}, self.quar, self.meta)
+        self.assertFalse(ok)
+        self.assertTrue(any("sneaky/x" in p for p in problems), problems)
+
+    def test_every_catalogue_entry_is_well_formed(self):
+        import project_scout as ps
+        for major, entries in ps.PROJECTS.items():
+            self.assertIn(major, ("cyber", "swe", "data"))
+            for level, lang, name, todo in entries:
+                self.assertIn(level, ps.LEVELS3)
+                self.assertIn(lang, ("Python", "SQL"))
+                self.assertRegex(name, r"^[\w.-]+/[\w.-]+$")
+                self.assertGreater(len(todo), 40)          # a task, not a label
+            self.assertTrue({e[0] for e in entries} == set(ps.LEVELS3), major)   # all three levels present
+            self.assertTrue({e[1] for e in entries} == {"Python", "SQL"}, major)  # both languages present

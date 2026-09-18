@@ -1,5 +1,10 @@
 # Scanners: what runs, what it covers, what it does not
 
+**SQL repositories** (`SQL`, `TSQL`, `PLpgSQL`, `PLSQL`, `MySQL`, `SQLPL`): Semgrep ships no SQL parser, so these are
+screened the way a documentation repo is — generic (regex) malware and secrets rules — while **YARA, ClamAV and
+osv-scanner still run over the whole checkout**. The coverage note on the record says exactly that. Before this, every
+SQL teaching repo was withheld as "unsupported language", which is why the feed carried no SQL projects at all.
+
 Two different things get scanned, by the same tool, in different trust zones:
 
 | Target | Where | Trust zone |
