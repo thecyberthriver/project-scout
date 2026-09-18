@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 register_discord.py — register the /scout and /verify slash commands with Discord (run once, and after edits).
-/verify has no options: enrollment is done by staff, never by name matching.
+/verify has no options: it grants the TLDP Student role to whoever runs it. The invite link is the gate,
+so keep invites single-use; no name matching is involved.
 
   DISCORD_APP_ID=... DISCORD_BOT_TOKEN=... python register_discord.py
 
@@ -35,7 +36,7 @@ LANES = [("Learning path (your year in order — start here)", "path"),
          ("Hugging Face (models, datasets & Spaces to build on)", "hf")]
 COMMANDS = [{
     "name": "verify",
-    "description": "How to get enrolled in the TLDP server (staff-handled)",
+    "description": "Unlock every TLDP channel - run this once after you join",
     "options": [],
 }, {
     "name": "scout",
